@@ -1,0 +1,223 @@
+/* ui.css — редизайн: тёмная база + лаймовый акцент */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#101215; --sf:#191c21; --sf2:#23272e; --line:rgba(255,255,255,.09);
+  --tx:#f4f6f2; --tx2:#969c95; --lime:#cdf564; --ink:#141712;
+  --ok:#4ade80; --info:#60a5fa; --warn:#fbbf24; --mute:#94a3b8; --bad:#f87171;
+  --r-card:18px; --r-panel:22px; --r-field:16px;
+}
+body.light-mode{
+  --bg:#f4f4f0; --sf:#fff; --sf2:#f3f3ee; --line:rgba(16,18,21,.10);
+  --tx:#15171b; --tx2:#6d726c; --lime:#c9f25b;
+  --ok:#16a34a; --info:#2563eb; --warn:#d97706; --mute:#64748b; --bad:#dc2626;
+}
+
+body, html.preload-dark body, body.dark-mode{
+  background:var(--bg) !important; color:var(--tx);
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+}
+h1,h2,h3{letter-spacing:-.02em}
+
+/* ── Панели ── */
+.panel, html.preload-dark .panel, body.dark-mode .panel{
+  background:var(--sf) !important; color:var(--tx) !important;
+  border:1px solid var(--line); border-radius:var(--r-panel);
+  box-shadow:none; padding:20px;
+}
+h2, .panel h2, body.dark-mode .panel h2{
+  color:var(--tx) !important; border-bottom:1px solid var(--line) !important;
+  font:800 22px/1.15 'Plus Jakarta Sans',sans-serif; padding-bottom:12px; margin-bottom:18px;
+}
+.panel p, body.dark-mode .panel p{color:var(--tx2) !important}
+
+/* ── Шапка / категории ── */
+.header{color:var(--tx)}
+.header h1{font:800 20px 'Plus Jakarta Sans',sans-serif}
+.category-btn{
+  background:var(--sf); color:var(--tx2); border:1px solid var(--line);
+  border-radius:999px; padding:8px 16px; font:700 12.5px 'Plus Jakarta Sans',sans-serif;
+}
+.category-btn.active{background:var(--lime); color:var(--ink); border-color:var(--lime)}
+.theme-toggle{
+  background:var(--sf) !important; border:1px solid var(--line); color:var(--tx);
+  width:36px; height:36px;
+}
+
+/* ── Кнопки ── */
+button{
+  background:var(--lime); color:var(--ink); border:none; border-radius:999px;
+  padding:15px 26px; font:700 15px 'Plus Jakarta Sans',sans-serif; width:100%; margin:10px 0;
+}
+.btn-reset, .action-btn{
+  background:var(--sf); color:var(--tx); border:1px solid var(--line);
+  font:700 13px 'Plus Jakarta Sans',sans-serif;
+}
+
+/* ── Нижняя навигация (4 таба) ── */
+.bottom-nav, body.dark-mode .bottom-nav{
+  background:var(--sf) !important; border-top:1px solid var(--line);
+  border-radius:0; box-shadow:none;
+  padding:8px 12px calc(14px + env(safe-area-inset-bottom,0px));
+  height:auto;
+}
+.nav-item{border-radius:14px; gap:5px}
+.nav-item::before{display:none}
+.nav-item.active{background:var(--sf2)}
+.nav-item .nav-label, body.dark-mode .nav-item .nav-label{
+  font:700 9.5px 'Plus Jakarta Sans',sans-serif; color:var(--tx2) !important;
+}
+.nav-item.active .nav-label, body.dark-mode .nav-item.active .nav-label{color:var(--tx) !important}
+.nav-item:active{background:var(--sf2)}
+
+/* ── Каталог ── */
+.products-grid{gap:10px}
+.product-item, body.dark-mode .product-item{
+  background:var(--sf) !important; border:1px solid var(--line) !important;
+  border-radius:var(--r-card); color:var(--tx) !important; padding:14px;
+}
+.product-item strong, body.dark-mode .product-item strong{
+  font:700 13.5px 'Plus Jakarta Sans',sans-serif; color:var(--tx) !important;
+}
+.product-item small, body.dark-mode .product-item small{
+  font:500 11.5px 'IBM Plex Mono',monospace; color:var(--tx2) !important;
+}
+.product-item.is-sold{opacity:.5}
+.product-item.is-delivery{border-left:3px solid var(--info) !important}
+.product-item.is-reserved{border-left:3px solid var(--warn) !important}
+.product-item.is-unsold{border-left:3px solid var(--ok) !important}
+.product-item.is-print-selected{border:1px solid var(--lime) !important; background:var(--sf2) !important}
+
+/* ── Фильтры ── */
+#catalog-stats, body.dark-mode #catalog-stats{
+  background:var(--sf2) !important; color:var(--tx) !important;
+  border:1px solid var(--line); border-radius:var(--r-card);
+}
+#catalog-stats strong, body.dark-mode #catalog-stats strong{color:var(--tx) !important}
+.status-filter-btn, body.dark-mode .status-filter-btn{
+  background:var(--sf) !important; border:1px solid var(--line) !important;
+  border-radius:999px; padding:8px 14px; white-space:nowrap;
+  font:700 12px 'Plus Jakarta Sans',sans-serif;
+}
+.status-filter-btn.active, body.dark-mode .status-filter-btn.active{
+  background:var(--lime) !important; color:var(--ink) !important; border-color:var(--lime) !important;
+}
+.model-filter-btn, body.dark-mode .model-filter-btn{
+  background:var(--sf) !important; color:var(--tx2) !important;
+  border:1px solid var(--line) !important; border-radius:999px; padding:6px 11px;
+  font:600 11.5px 'Plus Jakarta Sans',sans-serif;
+}
+
+/* ── Карточка товара ── */
+.product-card, body.dark-mode .product-card{
+  background:var(--sf) !important; border:1px solid var(--line);
+  border-left:1px solid var(--line) !important; border-radius:24px; padding:18px;
+}
+.product-card h3, body.dark-mode .product-card h3{
+  color:var(--tx) !important; font:800 20px/1.15 'Plus Jakarta Sans',sans-serif;
+}
+.product-detail, body.dark-mode .product-detail{
+  border-bottom:1px solid var(--line) !important; color:var(--tx) !important;
+  font:600 12.5px 'Plus Jakarta Sans',sans-serif; padding:12px 0; margin:0;
+}
+.product-detail strong, body.dark-mode .product-detail strong{
+  color:var(--tx2) !important; min-width:130px; font-weight:600;
+}
+.state-list li{color:var(--tx)}
+.state-list li::marker{color:var(--lime)}
+.qr-code{border-top:1px solid var(--line)}
+.qr-code img, body.dark-mode .qr-code img{
+  background:var(--sf2) !important; border:1px solid var(--line);
+}
+.status-unsold{color:var(--ok) !important}
+.status-delivery{color:var(--info) !important}
+.status-reserved{color:var(--warn) !important}
+.status-sold{color:var(--mute) !important}
+
+/* ── Поля и формы ── */
+input, select, textarea,
+body.dark-mode input, body.dark-mode select, body.dark-mode textarea,
+.form-group input, .form-group select, .form-group textarea,
+.search-box input, .model-search-input, .filter-row select{
+  background:var(--sf) !important; color:var(--tx) !important;
+  border:1px solid var(--line) !important; border-radius:var(--r-field) !important;
+  font:500 13.5px 'Plus Jakarta Sans',sans-serif; padding:13px 16px;
+}
+.search-box input, .model-search-input, .filter-row select{border-radius:999px !important}
+input:focus, select:focus, textarea:focus{outline:none; border-color:var(--lime) !important}
+input::placeholder, textarea::placeholder,
+body.dark-mode input::placeholder, body.dark-mode textarea::placeholder{color:var(--tx2) !important; opacity:1}
+.form-group label, body.dark-mode .form-group label{
+  color:var(--tx2) !important; font:700 11px 'Plus Jakarta Sans',sans-serif;
+  text-transform:uppercase; letter-spacing:.06em; margin-bottom:7px;
+}
+
+/* ── Сообщения ── */
+.error, body.dark-mode .error{background:rgba(248,113,113,.14) !important; color:var(--bad) !important; border-radius:var(--r-card)}
+.success, body.dark-mode .success{background:rgba(205,245,100,.14) !important; color:var(--lime) !important; border-radius:var(--r-card)}
+.loading{color:var(--tx2)}
+.install-banner{background:var(--sf2); color:var(--tx2); border:1px solid var(--line); border-radius:var(--r-card)}
+.toast-success{background:var(--lime); color:var(--ink)}
+.toast-error{background:var(--bad)}
+.toast-info{background:var(--sf2); color:var(--tx)}
+.confirm-dialog, body.dark-mode .confirm-dialog{background:var(--sf) !important; border:1px solid var(--line); border-radius:24px}
+.confirm-dialog p, body.dark-mode .confirm-dialog p{color:var(--tx) !important}
+#print-select-bar{
+  background:var(--sf2); color:var(--tx); border:1px solid var(--line);
+  border-radius:999px; padding:10px 12px 10px 20px; box-shadow:none;
+}
+.ptr-indicator{background:var(--sf2); color:var(--tx)}
+
+/* ── Аналитика ── */
+.kpi-card, body.dark-mode .kpi-card, html.preload-dark .kpi-card{
+  background:var(--sf) !important; border:1px solid var(--line);
+  border-radius:20px; box-shadow:none;
+}
+.kpi-card .kpi-label, body.dark-mode .kpi-card .kpi-label{
+  color:var(--tx2) !important; font:600 10px 'Plus Jakarta Sans',sans-serif; letter-spacing:.07em;
+}
+.kpi-card .kpi-value, body.dark-mode .kpi-card .kpi-value{
+  color:var(--tx) !important; font:700 21px 'IBM Plex Mono',monospace;
+}
+.kpi-card .kpi-sub, body.dark-mode .kpi-card .kpi-sub{color:var(--tx2) !important}
+.kpi-card.accent, body.dark-mode .kpi-card.accent{background:var(--lime) !important; border-color:var(--lime)}
+.kpi-card.accent .kpi-label, body.dark-mode .kpi-card.accent .kpi-label{color:var(--ink) !important; opacity:.6}
+.kpi-card.accent .kpi-value, body.dark-mode .kpi-card.accent .kpi-value{color:var(--ink) !important; font-size:30px}
+.kpi-card.accent .kpi-sub, body.dark-mode .kpi-card.accent .kpi-sub{color:var(--ink) !important; opacity:.65}
+.section, body.dark-mode .section, html.preload-dark .section{
+  background:var(--sf) !important; border:1px solid var(--line); border-radius:20px; box-shadow:none;
+}
+.section-title{color:var(--tx); font:700 12.5px 'Plus Jakarta Sans',sans-serif}
+.cat-btn, .period-btn{
+  background:var(--sf); color:var(--tx2); border:1px solid var(--line);
+  border-radius:999px; font:700 12px 'Plus Jakarta Sans',sans-serif;
+}
+.cat-btn.active, .period-btn.active{background:var(--lime); color:var(--ink); border-color:var(--lime)}
+.auth-card{background:var(--sf); border:1px solid var(--line); border-radius:24px; color:var(--tx)}
+
+/* ── Десктоп ── */
+@media (min-width:1024px){
+  .desktop-sidebar{
+    width:248px !important; background:#101215 !important;
+    border-right:1px solid rgba(255,255,255,.08); padding:24px 18px !important;
+  }
+  .desktop-sidebar .sidebar-logo{font:800 15px 'Plus Jakarta Sans',sans-serif; text-align:left}
+  .desktop-sidebar .sidebar-sub{
+    font:500 11px 'IBM Plex Mono',monospace; color:#969c95; text-align:left; margin-bottom:22px;
+  }
+  .desktop-sidebar .cat-item{
+    background:transparent; border:none; color:#c6cbc4; border-radius:13px;
+    padding:10px 13px; font:700 13px 'Plus Jakarta Sans',sans-serif;
+  }
+  .desktop-sidebar .cat-item.active{background:#cdf564; color:#141712}
+  .desktop-sidebar .sidebar-btn{color:#c6cbc4; border-radius:13px; padding:11px 13px}
+  .desktop-sidebar .sidebar-btn:hover{background:rgba(255,255,255,.06); color:#f4f6f2}
+  .desktop-sidebar .sidebar-btn.active{background:rgba(255,255,255,.08); color:#f4f6f2}
+  .desktop-sidebar .sidebar-divider{border-top-color:rgba(255,255,255,.10)}
+  .desktop-sidebar .stickers-btn-side{
+    background:transparent; border:1px solid rgba(255,255,255,.14); color:#c6cbc4; border-radius:13px;
+  }
+  .desktop-sidebar .theme-btn-side{background:#cdf564; color:#141712; border-radius:13px}
+  .products-grid{grid-template-columns:1fr 1fr !important; gap:12px !important}
+  .panel{border-radius:22px; padding:24px}
+}
