@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,26 +6,16 @@
     <meta name="theme-color" content="#1e3c72">
     <link rel="manifest" href="manifest.json">
     <title>QR Сканер</title>
-    <script>
-        // Мгновенно применяем тему до рендера — без анимации
-        (function() {
-            var saved = localStorage.getItem('theme');
-            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (saved === 'dark' || (!saved && prefersDark)) {
-                document.documentElement.classList.add('preload-dark');
-            }
-        })();
-    </script>
+    <script src="theme.js"></script>
+    <link rel="stylesheet" href="common.css">
     <style>
         /* Блокируем transition при первой загрузке */
-        html.preload-dark body { background: linear-gradient(135deg, #0d1b2a 0%, #1a2744 100%) !important; }
         html.preload-dark .panel { background: #1e2a3a !important; color: #e2e8f0 !important; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         /* ── ПЛАВНЫЙ ПЕРЕХОД ТЕМЫ ── */
         body, .panel, .product-item, .bottom-nav, .desktop-sidebar,
         .kpi-card, .section, input, select, textarea, .product-card,
-        .status-filter-btn, .model-filter-btn, .sku-display, .confirm-dialog {
+        .status-filter-btn, .model-filter-btn, .confirm-dialog {
             transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
@@ -60,8 +49,6 @@
         /* Placeholder */
         body.dark-mode input::placeholder,
         body.dark-mode textarea::placeholder { color: #5a7090 !important; opacity: 1; }
-        /* SKU display */
-        body.dark-mode .sku-display { background: #1e2d42 !important; color: #93c5fd !important; }
         /* Карточка товара (детальный просмотр) */
         body.dark-mode .product-card { background: #1e2a3a !important; border-left-color: #3b82f6 !important; }
         body.dark-mode .product-card h3 { color: #93c5fd !important; }
@@ -74,10 +61,6 @@
         /* Диалог подтверждения */
         body.dark-mode .confirm-dialog { background: #1e2a3a !important; }
         body.dark-mode .confirm-dialog p { color: #e2e8f0 !important; }
-
-        /* ── THEME TOGGLE BUTTON ── */
-        .theme-toggle { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
-        .theme-toggle:active { background: rgba(255,255,255,0.35); }
 
         /* ── PULL-TO-REFRESH ── */
         .ptr-indicator {
@@ -100,7 +83,7 @@
         .ptr-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: ptr-spin 0.7s linear infinite; }
         @keyframes ptr-spin { to { transform: rotate(360deg); } }
 
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; padding: 16px; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+        body { padding: 16px; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
         .container { max-width: min(600px, 100%); margin: 0 auto; }
 
         /* ── ДЕСКТОП ── */
@@ -289,7 +272,6 @@
         .panel.active { display: block; }
         h2 { color: #1e3c72; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #eef2f7; padding-bottom: 10px; }
         #reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 16px; overflow: hidden; }
-        #receive-reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 16px; overflow: hidden; }
         button { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px 28px; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 10px 0; width: 100%; }
         /* FIX #2: disabled кнопки */
         button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -330,37 +312,8 @@
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #1e3c72; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e4e8; border-radius: 30px; font-size: 14px; }
         .form-group textarea { border-radius: 20px; }
-        .sku-display { background: #eef2ff; padding: 12px; border-radius: 12px; margin: 15px 0; text-align: center; font-family: monospace; font-size: 16px; font-weight: bold; color: #1e3c72; }
-        .receive-scan-area { text-align: center; margin-bottom: 20px; }
-        .debug-info { background: #fff3cd; border: 1px solid #ffc107; padding: 8px; border-radius: 8px; font-size: 12px; margin-top: 10px; display: none; }
         .state-list ul { margin: 5px 0 0 20px; padding-left: 0; list-style-type: disc; }
         .state-list li { margin: 4px 0; line-height: 1.4; }
-
-        /* FIX #5: Toast уведомления */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            padding: 12px 24px;
-            border-radius: 30px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            z-index: 3000;
-            opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
-            max-width: 90%;
-            text-align: center;
-            pointer-events: none;
-        }
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-        .toast-success { background: #16a34a; }
-        .toast-error { background: #dc2626; }
-        .toast-info { background: #3b82f6; }
 
         /* FIX #6: Поиск моделей */
         .model-search-input {
@@ -431,11 +384,8 @@
         <button class="sidebar-btn" id="sb-nav-catalog" onclick="switchTab('catalog'); setSbNav(this)">
             <span class="sb-icon">📦</span> Каталог
         </button>
-        <button class="sidebar-btn" id="sb-nav-receive" onclick="switchTab('receive'); setSbNav(this)">
-            <span class="sb-icon">📋</span> Приёмка QR
-        </button>
         <button class="sidebar-btn" id="sb-nav-receive-noqr" onclick="switchTab('receive-noqr'); setSbNav(this)">
-            <span class="sb-icon">✏️</span> Без QR
+            <span class="sb-icon">➕</span> Добавление товара
         </button>
     </nav>
 
@@ -443,7 +393,7 @@
         <hr class="sidebar-divider">
         <a href="analytics.html" class="stickers-btn-side">📊 Аналитика</a>
         <a href="generator.html" target="_blank" class="stickers-btn-side">🖨️ Наклейки</a>
-        <button class="theme-btn-side" id="sb-theme-btn" onclick="toggleTheme()">🌙 Тема</button>
+        <button class="theme-btn-side" id="sb-theme-btn" onclick="toggleTheme()" data-theme-label="Тема">🌙 Тема</button>
     </div>
 </aside>
 
@@ -457,7 +407,7 @@
     <div class="header" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
         <a href="generator.html" target="_blank" style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; color: white; text-decoration: none; font-size: 12px; white-space:nowrap; flex-shrink:0;">🖨️ Наклейки</a>
         <h1 style="flex:1; text-align:center; font-size:20px;">📱 QR Сканер</h1>
-        <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Переключить тему" style="flex-shrink:0;">🌙</button>
+        <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Переключить тему" data-theme-icon style="flex-shrink:0;">🌙</button>
     </div>
 
     <div id="mobile-cat-bar" style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: center;">
@@ -505,69 +455,15 @@
         <div id="catalog-content" class="loading">⏳ Загрузка...</div>
     </div>
 
-    <div id="receive-panel" class="panel">
-        <h2>➕ Приёмка нового товара</h2>
-        <p style="color: #666; margin-bottom: 15px;">Сначала отсканируйте QR-код с наклейки, затем заполните информацию</p>
-
-        <div class="receive-scan-area">
-            <div id="receive-reader"></div>
-            <button id="start-receive-scan">📷 Сканировать QR-код</button>
-        </div>
-
-        <div id="scanned-sku-display" class="sku-display" style="display: none;">
-            🔢 Отсканированный артикул: <span id="scanned-sku"></span>
-        </div>
-
-        <div id="receive-form" style="display: none;">
-            <div class="form-group">
-                <label>🚁 Модель *</label>
-                <div style="display:flex; gap:8px; margin-bottom:8px;">
-                    <button type="button" id="receive-mode-list" onclick="switchModelMode('receive', 'list')" style="flex:1; padding:8px; margin:0; font-size:13px; background:#1e3c72;">📋 Из списка</button>
-                    <button type="button" id="receive-mode-manual" onclick="switchModelMode('receive', 'manual')" style="flex:1; padding:8px; margin:0; font-size:13px; background:rgba(30,60,114,0.3);">✏️ Ввести вручную</button>
-                </div>
-                <div id="receive-list-block">
-                    <input type="text" class="model-search-input" id="receive-model-search" placeholder="Поиск модели..." oninput="filterModels(this.value, 'receive-model')">
-                    <select id="receive-model">
-                        <option value="">Выберите модель</option>
-                    </select>
-                </div>
-                <div id="receive-manual-block" style="display:none;">
-                    <input type="text" id="receive-model-manual" placeholder="Введите название модели..." style="width:100%; padding:12px; border:2px solid #e0e4e8; border-radius:30px; font-size:14px;">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>🔢 Серийный номер (заводской)</label>
-                <input type="text" id="receive-serial" placeholder="Например: 3YTBJ4900301RC">
-            </div>
-
-            <div class="form-group">
-                <label>💰 Цена закупки</label>
-                <input type="number" id="receive-price" placeholder="0">
-            </div>
-
-            <div class="form-group">
-                <label>📝 Состояние / Описание</label>
-                <textarea id="receive-description" rows="3" placeholder="Состояние, комплектация, примечания..."></textarea>
-            </div>
-
-            <button id="submit-receive-btn" style="background: #16a34a;">✅ Добавить товар</button>
-            <button id="cancel-receive-btn" style="background: #64748b;">🗑️ Отмена</button>
-        </div>
-
-        <div id="receive-result"></div>
-        <div id="receive-debug" class="debug-info"></div>
-    </div>
-
     <div id="receive-noqr-panel" class="panel">
-        <h2>📝 Приёмка нового товара (без QR)</h2>
-        <p style="color: #666; margin-bottom: 15px;">Заполните информацию о товаре. QR-код будет сгенерирован автоматически после добавления.</p>
+        <h2>➕ Добавление товара</h2>
+        <p style="color: #666; margin-bottom: 15px;">Заполните информацию о товаре. QR-код для наклейки будет сгенерирован автоматически после добавления.</p>
 
         <div class="form-group">
             <label>🚁 Модель *</label>
             <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <button type="button" id="noqr-mode-list" onclick="switchModelMode('noqr', 'list')" style="flex:1; padding:8px; margin:0; font-size:13px; background:#1e3c72;">📋 Из списка</button>
-                <button type="button" id="noqr-mode-manual" onclick="switchModelMode('noqr', 'manual')" style="flex:1; padding:8px; margin:0; font-size:13px; background:rgba(30,60,114,0.3);">✏️ Ввести вручную</button>
+                <button type="button" id="noqr-mode-list" onclick="switchModelMode('list')" style="flex:1; padding:8px; margin:0; font-size:13px; background:#1e3c72;">📋 Из списка</button>
+                <button type="button" id="noqr-mode-manual" onclick="switchModelMode('manual')" style="flex:1; padding:8px; margin:0; font-size:13px; background:rgba(30,60,114,0.3);">✏️ Ввести вручную</button>
             </div>
             <div id="noqr-list-block">
                 <input type="text" class="model-search-input" id="receive-noqr-model-search" placeholder="Поиск модели..." oninput="filterModels(this.value, 'receive-noqr-model')">
@@ -615,130 +511,29 @@
         <span class="nav-icon">📦</span>
         <span class="nav-label">Каталог</span>
     </button>
-    <button class="nav-item" id="nav-receive" onclick="switchTab('receive', null, this)">
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">Приёмка QR</span>
-    </button>
     <button class="nav-item" id="nav-receive-noqr" onclick="switchTab('receive-noqr', null, this)">
-        <span class="nav-icon">✏️</span>
-        <span class="nav-label">Без QR</span>
+        <span class="nav-icon">➕</span>
+        <span class="nav-label">Добавить</span>
     </button>
 </nav>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="models.js"></script>
+<script src="status.js"></script>
+<script src="toast.js"></script>
 <script>
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMI8Q18FlMSUfDFhgmuH6st-3NFn6Dpx8aUDu6SICf6QraBxlLNRs3UU15c-sJ0D-zdg/exec';
-
     let html5QrCode = null;
-    let receiveQrCode = null;
     let isScanning = false;
-    let isReceiveScanning = false;
     let allProducts = [];
     let currentProduct = null;
-    let pendingSku = null;
     let currentCategory = 'Дроны';
 
     let cachedProducts = null;
     let catalogLoaded = false;
 
-    // ========== МОДЕЛИ ДЛЯ КАТЕГОРИЙ ==========
-    const MODELS_BY_CATEGORY = {
-        'Дроны': [
-            'DJI Mavic 3', 'DJI Mavic 3 Only Drone', 'DJI Mavic 3 Fly More Combo',
-            'DJI Mavic 3 Cine', 'DJI Mavic 3 Cine Only Drone', 'DJI Mavic 3 Cine Premium Combo',
-            'DJI Mavic 3 Classic', 'DJI Mavic 3 Classic Only Drone', 'DJI Mavic 3 Classic Fly More Combo',
-            'DJI Mavic 3 Pro', 'DJI Mavic 3 Pro Only Drone', 'DJI Mavic 3 Pro Fly More Combo',
-            'DJI Mavic 3 Pro Cine', 'DJI Mavic 3 Pro Cine Only Drone', 'DJI Mavic 3 Pro Cine Premium Combo',
-            'DJI Mavic 3 Enterprise (M3E)', 'DJI Mavic 3 Enterprise Only Drone', 'DJI Mavic 3 Enterprise Fly More Combo',
-            'DJI Mavic 3E', 'DJI Mavic 3E Only Drone', 'DJI Mavic 3E Fly More Combo',
-            'DJI Mavic 3T', 'DJI Mavic 3T Only Drone', 'DJI Mavic 3T Fly More Combo',
-            'DJI Mavic 3M', 'DJI Mavic 3M Only Drone', 'DJI Mavic 3M Fly More Combo',
-            'DJI Mavic 2 Pro', 'DJI Mavic 2 Pro Only Drone', 'DJI Mavic 2 Pro Fly More Combo',
-            'DJI Mavic 2 Zoom', 'DJI Mavic 2 Zoom Only Drone', 'DJI Mavic 2 Zoom Fly More Combo',
-            'DJI Mavic Pro', 'DJI Mavic Pro Only Drone',
-            'DJI Air 3S', 'DJI Air 3S Only Drone', 'DJI Air 3S Fly More Combo',
-            'DJI Air 3', 'DJI Air 3 Only Drone', 'DJI Air 3 Fly More Combo',
-            'DJI Air 2S', 'DJI Air 2S Only Drone', 'DJI Air 2S Fly More Combo',
-            'DJI Air 2', 'DJI Air 2 Only Drone', 'DJI Air 2 Fly More Combo',
-            'DJI Mini 5 Pro', 'DJI Mini 5 Pro Only Drone', 'DJI Mini 5 Pro Fly More Combo',
-            'DJI Mini 4 Pro', 'DJI Mini 4 Pro Only Drone', 'DJI Mini 4 Pro Fly More Combo',
-            'DJI Mini 4K', 'DJI Mini 4K Only Drone', 'DJI Mini 4K Fly More Combo',
-            'DJI Mini 3 Pro', 'DJI Mini 3 Pro Only Drone', 'DJI Mini 3 Pro Fly More Combo',
-            'DJI Mini 3', 'DJI Mini 3 Only Drone', 'DJI Mini 3 Fly More Combo',
-            'DJI Mini 2 SE', 'DJI Mini 2 SE Only Drone', 'DJI Mini 2 SE Fly More Combo',
-            'DJI Mini 2', 'DJI Mini 2 Only Drone', 'DJI Mini 2 Fly More Combo',
-            'DJI Mini SE', 'DJI Mini SE Only Drone',
-            'DJI Neo 2', 'DJI Neo 2 Only Drone', 'DJI Neo 2 Fly More Combo',
-            'DJI Neo', 'DJI Neo Only Drone', 'DJI Neo Fly More Combo', 'DJI Neo Motion Fly More Combo',
-            'DJI Flip', 'DJI Flip Only Drone', 'DJI Flip Fly More Combo',
-            'DJI Avata 2', 'DJI Avata 2 Only Drone', 'DJI Avata 2 Fly More Combo',
-            'DJI Avata', 'DJI Avata Only Drone', 'DJI Avata Fly More Combo',
-            'DJI Inspire 3', 'DJI Inspire 3 Only Drone', 'DJI Inspire 3 Premium Combo',
-            'DJI Inspire 2', 'DJI Inspire 2 Only Drone', 'DJI Inspire 2 Fly More Combo',
-            'DJI Matrice 350 RTK', 'DJI Matrice 350 RTK Only Drone', 'DJI Matrice 350 RTK Combo',
-            'DJI Matrice 30', 'DJI Matrice 30 Only Drone', 'DJI Matrice 30 Combo',
-            'DJI Matrice 30T', 'DJI Matrice 30T Only Drone', 'DJI Matrice 30T Combo',
-            'DJI Matrice 300 RTK', 'DJI Matrice 300 RTK Only Drone', 'DJI Matrice 300 RTK Combo'
-        ],
-        'Самокаты': [
-            'Xiaomi M365', 'Xiaomi M365 Pro', 'Xiaomi Mi Electric Scooter 1S',
-            'Xiaomi Mi Electric Scooter Essential', 'Xiaomi Mi Electric Scooter Pro 2',
-            'Xiaomi Mi Electric Scooter 3', 'Xiaomi Mi Electric Scooter 3 Lite',
-            'Xiaomi Electric Scooter 4', 'Xiaomi Electric Scooter 4 Lite',
-            'Xiaomi Electric Scooter 4 Pro', 'Xiaomi Electric Scooter 4 Ultra',
-            'Xiaomi Electric Scooter 5', 'Xiaomi Electric Scooter 5 Pro',
-            'Xiaomi Electric Scooter 5 Max', 'Xiaomi Electric Scooter 6 Ultra',
-            'Ninebot ES1', 'Ninebot ES2', 'Ninebot ES4',
-            'Ninebot Max G30', 'Ninebot Max G30LP', 'Ninebot Max G2', 'Ninebot Max G3',
-            'Ninebot F20', 'Ninebot F25', 'Ninebot F30', 'Ninebot F40',
-            'Ninebot F2', 'Ninebot F2 Pro', 'Ninebot F3', 'Ninebot F4',
-            'Ninebot E22', 'Ninebot E25', 'Ninebot E45',
-            'Segway D18E', 'Segway D28E', 'Segway D38E',
-            'Segway P65E', 'Segway P100SE',
-            'Segway GT1', 'Segway GT2', 'Segway GT3', 'Segway ZT3 Pro', 'Segway Air T15E',
-            'NIU KQi1 Sport', 'NIU KQi2 Pro', 'NIU KQi3 Sport', 'NIU KQi3 Pro', 'NIU KQi3 Max',
-            'NIU KQi 100P', 'NIU KQi 300X',
-            'Navee N20', 'Navee N40', 'Navee N65', 'Navee S65', 'Navee V40', 'Navee UT5', 'Navee UT5 Ultra',
-            'Hiboy S2', 'Hiboy S2 Pro', 'Hiboy KS4', 'Hiboy MAX3', 'Hiboy Titan',
-            'Razor E90', 'Razor E100', 'Razor E200', 'Razor E300', 'Razor Power Core E90', 'Razor EcoSmart',
-            'Pure Air', 'Pure Air Pro', 'Pure Advance',
-            'TurboAnt X7', 'TurboAnt X7 Pro', 'TurboAnt X7 Max',
-            'Levy Electric Scooter', 'Levy Plus',
-            'Apollo Air', 'Apollo Air Pro', 'Apollo City', 'Apollo Explore', 'Apollo Ghost', 'Apollo Phantom', 'Apollo Go',
-            'Kaabo Skywalker 8', 'Kaabo Skywalker 10S', 'Kaabo Mantis 8', 'Kaabo Mantis 10',
-            'Kaabo Mantis Pro', 'Kaabo Mantis King GT',
-            'Kaabo Wolf Warrior', 'Kaabo Wolf King', 'Kaabo Wolf King GT', 'Kaabo Wolf King GTR',
-            'Dualtron Mini', 'Dualtron Compact', 'Dualtron Spider', 'Dualtron Eagle', 'Dualtron Raptor',
-            'Dualtron Victor', 'Dualtron Victor Limited', 'Dualtron Thunder', 'Dualtron Thunder 2', 'Dualtron Thunder 3',
-            'Dualtron Storm', 'Dualtron Storm Limited', 'Dualtron Ultra', 'Dualtron X', 'Dualtron X2',
-            'Dualtron Alien', 'Dualtron Dolphin', 'Dualtron Sonic',
-            'Dualtron TOGO', 'Dualtron TOGO Plus', 'Dualtron TOGO Pro', 'Dualtron TOGO Max', 'Dualtron TOGO Limited',
-            'VSETT 8', 'VSETT 8+', 'VSETT 9', 'VSETT 9+', 'VSETT 10+', 'VSETT 11+',
-            'INOKIM Light', 'INOKIM Quick', 'INOKIM OX', 'INOKIM OXO',
-            'EMOVE Touring', 'EMOVE Cruiser',
-            'Zero 8', 'Zero 9', 'Zero 10', 'Zero 10X', 'Zero 11X',
-            'Kugoo S1', 'Kugoo S3', 'Kugoo G2 Pro', 'KuKirin G3', 'KuKirin G3 Pro',
-            'GOTRAX GXL', 'GOTRAX G3', 'GOTRAX G4', 'GOTRAX GX1',
-            'NanRobot D4+', 'NanRobot LS7', 'InMotion S1', 'InMotion L9',
-            'E-TWOW Booster S', 'E-TWOW GT', 'Glion Dolly', 'Unagi Model One', 'Unagi Model One Voyager',
-            'Swagtron Swagger', 'Mercane WideWheel', 'Splach Twin', 'Yume X11',
-            'RION RE90', 'WEPED FS', 'NAMI Burn-E', 'NAMI Burn-E 2', 'NAMI Burn-E 2 Max'
-        ]
-    };
-
     function updateModelsForCategory(category) {
         const models = MODELS_BY_CATEGORY[category] || [];
-
-        const receiveModelSelect = document.getElementById('receive-model');
-        if (receiveModelSelect) {
-            receiveModelSelect.innerHTML = '<option value="">Выберите модель</option>';
-            models.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model;
-                option.textContent = model;
-                receiveModelSelect.appendChild(option);
-            });
-        }
 
         const receiveNoqrModelSelect = document.getElementById('receive-noqr-model');
         if (receiveNoqrModelSelect) {
@@ -757,12 +552,11 @@
     }
 
     // Переключение режима выбора модели: список / ручной ввод
-    function switchModelMode(form, mode) {
-        const isReceive = (form === 'receive');
-        const listBlock   = document.getElementById(isReceive ? 'receive-list-block'   : 'noqr-list-block');
-        const manualBlock = document.getElementById(isReceive ? 'receive-manual-block' : 'noqr-manual-block');
-        const btnList     = document.getElementById(isReceive ? 'receive-mode-list'    : 'noqr-mode-list');
-        const btnManual   = document.getElementById(isReceive ? 'receive-mode-manual'  : 'noqr-mode-manual');
+    function switchModelMode(mode) {
+        const listBlock   = document.getElementById('noqr-list-block');
+        const manualBlock = document.getElementById('noqr-manual-block');
+        const btnList     = document.getElementById('noqr-mode-list');
+        const btnManual   = document.getElementById('noqr-mode-manual');
 
         if (mode === 'manual') {
             listBlock.style.display   = 'none';
@@ -778,13 +572,12 @@
     }
 
     // Получить выбранную модель с учётом режима
-    function getModelValue(form) {
-        const isReceive   = (form === 'receive');
-        const manualBlock = document.getElementById(isReceive ? 'receive-manual-block' : 'noqr-manual-block');
+    function getModelValue() {
+        const manualBlock = document.getElementById('noqr-manual-block');
         if (manualBlock && manualBlock.style.display !== 'none') {
-            return (document.getElementById(isReceive ? 'receive-model-manual' : 'receive-noqr-model-manual')?.value || '').trim();
+            return (document.getElementById('receive-noqr-model-manual')?.value || '').trim();
         }
-        return document.getElementById(isReceive ? 'receive-model' : 'receive-noqr-model')?.value || '';
+        return document.getElementById('receive-noqr-model')?.value || '';
     }
 
     // FIX #6: Фильтрация моделей в select
@@ -837,21 +630,6 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;')
             .replace(/`/g, '&#96;');
-    }
-
-    // FIX #5: Toast-уведомления вместо alert()
-    function showToast(msg, type = 'success') {
-        const t = document.createElement('div');
-        t.className = 'toast toast-' + type;
-        t.textContent = msg;
-        document.body.appendChild(t);
-        requestAnimationFrame(() => {
-            t.classList.add('show');
-        });
-        setTimeout(() => {
-            t.classList.remove('show');
-            setTimeout(() => t.remove(), 300);
-        }, 3000);
     }
 
     // FIX #11: Кастомный диалог подтверждения (вместо confirm())
@@ -918,19 +696,8 @@
         if (tab === 'scan' && html5QrCode && isScanning) {
             html5QrCode.stop().then(() => isScanning = false);
         }
-        if (tab === 'receive') {
-            if (receiveQrCode && isReceiveScanning) receiveQrCode.stop().then(() => isReceiveScanning = false);
-            const receiveForm = document.getElementById('receive-form');
-            const scannedDisplay = document.getElementById('scanned-sku-display');
-            const receiveResult = document.getElementById('receive-result');
-            if (receiveForm) receiveForm.style.display = 'none';
-            if (scannedDisplay) scannedDisplay.style.display = 'none';
-            if (receiveResult) receiveResult.innerHTML = '';
-            pendingSku = null;
-        }
-        if (tab === 'receive-noqr') {
-            if (receiveQrCode && isReceiveScanning) receiveQrCode.stop().then(() => isReceiveScanning = false);
-            if (html5QrCode && isScanning) html5QrCode.stop().then(() => isScanning = false);
+        if (tab === 'receive-noqr' && html5QrCode && isScanning) {
+            html5QrCode.stop().then(() => isScanning = false);
         }
     }
 
@@ -972,220 +739,8 @@
         }
     }
 
-    async function startReceiveScanner() {
-        const resultDiv = document.getElementById('receive-result');
-        const debugDiv = document.getElementById('receive-debug');
-        if (!resultDiv) return;
-        resultDiv.innerHTML = '<div class="loading">📷 Запуск камеры...</div>';
-        if (debugDiv) {
-            debugDiv.style.display = 'block';
-            debugDiv.innerHTML = 'Запуск камеры...';
-        }
-
-        if (receiveQrCode && isReceiveScanning) await receiveQrCode.stop();
-
-        receiveQrCode = new Html5Qrcode("receive-reader");
-        try {
-            await receiveQrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 300, height: 300 } },
-                async (text) => {
-                    if (debugDiv) debugDiv.textContent = '📱 Отсканировано: ' + text;
-                    await receiveQrCode.stop();
-                    isReceiveScanning = false;
-                    if (debugDiv) debugDiv.textContent += ' | 🔍 Проверка артикула: ' + text + '...';
-
-                    try {
-                        const checkRes = await fetch(GOOGLE_SCRIPT_URL + '?action=checkSku&sku=' + encodeURIComponent(text) + '&category=' + encodeURIComponent(currentCategory));
-                        const checkData = await checkRes.json();
-                        if (debugDiv) debugDiv.textContent += ' | 📡 Ответ: ' + JSON.stringify(checkData);
-
-                        if (checkData.exists) {
-                            resultDiv.innerHTML = '<div class="error">❌ Товар с артикулом "' + escapeHtml(text) + '" уже существует в таблице!</div>';
-                            const receiveForm = document.getElementById('receive-form');
-                            const scannedDisplay = document.getElementById('scanned-sku-display');
-                            if (receiveForm) receiveForm.style.display = 'none';
-                            if (scannedDisplay) scannedDisplay.style.display = 'none';
-                            pendingSku = null;
-                            return;
-                        }
-
-                        pendingSku = text;
-                        const scannedSkuSpan = document.getElementById('scanned-sku');
-                        const scannedDisplay = document.getElementById('scanned-sku-display');
-                        const receiveForm = document.getElementById('receive-form');
-                        if (scannedSkuSpan) scannedSkuSpan.textContent = text;
-                        if (scannedDisplay) scannedDisplay.style.display = 'block';
-                        if (receiveForm) receiveForm.style.display = 'block';
-                        resultDiv.innerHTML = '<div class="success">✅ QR-код отсканирован! Заполните информацию о товаре.</div>';
-                        if (debugDiv) debugDiv.textContent += ' | ✅ Форма открыта для артикула: ' + text;
-
-                    } catch (fetchError) {
-                        if (debugDiv) debugDiv.textContent += ' | ❌ Ошибка проверки: ' + fetchError.message;
-                        resultDiv.innerHTML = '<div class="error">❌ Ошибка проверки: ' + escapeHtml(fetchError.message) + '</div>';
-                    }
-                },
-                (err) => { if (debugDiv) debugDiv.textContent = 'Сканирование... ' + err; }
-            );
-            isReceiveScanning = true;
-            resultDiv.innerHTML = '<div class="success">✅ Камера работает. Наведите на QR-код наклейки.</div>';
-            if (debugDiv) debugDiv.textContent = 'Камера запущена, ждём сканирования...';
-        } catch(e) {
-            resultDiv.innerHTML = '<div class="error">❌ Ошибка камеры. Проверьте разрешения.</div>';
-            if (debugDiv) debugDiv.textContent = '❌ Ошибка: ' + e.message;
-        }
-    }
-
-    // FIX #2 + #3 + #10: POST, блокировка кнопки, спиннер
-    async function submitNewProduct() {
-        if (!pendingSku) {
-            showToast('Сначала отсканируйте QR-код', 'error');
-            return;
-        }
-
-        const model = getModelValue('receive');
-        const serialNumber = document.getElementById('receive-serial')?.value.trim() || '';
-        const purchasePrice = document.getElementById('receive-price')?.value || '';
-        const description = document.getElementById('receive-description')?.value || '';
-
-        if (!model) {
-            showToast('Выберите модель', 'error');
-            return;
-        }
-
-        // Проверка дубликата серийного номера
-        if (serialNumber && allProducts && allProducts.length) {
-            const duplicate = allProducts.find(p => p['Серийный номер'] && p['Серийный номер'].trim() === serialNumber);
-            if (duplicate) {
-                const confirmed = await showConfirmDialog(
-                    '⚠️ Товар с таким серийным номером уже существует:\n' +
-                    duplicate['Название'] + ' (арт. ' + duplicate['Артикул'] + ')\nДобавить всё равно?'
-                );
-                if (!confirmed) return;
-            }
-        }
-
-        const submitBtn = document.getElementById('submit-receive-btn');
-        if (submitBtn && submitBtn.disabled) return;
-
-        const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ Добавление...';
-        }
-
-        const resultDiv = document.getElementById('receive-result');
-        const debugDiv = document.getElementById('receive-debug');
-        if (resultDiv) resultDiv.innerHTML = '<div class="loading">💾 Добавление товара...</div>';
-
-        if (debugDiv) debugDiv.textContent = '📤 GET запрос...';
-
-        try {
-            const url = GOOGLE_SCRIPT_URL + '?action=autoAdd'
-                + '&sku='           + encodeURIComponent(pendingSku)
-                + '&model='         + encodeURIComponent(model)
-                + '&serialNumber='  + encodeURIComponent(serialNumber)
-                + '&purchasePrice=' + encodeURIComponent(purchasePrice)
-                + '&description='   + encodeURIComponent(description)
-                + '&category='      + encodeURIComponent(currentCategory);
-            const response = await fetch(url);
-            const data = await response.json();
-            if (debugDiv) debugDiv.textContent += ' | 📡 Ответ: ' + JSON.stringify(data);
-
-            if (data.duplicateSerial) {
-                // Дубликат серийного номера на сервере
-                const confirmed = await showConfirmDialog('⚠️ ' + data.message + '\nДобавить всё равно?');
-                if (!confirmed) return;
-                // Повторно запрашиваем с флагом force=true
-                const forceUrl = (url.includes('?') ? url : url) + '&forceSerial=true';
-                const forceResponse = await fetch(forceUrl);
-                const forceData = await forceResponse.json();
-                if (!forceData.success) {
-                    if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ ' + escapeHtml(forceData.message) + '</div>';
-                    return;
-                }
-                Object.assign(data, forceData);
-            }
-            if (data.success) {
-                if (resultDiv) resultDiv.innerHTML = '<div class="success">' + escapeHtml(data.message) + '<br>🔢 Артикул: ' + escapeHtml(data.sku) + '</div>';
-                const receiveForm = document.getElementById('receive-form');
-                const scannedDisplay = document.getElementById('scanned-sku-display');
-                if (receiveForm) receiveForm.style.display = 'none';
-                if (scannedDisplay) scannedDisplay.style.display = 'none';
-                const receiveModel = document.getElementById('receive-model');
-                const receiveSerial = document.getElementById('receive-serial');
-                const receivePrice = document.getElementById('receive-price');
-                const receiveDescription = document.getElementById('receive-description');
-                if (receiveModel) receiveModel.value = '';
-                if (receiveSerial) receiveSerial.value = '';
-                if (receivePrice) receivePrice.value = '';
-                if (receiveDescription) receiveDescription.value = '';
-                const receiveModelManualEl = document.getElementById('receive-model-manual');
-                if (receiveModelManualEl) receiveModelManualEl.value = '';
-                switchModelMode('receive', 'list');
-                pendingSku = null;
-                catalogLoaded = false;
-                loadCatalog();
-                showToast('Товар успешно добавлен!');
-            } else {
-                if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ ' + escapeHtml(data.message) + '</div>';
-            }
-        } catch (error) {
-            if (debugDiv) debugDiv.textContent += ' | ❌ Ошибка: ' + error.message;
-            if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ Ошибка: ' + escapeHtml(error.message) + '</div>';
-        } finally {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-            }
-        }
-    }
-
-    // FIX #11: Подтверждение перед отменой если форма заполнена
-    async function cancelReceive() {
-        const receiveModel = document.getElementById('receive-model');
-        const receiveSerial = document.getElementById('receive-serial');
-        const receivePrice = document.getElementById('receive-price');
-        const receiveDescription = document.getElementById('receive-description');
-
-        const hasData = (receiveModel && receiveModel.value) ||
-                        (receiveSerial && receiveSerial.value.trim()) ||
-                        (receivePrice && receivePrice.value) ||
-                        (receiveDescription && receiveDescription.value.trim());
-
-        if (hasData) {
-            const confirmed = await showConfirmDialog('Форма заполнена. Вы уверены, что хотите отменить?');
-            if (!confirmed) return;
-        }
-
-        const receiveForm = document.getElementById('receive-form');
-        const scannedDisplay = document.getElementById('scanned-sku-display');
-        const receiveResult = document.getElementById('receive-result');
-        const receiveDebug = document.getElementById('receive-debug');
-
-        if (receiveForm) receiveForm.style.display = 'none';
-        if (scannedDisplay) scannedDisplay.style.display = 'none';
-        if (receiveResult) receiveResult.innerHTML = '';
-        if (receiveDebug) {
-            receiveDebug.innerHTML = '';
-            receiveDebug.style.display = 'none';
-        }
-        if (receiveModel) receiveModel.value = '';
-        if (receiveSerial) receiveSerial.value = '';
-        if (receivePrice) receivePrice.value = '';
-        if (receiveDescription) receiveDescription.value = '';
-        const receiveModelManual = document.getElementById('receive-model-manual');
-        if (receiveModelManual) receiveModelManual.value = '';
-        switchModelMode('receive', 'list');
-        pendingSku = null;
-        if (receiveQrCode && isReceiveScanning) {
-            receiveQrCode.stop().then(() => isReceiveScanning = false);
-        }
-    }
-
-    // FIX #2 + #3 + #10: POST, блокировка кнопки, спиннер
     async function submitNoQRProduct() {
-        const model = getModelValue('noqr');
+        const model = getModelValue();
         const serialNumber = document.getElementById('receive-noqr-serial')?.value.trim() || '';
         const purchasePrice = document.getElementById('receive-noqr-price')?.value || '';
         const description = document.getElementById('receive-noqr-description')?.value || '';
@@ -1220,14 +775,14 @@
         if (resultDiv) resultDiv.innerHTML = '<div class="loading">💾 Добавление товара и генерация QR-кода...</div>';
 
         try {
-            const url = GOOGLE_SCRIPT_URL + '?action=addWithoutSku'
-                + '&model='         + encodeURIComponent(model)
-                + '&serialNumber='  + encodeURIComponent(serialNumber)
-                + '&purchasePrice=' + encodeURIComponent(purchasePrice)
-                + '&description='   + encodeURIComponent(description)
-                + '&category='      + encodeURIComponent(currentCategory);
-            const response = await fetch(url);
-            const data = await response.json();
+            const data = await apiPost({
+                action:         'addWithoutSku',
+                model:          model,
+                serialNumber:   serialNumber,
+                purchasePrice:  purchasePrice,
+                description:    description,
+                category:       currentCategory
+            });
 
             if (data.success) {
                 if (resultDiv) resultDiv.innerHTML = '<div class="success">' + escapeHtml(data.message) + '<br>🔢 Артикул: ' + escapeHtml(data.sku) + '<br>📱 QR-код сгенерирован: <a href="' + escapeHtml(data.qrCode) + '" target="_blank">Посмотреть QR</a></div>';
@@ -1241,7 +796,7 @@
                 if (receiveNoqrDescription) receiveNoqrDescription.value = '';
                 const receiveNoqrModelManualEl = document.getElementById('receive-noqr-model-manual');
                 if (receiveNoqrModelManualEl) receiveNoqrModelManualEl.value = '';
-                switchModelMode('noqr', 'list');
+                switchModelMode('list');
                 catalogLoaded = false;
                 loadCatalog();
                 showToast('Товар успешно добавлен!');
@@ -1271,7 +826,7 @@
         if (receiveNoqrResult) receiveNoqrResult.innerHTML = '';
         const receiveNoqrModelManual = document.getElementById('receive-noqr-model-manual');
         if (receiveNoqrModelManual) receiveNoqrModelManual.value = '';
-        switchModelMode('noqr', 'list');
+        switchModelMode('list');
     }
 
     // ========== ПОИСК ==========
@@ -1361,7 +916,7 @@
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
-            const url = GOOGLE_SCRIPT_URL + '?serial=' + encodeURIComponent(sku) + '&category=' + encodeURIComponent(currentCategory);
+            const url = apiUrl({ serial: sku, category: currentCategory });
             const response = await fetch(url, { signal: controller.signal });
             clearTimeout(timeoutId);
             const data = await response.json();
@@ -1400,7 +955,7 @@
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
-            const res = await fetch(GOOGLE_SCRIPT_URL + '?serial=' + encodeURIComponent(sku) + '&category=' + encodeURIComponent(currentCategory), { signal: controller.signal });
+            const res = await fetch(apiUrl({ serial: sku, category: currentCategory }), { signal: controller.signal });
             clearTimeout(timeoutId);
             const data = await res.json();
             if (data.error) throw new Error(data.error);
@@ -1416,34 +971,6 @@
     }
 
     // ========== ОТОБРАЖЕНИЕ ==========
-    function getStatusIcon(status) {
-        switch(status) {
-            case 'Продан':         return { icon: '💰', color: '#64748b', title: 'Продан' };
-            case 'Зарезервирован': return { icon: '🔐', color: '#d97706', title: 'Зарезервирован' };
-            case 'В доставке':    return { icon: '🚚', color: '#2563eb', title: 'В доставке' };
-            case 'Не продан':    return { icon: '🟢', color: '#16a34a', title: 'В наличии' };
-            default:              return { icon: '🟢', color: '#16a34a', title: 'В наличии' };
-        }
-    }
-
-    function getStatusClass(status) {
-        switch(status) {
-            case 'Продан': return 'status-sold';
-            case 'Зарезервирован': return 'status-reserved';
-            case 'В доставке': return 'status-delivery';
-            default: return 'status-unsold';
-        }
-    }
-
-    function getStatusText(status) {
-        switch(status) {
-            case 'Продан': return '✅ Продан';
-            case 'Зарезервирован': return '🔒 Зарезервирован';
-            case 'В доставке': return '🚚 В доставке';
-            default: return '📦 Не продан';
-        }
-    }
-
     function displayProduct(p, containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -1606,16 +1133,6 @@
         if (statsHeader) statsHeader.innerHTML = '📊 Статистика по комплектациям:';
     }
 
-    // Сортировка: Не продан → В доставке → Зарезервирован → Продан
-    function sortByStatus(products) {
-        const order = { 'Не продан': 0, 'В доставке': 1, 'Зарезервирован': 2, 'Продан': 3 };
-        return products.slice().sort((a, b) => {
-            const oa = order[a['Статус']] !== undefined ? order[a['Статус']] : 1;
-            const ob = order[b['Статус']] !== undefined ? order[b['Статус']] : 1;
-            return oa - ob;
-        });
-    }
-
     function applyFilters() {
         if (!allProducts || !allProducts.length) return;
         const statusFilter = activeStatusFilter || '';
@@ -1705,7 +1222,7 @@
 
     async function updateCategoryInBackground(category) {
         try {
-            const url = GOOGLE_SCRIPT_URL + '?action=getAll&category=' + encodeURIComponent(category);
+            const url = apiUrl({ action: 'getAll', category: category });
             const response = await fetch(url);
             const data = await response.json();
             if (data.error) throw new Error(data.error);
@@ -1816,7 +1333,7 @@
 
         container.innerHTML = '<div class="loading">📦 Загрузка...</div>';
         try {
-            const url = GOOGLE_SCRIPT_URL + '?action=getAll&category=' + encodeURIComponent(currentCategory);
+            const url = apiUrl({ action: 'getAll', category: currentCategory });
             const response = await fetch(url);
             const data = await response.json();
             if (data.error) throw new Error(data.error);
@@ -1937,20 +1454,20 @@
         if (resultContainer) resultContainer.innerHTML = '<div class="loading">💾 Сохранение...</div>';
 
         try {
-            const url = GOOGLE_SCRIPT_URL + '?action=updateProduct'
-                + '&sku='           + encodeURIComponent(data.sku)
-                + '&name='          + encodeURIComponent(data.name)
-                + '&serialNumber='  + encodeURIComponent(data.serialNumber)
-                + '&description='   + encodeURIComponent(data.description)
-                + '&purchasePrice=' + encodeURIComponent(data.purchasePrice)
-                + '&salePrice='     + encodeURIComponent(data.salePrice)
-                + '&status='        + encodeURIComponent(data.status)
-                + '&avitoLink='     + encodeURIComponent(data.avitoLink || '')
-                + '&repairCost='    + encodeURIComponent(data.repairCost || '')
-                + '&deliveryCost='  + encodeURIComponent(data.deliveryCost || '')
-                + '&category='      + encodeURIComponent(currentCategory);
-            const response = await fetch(url);
-            const result = await response.json();
+            const result = await apiPost({
+                action:         'updateProduct',
+                sku:            data.sku,
+                name:           data.name,
+                serialNumber:   data.serialNumber,
+                description:    data.description,
+                purchasePrice:  data.purchasePrice,
+                salePrice:      data.salePrice,
+                status:         data.status,
+                avitoLink:      data.avitoLink || '',
+                repairCost:     data.repairCost || '',
+                deliveryCost:   data.deliveryCost || '',
+                category:       currentCategory
+            });
             if (result.success) {
                 showToast('✅ Товар обновлён');
                 const updatedProduct = await findProductBySKU(data.sku);
@@ -1980,8 +1497,7 @@
         if (resultContainer) resultContainer.innerHTML = '<div class="loading">🗑️ Удаление...</div>';
 
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL + '?action=deleteProduct&sku=' + encodeURIComponent(sku) + '&category=' + encodeURIComponent(currentCategory));
-            const result = await response.json();
+            const result = await apiPost({ action: 'deleteProduct', sku: sku, category: currentCategory });
             if (result.success) {
                 showToast('✅ Товар ' + sku + ' удалён');
                 if (resultContainer) {
@@ -2030,9 +1546,6 @@
     // ========== ОБРАБОТЧИКИ ==========
     // FIX #8: Кнопки навигации подключены
     document.getElementById('start-scan-btn').onclick = startScanner;
-    document.getElementById('start-receive-scan').onclick = startReceiveScanner;
-    document.getElementById('submit-receive-btn').onclick = submitNewProduct;
-    document.getElementById('cancel-receive-btn').onclick = cancelReceive;
     document.getElementById('submit-noqr-btn').onclick = submitNoQRProduct;
     document.getElementById('clear-noqr-btn').onclick = clearNoQRForm;
 
@@ -2048,30 +1561,8 @@
         updateModelsForCategory(currentCategory);
         loadCatalog();
         initTheme();
-        // Убираем preload-dark — теперь transitions работают
-        requestAnimationFrame(() => document.documentElement.classList.remove("preload-dark"));
         initPullToRefresh();
     };
-
-    // ── ТЕМА ─────────────────────────────────────
-    function initTheme() {
-        const saved = localStorage.getItem('theme');
-        if (saved === 'dark') {
-            applyDark();
-        } else if (saved === 'light') {
-            applyLight();
-        } else {
-            // Пользователь не выбирал вручную — смотрим на настройки ОС
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                applyDark();
-            }
-            // Слушаем смену системной темы
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (localStorage.getItem('theme')) return; // есть явный выбор — не оверрайдим
-                e.matches ? applyDark() : applyLight();
-            });
-        }
-    }
 
     function setSbNav(btn) {
         document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
@@ -2081,32 +1572,6 @@
     function setSbCat(btn) {
         document.querySelectorAll('.cat-item').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
-    }
-
-    function applyDark() {
-        document.body.classList.add('dark-mode');
-        const tb = document.getElementById('theme-toggle-btn');
-        if (tb) tb.textContent = '☀️';
-        const sb = document.getElementById('sb-theme-btn');
-        if (sb) sb.textContent = '☀️ Тема';
-    }
-
-    function applyLight() {
-        document.body.classList.remove('dark-mode');
-        const tb = document.getElementById('theme-toggle-btn');
-        if (tb) tb.textContent = '🌙';
-        const sb = document.getElementById('sb-theme-btn');
-        if (sb) sb.textContent = '🌙 Тема';
-    }
-
-    function toggleTheme() {
-        if (document.body.classList.contains('dark-mode')) {
-            applyLight();
-            localStorage.setItem('theme', 'light');
-        } else {
-            applyDark();
-            localStorage.setItem('theme', 'dark');
-        }
     }
 
     // ── PULL-TO-REFRESH ────────────────────────────
