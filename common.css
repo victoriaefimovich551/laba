@@ -1,4 +1,4 @@
-/* common.css — общие стили для всех страниц приложения (index.html, analytics.html, generator.html):
+/* common.css — общие стили для всех страниц приложения (index.html, analytics.html):
    сброс, базовый фон/шрифт, вспышка тёмной темы до отрисовки, кнопка переключения темы, toast-уведомления.
    Подключать через <link rel="stylesheet" href="common.css"> в <head>, после theme.js (если он есть на странице). */
 
