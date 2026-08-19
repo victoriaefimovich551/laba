@@ -321,9 +321,73 @@
 
   /* Кнопка темы — базовый вид из common.css (.theme-toggle), тут только позиционирование */
   .theme-toggle-an { margin-left: auto; }
+
+  /* ── Пароль доступа к аналитике ── */
+  .auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    padding: 20px;
+  }
+  .auth-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 24px;
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .auth-card .auth-icon { font-size: 2rem; margin-bottom: 10px; }
+  .auth-card h2 { font-size: 1.05rem; color: #1e3c72; margin-bottom: 16px; }
+  .auth-card input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e4e8;
+    border-radius: 30px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .auth-card button {
+    width: 100%;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .auth-error {
+    display: none;
+    color: #dc2626;
+    font-size: 0.82rem;
+    margin-bottom: 10px;
+  }
+  body.dark-mode .auth-card { background: #1e2a3a; }
+  body.dark-mode .auth-card h2 { color: #93c5fd; }
+  body.dark-mode .auth-card input { background: #243447; color: #e2e8f0; border-color: #3a4f66; }
 </style>
 </head>
 <body>
+
+<!-- Пароль доступа -->
+<div id="auth-overlay" class="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-icon">🔒</div>
+    <h2>Доступ к аналитике</h2>
+    <div class="auth-error" id="auth-error">Неверный пароль</div>
+    <input type="password" id="auth-password" placeholder="Пароль" inputmode="numeric" autocomplete="off" onkeydown="if(event.key==='Enter') submitAnalyticsPassword()">
+    <button onclick="submitAnalyticsPassword()">Войти</button>
+  </div>
+</div>
 
 <!-- Header -->
 <div class="header">
@@ -420,6 +484,42 @@
 
 <script src="config.js"></script>
 <script>
+// ── Пароль доступа к аналитике ──────────────────────────────────
+// Хранится не открытым текстом, а как SHA-256 хеш. Это не защита
+// военного уровня (кто-то может перебрать несложный пароль оффлайн,
+// зная хеш из исходного кода страницы), а простой барьер, чтобы
+// сотрудники, которые просто пользуются каталогом, не заходили сюда
+// случайно. Пока пароль не введён, данные с сервера не запрашиваются.
+const ANALYTICS_PASSWORD_HASH = '7de53cf657da848963be4fda0b9010231f6df1bb0088967f50865a61cd152ba6';
+
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function submitAnalyticsPassword() {
+  const input = document.getElementById('auth-password');
+  const hash = await sha256Hex(input.value);
+  if (hash === ANALYTICS_PASSWORD_HASH) {
+    sessionStorage.setItem('analyticsAuthed', '1');
+    document.getElementById('auth-overlay').style.display = 'none';
+    init();
+  } else {
+    document.getElementById('auth-error').style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function checkAnalyticsAuth() {
+  if (sessionStorage.getItem('analyticsAuthed') === '1') {
+    document.getElementById('auth-overlay').style.display = 'none';
+    init();
+  } else {
+    document.getElementById('auth-password').focus();
+  }
+}
+
 let allData    = [];   // все товары (дроны + самокаты)
 let currentCat = 'all';
 let currentPeriod = 'month';
@@ -703,7 +803,7 @@ function renderChart(data) {
   });
 }
 
-init();
+checkAnalyticsAuth();
 
 // ── Тема (общая логика в theme.js) ──────────────────
 initTheme();
