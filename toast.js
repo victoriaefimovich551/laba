@@ -1,5 +1,5 @@
 // toast.js — единая функция показа toast-уведомлений (вместо alert()).
-// Используется в index.html и generator.html. Стили — в common.css.
+// Используется в index.html. Стили — в common.css.
 
 function showToast(message, type, duration) {
     type = type || 'success';
