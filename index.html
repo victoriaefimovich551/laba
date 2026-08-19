@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -233,7 +234,6 @@
             box-shadow: 0 -2px 16px rgba(0,0,0,0.15);
             z-index: 9999;
             border-radius: 18px 18px 0 0;
-            overflow: hidden;
             will-change: transform;
         }
         .nav-item {
@@ -267,14 +267,41 @@
             transition: transform 0.2s ease;
         }
         .nav-item.active::before { transform: scaleX(1); }
+
+        /* ── Выделенная центральная кнопка «Добавить» ── */
+        .nav-item-fab { justify-content: flex-start; padding-top: 0; }
+        .nav-item-fab::before { display: none; }
+        .nav-item-fab .nav-fab-circle {
+            width: 54px; height: 54px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            line-height: 1;
+            margin-top: -24px;
+            box-shadow: 0 6px 16px rgba(30,60,114,0.45);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .nav-item-fab .nav-label { margin-top: 3px; font-weight: 700; }
+        body.dark-mode .nav-item-fab .nav-fab-circle { box-shadow: 0 6px 16px rgba(0,0,0,0.5); }
         .tab-btn { display: none; } /* скрыты, нижняя навигация управляет табами */
         .panel { display: none; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         .panel.active { display: block; }
         h2 { color: #1e3c72; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #eef2f7; padding-bottom: 10px; }
         #reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 16px; overflow: hidden; }
-        button { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px 28px; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 10px 0; width: 100%; }
+        button { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px 28px; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 10px 0; width: 100%; transition: transform 0.15s ease; }
         /* FIX #2: disabled кнопки */
         button:disabled { opacity: 0.6; cursor: not-allowed; }
+        /* Лёгкое увеличение кнопок при наведении — только там, где есть настоящая мышь/трекпад,
+           чтобы не залипало на телефонах после тапа */
+        @media (hover: hover) and (pointer: fine) {
+            button:hover:not(:disabled) { transform: scale(1.05); }
+            .nav-item-fab:hover .nav-fab-circle { transform: scale(1.08); }
+        }
         .search-box { display: flex; gap: 10px; margin: 15px 0; }
         .search-box input { flex: 1; padding: 12px; border: 2px solid #e0e4e8; border-radius: 30px; font-size: 16px; }
         .search-box button { width: auto; padding: 12px 20px; margin: 0; }
@@ -424,10 +451,10 @@
     </div>
 
     <div class="header" style="position:relative; display:flex; align-items:center; justify-content:center; min-height:36px;">
-    <button onclick="openPrintSelectMode()" style="position:absolute; left:0; width:auto; background: rgba(255,255,255,0.2); border: none; padding: 6px 12px; border-radius: 20px; color: white; font-size: 12px; white-space:nowrap; cursor:pointer;">🖨️ Наклейки</button>
-    <h1 style="font-size:20px; text-align:center; padding:0 90px;">📱 QR Сканер</h1>
-    <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Переключить тему" data-theme-icon style="position:absolute; right:0;">🌙</button>
-</div>
+        <button onclick="openPrintSelectMode()" style="position:absolute; left:0; width:auto; background: rgba(255,255,255,0.2); border: none; padding: 6px 12px; border-radius: 20px; color: white; font-size: 12px; white-space:nowrap; cursor:pointer;">🖨️ Наклейки</button>
+        <h1 style="font-size:20px; text-align:center; padding:0 90px;">📱 QR Сканер</h1>
+        <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Переключить тему" data-theme-icon style="position:absolute; right:0;">🌙</button>
+    </div>
 
     <div id="mobile-cat-bar" style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: center;">
         <button id="btn-drones" class="category-btn active" onclick="switchCategory('Дроны')">🚁 Дроны</button>
@@ -535,13 +562,13 @@
         <span class="nav-icon">🔍</span>
         <span class="nav-label">Поиск</span>
     </button>
+    <button class="nav-item nav-item-fab" id="nav-receive-noqr" onclick="switchTab('receive-noqr', null, this)">
+        <span class="nav-fab-circle">➕</span>
+        <span class="nav-label">Добавить</span>
+    </button>
     <button class="nav-item" id="nav-catalog" onclick="switchTab('catalog', null, this)">
         <span class="nav-icon">📦</span>
         <span class="nav-label">Каталог</span>
-    </button>
-    <button class="nav-item" id="nav-receive-noqr" onclick="switchTab('receive-noqr', null, this)">
-        <span class="nav-icon">➕</span>
-        <span class="nav-label">Добавить</span>
     </button>
 </nav>
 
