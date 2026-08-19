@@ -13,27 +13,38 @@
 
 const LABEL_WIDTH_MM  = 40;
 const LABEL_HEIGHT_MM = 30;
-const LABEL_PX_PER_MM = 12; // ~300 dpi
+const LABEL_PX_PER_MM = 16; // выше разрешение холста — резче текст после печати/пересжатия
 
-function wrapTextToLines(ctx, text, maxWidth, maxLines) {
-    const words = String(text || '').split(/\s+/).filter(Boolean);
-    const lines = [];
-    let line = '';
-    words.forEach(function (word) {
-        const test = line ? line + ' ' + word : word;
-        if (ctx.measureText(test).width > maxWidth && line) {
-            lines.push(line);
-            line = word;
-        } else {
-            line = test;
-        }
-    });
-    if (line) lines.push(line);
-    if (lines.length > maxLines) {
-        lines.length = maxLines;
-        lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '…');
+// Подбирает наибольший размер шрифта, при котором строка укладывается в maxWidth;
+// если не влезает даже на минимальном размере — обрезает с многоточием.
+function fitSingleLine(ctx, text, fontSpec, maxWidth, maxSize, minSize) {
+    let size = maxSize;
+    let display = String(text || '');
+    for (; size > minSize; size -= 1) {
+        ctx.font = fontSpec(size);
+        if (ctx.measureText(display).width <= maxWidth) break;
     }
-    return lines;
+    ctx.font = fontSpec(size);
+    while (display.length > 1 && ctx.measureText(display).width > maxWidth) {
+        display = display.slice(0, -1);
+    }
+    if (display !== String(text || '')) display = display.replace(/.$/, '…');
+    return { size: size, text: display };
+}
+
+// Рисует текст повёрнутым на 90° (читается снизу вверх), по центру колонки
+// с центром в colCenterX, и по вертикали — по центру канвы высотой canvasH.
+function drawVerticalText(ctx, text, colCenterX, canvasH, availableHeight, fontSpec, maxSize, minSize) {
+    const fit = fitSingleLine(ctx, text, fontSpec, availableHeight, maxSize, minSize);
+    ctx.font = fontSpec(fit.size);
+    const textWidth = ctx.measureText(fit.text).width;
+    ctx.save();
+    ctx.translate(colCenterX, canvasH / 2 + textWidth / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fit.text, 0, 0);
+    ctx.restore();
 }
 
 function buildLabelCanvas(product) {
@@ -51,16 +62,16 @@ function buildLabelCanvas(product) {
     const sku = product['Артикул'] || '';
     const name = product['Название'] || '';
 
-    // QR-код слева — фиксированный размер (не во всю высоту), чтобы оставить
-    // достаточно места под текст справа даже для длинных артикулов
+    // QR-код слева, почти во всю высоту этикетки
     const qr = qrcode(0, 'M');
     qr.addData(sku);
     qr.make();
     const moduleCount = qr.getModuleCount();
-    const qrSize = Math.min(h - 16, 22 * LABEL_PX_PER_MM);
+    const margin = 14;
+    const qrSize = h - margin * 2;
     const cell = qrSize / moduleCount;
-    const qrX = 8;
-    const qrY = (h - qrSize) / 2;
+    const qrX = margin;
+    const qrY = margin;
     for (let r = 0; r < moduleCount; r++) {
         for (let c = 0; c < moduleCount; c++) {
             if (qr.isDark(r, c)) {
@@ -69,34 +80,18 @@ function buildLabelCanvas(product) {
         }
     }
 
-    // Текст справа: название (до 3 строк, шрифт ужимается, если не влезает) + артикул снизу
-    const textX = qrX + qrSize + 14;
-    const textWidth = w - textX - 8;
+    // Справа — два повёрнутых столбца текста (снизу вверх): артикул, затем название.
+    // Текст идёт вдоль высоты этикетки, поэтому даже длинное название помещается
+    // одной крупной строкой без переноса и без мелкого шрифта.
+    const textAreaX = qrX + qrSize + 16;
+    const textAreaWidth = w - textAreaX - 10;
+    const colWidth = textAreaWidth / 2;
+    const availableHeight = h - margin * 2;
 
-    let fontSize = 26;
-    let lines = [];
-    do {
-        ctx.font = 'bold ' + fontSize + 'px Arial, sans-serif';
-        lines = wrapTextToLines(ctx, name, textWidth, 3);
-        fontSize -= 2;
-    } while (lines.length > 3 && fontSize > 12);
-
-    ctx.font = 'bold ' + (fontSize + 2) + 'px Arial, sans-serif';
-    ctx.textBaseline = 'top';
-    let y = 10;
-    lines.forEach(function (line) {
-        ctx.fillText(line, textX, y);
-        y += fontSize + 6;
-    });
-
-    // Артикул — тоже ужимается по ширине, чтобы никогда не обрезался
-    let skuFontSize = 30;
-    ctx.font = 'bold ' + skuFontSize + 'px monospace';
-    while (ctx.measureText(sku).width > textWidth && skuFontSize > 14) {
-        skuFontSize -= 2;
-        ctx.font = 'bold ' + skuFontSize + 'px monospace';
-    }
-    ctx.fillText(sku, textX, h - skuFontSize - 10);
+    drawVerticalText(ctx, sku, textAreaX + colWidth * 0.5, h, availableHeight,
+        function (s) { return 'bold ' + s + 'px monospace'; }, 40, 16);
+    drawVerticalText(ctx, name, textAreaX + colWidth * 1.5, h, availableHeight,
+        function (s) { return 'bold ' + s + 'px Arial, sans-serif'; }, 36, 14);
 
     return canvas;
 }
