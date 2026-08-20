@@ -5,8 +5,8 @@
   "start_url": "/qr-scanner/",
   "scope": "/qr-scanner/",
   "display": "standalone",
-  "theme_color": "#1e3c72",
-  "background_color": "#1e3c72",
+  "theme_color": "#101215",
+  "background_color": "#101215",
   "icons": [
     {
       "src": "icon-192.png",
