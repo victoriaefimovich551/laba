@@ -304,12 +304,13 @@
                 width: 100%;
             }
 
-            .container { flex: 1; max-width: none; padding: 24px 32px; padding-bottom: 24px; overflow-y: auto; }
+            .container { flex: 1; min-width: 0; max-width: none; padding: 24px 32px; padding-bottom: 24px; overflow-y: auto; }
 
             .mobile-header { display: none !important; }
             .bottom-nav { display: none !important; }
 
-            .products-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
+            .products-grid { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+            .products-grid .list-row.product-item { min-width: 0; }
 
             .catalog-head { align-items: flex-start; gap: 18px; }
             .catalog-subtitle { display: block !important; font: 500 12.5px var(--f-head); color: var(--tx2); margin-top: 4px; }
@@ -1692,6 +1693,11 @@
     async function switchCategory(category) {
         if (currentCategory === category) return;
         currentCategory = category;
+
+        // Товар в панели справа (десктоп) относится к прежней категории — прячем,
+        // пока не выберут что-то в новой (viewProductDetail покажет её заново при клике).
+        const detailPanel = document.getElementById('desktop-detail-panel');
+        if (detailPanel) detailPanel.classList.remove('visible');
 
         document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
         if (category === 'Дроны') {
