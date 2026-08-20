@@ -1936,6 +1936,28 @@
     }
 
     // ========== РЕДАКТИРОВАНИЕ ==========
+    // Перерисовывает карточку товара, которая сейчас видна за модалкой
+    // редактирования (правая панель на десктопе, результат скана/поиска
+    // на мобильном) — нужна, чтобы новое фото было видно сразу, а не
+    // только после нажатия «Сохранить».
+    function refreshVisibleProductCard() {
+        if (!currentProduct) return;
+        if (isDesktopLayout()) {
+            renderDesktopDetail(currentProduct);
+            return;
+        }
+        const activePanel = document.querySelector('.panel.active');
+        let resultContainer;
+        if (activePanel && activePanel.id === 'search-panel') {
+            resultContainer = document.getElementById('search-result');
+        } else {
+            resultContainer = document.getElementById('scan-result');
+        }
+        if (resultContainer && resultContainer.innerHTML.trim()) {
+            displayProduct(currentProduct, resultContainer.id);
+        }
+    }
+
     function editProduct(sku) {
         currentProduct = allProducts.find(p => p['Артикул'] === sku);
         if (!currentProduct) return;
@@ -1991,6 +2013,7 @@
                 photoPreview.innerHTML = '<img src="' + escapeHtml(url) + '" style="width:100%; max-height:180px; object-fit:cover; border-radius:14px; display:block; border:1px solid var(--line);">';
                 photoBtn.textContent = '📷 Заменить фото';
                 photoStatus.textContent = '✅ Фото загружено';
+                refreshVisibleProductCard();
             } catch (err) {
                 photoStatus.textContent = '❌ ' + err.message;
             } finally {
@@ -2047,7 +2070,11 @@
                 showToast('✅ Товар обновлён');
                 const updatedProduct = await findProductBySKU(data.sku);
                 currentProduct = updatedProduct;
-                if (resultContainer) displayProduct(updatedProduct, resultContainer.id);
+                if (isDesktopLayout()) {
+                    renderDesktopDetail(updatedProduct);
+                } else if (resultContainer) {
+                    displayProduct(updatedProduct, resultContainer.id);
+                }
                 catalogLoaded = false;
                 loadCatalog();
             } else {
