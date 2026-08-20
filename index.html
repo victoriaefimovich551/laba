@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -179,6 +178,7 @@
         .stat-row { display: flex; gap: 10px; margin-top: 14px; }
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; }
         .quick-action {
+            position: relative;
             background: var(--sf);
             border: 1px solid var(--line);
             border-radius: 18px;
@@ -186,9 +186,12 @@
             cursor: pointer;
             text-align: left;
             color: var(--tx);
+            text-decoration: none;
+            display: block;
         }
         .quick-action-icon { font-size: 18px; }
         .quick-action-label { font: 700 12px var(--f-head); margin-top: 8px; }
+        .quick-action-arrow { position: absolute; top: 14px; right: 12px; font-size: 13px; color: var(--tx2); }
 
         /* ── НИЖНЯЯ НАВИГАЦИЯ ── */
         .bottom-nav {
@@ -451,9 +454,10 @@
                 <div class="quick-action-icon">🖨</div>
                 <div class="quick-action-label">Наклейки</div>
             </button>
-            <a class="quick-action" href="analytics.html" style="text-decoration:none; display:block;">
+            <a class="quick-action" href="analytics.html">
                 <div class="quick-action-icon">📊</div>
                 <div class="quick-action-label">Аналитика</div>
+                <span class="quick-action-arrow">→</span>
             </a>
         </div>
         <div class="eyebrow" style="margin-top:2px;">Последние сканы</div>
@@ -622,7 +626,6 @@
 
     let printSelectMode = false;
     let selectedForPrint = new Set();
-    let desktopDetailInitialized = false;
 
     function updateModelsForCategory(category) {
         const models = MODELS_BY_CATEGORY[category] || [];
@@ -806,8 +809,10 @@
         const catGroup = document.getElementById('mobile-header-cat-group');
         if (catGroup) catGroup.style.display = (tab === 'search') ? 'none' : '';
 
+        // Панель детали товара на десктопе — появляется только по клику на товар,
+        // при уходе со вкладки «Каталог» прячем её, чтобы при следующем заходе каталог снова был во весь экран.
         const detailPanel = document.getElementById('desktop-detail-panel');
-        if (detailPanel) detailPanel.classList.toggle('visible', tab === 'catalog');
+        if (detailPanel && tab !== 'catalog') detailPanel.classList.remove('visible');
         if (tab === 'scan' && html5QrCode && isScanning) {
             html5QrCode.stop().then(() => { isScanning = false; setScannerPlaceholderVisible(true); });
         }
@@ -1489,11 +1494,6 @@
         });
         html += '</div>';
         container.innerHTML = html;
-
-        if (isDesktopLayout() && !desktopDetailInitialized) {
-            desktopDetailInitialized = true;
-            renderDesktopDetail(null);
-        }
     }
 
     function resetFilters() {
@@ -1546,6 +1546,8 @@
             const product = allProducts.find(p => p['Артикул'] === sku) || await findProductBySKU(sku);
             currentProduct = product;
             renderDesktopDetail(product);
+            const detailPanel = document.getElementById('desktop-detail-panel');
+            if (detailPanel) detailPanel.classList.add('visible');
             return;
         }
         switchTab('search');
@@ -1605,7 +1607,7 @@
 
         html += '<div style="display:flex; gap:10px;">'
             + '<div class="stat-card"><span class="eyebrow">Закупка</span><div class="stat-value">' + priceZakupka + '</div></div>'
-            + '<div class="stat-card" style="background:var(--lime); color:var(--ink); border:none;"><span class="eyebrow" style="color:var(--ink); opacity:.6;">Прогноз прибыли</span><div class="stat-value" style="color:var(--ink);">' + profit + '</div></div>'
+            + '<div class="stat-card" style="background:var(--lime); color:var(--ink); border:none;"><span class="eyebrow" style="color:var(--ink); opacity:.6;">Прибыль</span><div class="stat-value" style="color:var(--ink);">' + profit + '</div></div>'
             + '</div>';
 
         html += '<div style="background:var(--sf); border:1px solid var(--line); border-radius:18px; padding:4px 16px;">';
