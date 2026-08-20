@@ -7,20 +7,22 @@
 const STATUS_ORDER = ['Не продан', 'В доставке', 'Зарезервирован', 'Продан'];
 const DEFAULT_STATUS = 'Не продан';
 
-// Иконка/цвет/подпись статуса — для бейджей каталога и карточки товара (index.html)
+// Иконка/цвет/подпись статуса — для бейджей каталога и карточки товара (index.html).
+// Цвета — CSS-переменные из common.css (--st-*), поэтому сами подстраиваются
+// под тёмную/светлую тему без дополнительной логики в JS.
 const STATUS_META = {
-    'Не продан':      { icon: '🟢', color: '#16a34a', title: 'В наличии',      cssClass: 'status-unsold',   label: '📦 Не продан' },
-    'В доставке':     { icon: '🚚', color: '#2563eb', title: 'В доставке',     cssClass: 'status-delivery', label: '🚚 В доставке' },
-    'Зарезервирован': { icon: '🔐', color: '#d97706', title: 'Зарезервирован', cssClass: 'status-reserved', label: '🔒 Зарезервирован' },
-    'Продан':         { icon: '💰', color: '#64748b', title: 'Продан',         cssClass: 'status-sold',     label: '✅ Продан' }
+    'Не продан':      { icon: '🟢', color: 'var(--st-ok)',   title: 'В наличии',      cssClass: 'status-unsold',   label: 'Не продан' },
+    'В доставке':     { icon: '🚚', color: 'var(--st-info)', title: 'В доставке',     cssClass: 'status-delivery', label: 'В доставке' },
+    'Зарезервирован': { icon: '🔐', color: 'var(--st-warn)', title: 'Зарезервирован', cssClass: 'status-reserved', label: 'Резерв' },
+    'Продан':         { icon: '💰', color: 'var(--st-off)',  title: 'Продан',         cssClass: 'status-sold',     label: 'Продан' }
 };
 
-// Цвета статусов на дашборде аналитики (своя палитра под карточки status-grid)
+// Цвета статусов на дашборде аналитики (текст + фон бейджа = цвет статуса с прозрачностью)
 const STATUS_ANALYTICS_COLORS = {
-    'Не продан':      { color: '#b09000', bg: '#fffbe6' },
-    'В доставке':     { color: '#2a5298', bg: '#e8f0ff' },
-    'Зарезервирован': { color: '#c05a00', bg: '#fff0e6' },
-    'Продан':         { color: '#666e7a', bg: '#f0f1f3' }
+    'Не продан':      { color: 'var(--st-ok)',   bg: 'color-mix(in srgb, var(--st-ok) 16%, transparent)' },
+    'В доставке':     { color: 'var(--st-info)', bg: 'color-mix(in srgb, var(--st-info) 16%, transparent)' },
+    'Зарезервирован': { color: 'var(--st-warn)', bg: 'color-mix(in srgb, var(--st-warn) 16%, transparent)' },
+    'Продан':         { color: 'var(--st-off)',  bg: 'color-mix(in srgb, var(--st-off) 16%, transparent)' }
 };
 
 function getStatusIcon(status) {
@@ -36,6 +38,12 @@ function getStatusClass(status) {
 function getStatusText(status) {
     const m = STATUS_META[status] || STATUS_META[DEFAULT_STATUS];
     return m.label;
+}
+
+// Иконка + подпись вместе — для пилюль-бейджей (карточка товара, «Последние сканы»)
+function getStatusBadge(status) {
+    const m = STATUS_META[status] || STATUS_META[DEFAULT_STATUS];
+    return m.icon + ' ' + m.label;
 }
 
 // Порядок сортировки каталога: в наличии → в доставке → резерв → продан
