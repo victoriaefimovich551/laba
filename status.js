@@ -13,7 +13,7 @@ const DEFAULT_STATUS = 'Не продан';
 const STATUS_META = {
     'Не продан':      { icon: '🟢', color: 'var(--st-ok)',   title: 'В наличии',      cssClass: 'status-unsold',   label: 'Не продан' },
     'В доставке':     { icon: '🚚', color: 'var(--st-info)', title: 'В доставке',     cssClass: 'status-delivery', label: 'В доставке' },
-    'Зарезервирован': { icon: '🔐', color: 'var(--st-warn)', title: 'Зарезервирован', cssClass: 'status-reserved', label: 'Резерв' },
+    'Зарезервирован': { icon: '🔐', color: 'var(--st-warn)', title: 'Резерв', cssClass: 'status-reserved', label: 'Резерв' },
     'Продан':         { icon: '💰', color: 'var(--st-off)',  title: 'Продан',         cssClass: 'status-sold',     label: 'Продан' }
 };
 
