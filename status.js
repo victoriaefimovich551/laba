@@ -46,6 +46,17 @@ function getStatusBadge(status) {
     return m.icon + ' ' + m.label;
 }
 
+// Убирает из названия модели пометки о состоянии/статусе в скобках (под
+// восстановление, нуждается в проверке...), чтобы одна и та же модель
+// группировалась в статистике каталога и в топе моделей аналитики независимо
+// от такой пометки: "Dualtron Thunder 1 (под восстановление)" и
+// "Dualtron Thunder 1" — одна и та же модель.
+function getModelGroupKey(name) {
+    let key = (name || '').trim().replace(/\s+/g, ' ');
+    key = key.replace(/\s*\([^)]*(?:восстановлен|провер)[^)]*\)\s*/gi, ' ');
+    return key.trim().replace(/\s+/g, ' ') || (name || '').trim();
+}
+
 // Порядок сортировки каталога: в наличии → в доставке → резерв → продан
 function sortByStatus(products) {
     const order = {};
