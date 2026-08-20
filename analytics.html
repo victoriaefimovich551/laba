@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -560,7 +561,7 @@ function render() {
   // ── Топ моделей ──
   const modelStats = {};
   data.filter(p => p['Статус'] === 'Продан').forEach(p => {
-    const name = (p['Название'] || 'Без названия').trim().replace(/\s+/g, ' ');
+    const name = getModelGroupKey(p['Название'] || 'Без названия');
     if (!modelStats[name]) modelStats[name] = { profit: 0, sold: 0, revenue: 0, cost: 0 };
     modelStats[name].profit  += parseFloat(p['Прибыль'])     || 0;
     modelStats[name].revenue += parseFloat(p['Цена продажа']) || 0;
