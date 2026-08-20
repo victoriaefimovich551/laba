@@ -735,6 +735,7 @@
             selectedForPrint.clear();
             updatePrintBar();
         }
+        if (tab === 'search') ensureAllCategoriesLoaded();
         if (tab === 'scan' && html5QrCode && isScanning) {
             html5QrCode.stop().then(() => { isScanning = false; setScannerPlaceholderVisible(true); });
         }
@@ -936,17 +937,55 @@
         switchModelMode('list');
     }
 
-    // ========== ПОИСК ==========
+    // ========== ПОИСК (по всем категориям сразу) ==========
 
-    // Живой поиск по мере набора — только по локальному кэшу
-    function searchLive(query) {
+    // Объединённый список товаров обеих категорий для поиска — не путать с allProducts
+    // (тот всегда относится только к текущей выбранной категории и используется в каталоге).
+    function getAllProductsForSearch() {
+        const drones = window['cachedProducts_Дроны'] || [];
+        const scooters = window['cachedProducts_Самокаты'] || [];
+        return [
+            ...drones.map(p => ({ ...p, _cat: 'Дроны' })),
+            ...scooters.map(p => ({ ...p, _cat: 'Самокаты' }))
+        ];
+    }
+
+    // Подгружает данные обеих категорий в кэш, чтобы поиск сразу видел и дроны, и самокаты
+    function ensureAllCategoriesLoaded() {
+        ['Дроны', 'Самокаты'].forEach(cat => {
+            const cacheKey = 'cachedProducts_' + cat;
+            if (!window[cacheKey] || !window[cacheKey].length) {
+                const offline = loadProductsFromLocalStorageForCategory(cat);
+                if (offline && offline.products && offline.products.length) {
+                    window[cacheKey] = offline.products;
+                }
+            }
+            updateCategoryInBackground(cat);
+        });
+    }
+
+    // Открыть найденный товар: при необходимости переключаем категорию,
+    // чтобы дальнейшие действия (редактирование, удаление, печать) шли в правильный лист таблицы.
+    async function openSearchMatch(p) {
+        if (p._cat && p._cat !== currentCategory) {
+            await switchCategory(p._cat);
+        }
+        const sku = p['Артикул'];
+        const product = (allProducts && allProducts.find(x => x['Артикул'] === sku)) || p;
+        currentProduct = product;
+        displayProduct(product, 'search-result');
+    }
+
+    // Живой поиск по мере набора — по локальному кэшу обеих категорий
+    async function searchLive(query) {
         const q = query.trim().toLowerCase();
         const resultDiv = document.getElementById('search-result');
         if (!resultDiv) return;
         if (!q || q.length < 2) { resultDiv.innerHTML = ''; return; }
-        if (!allProducts || !allProducts.length) return;
+        const source = getAllProductsForSearch();
+        if (!source.length) return;
 
-        const matches = allProducts.filter(p =>
+        const matches = source.filter(p =>
             (p['Артикул'] || '').toLowerCase().includes(q) ||
             (p['Название'] || '').toLowerCase().includes(q) ||
             (p['Серийный номер'] || '').toLowerCase().includes(q)
@@ -957,16 +996,15 @@
             return;
         }
         if (matches.length === 1) {
-            currentProduct = matches[0];
-            displayProduct(matches[0], 'search-result');
+            await openSearchMatch(matches[0]);
             return;
         }
         // Несколько результатов — показываем список для выбора
         let html = '<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">';
         matches.slice(0, 10).forEach(p => {
             const si = getStatusIcon(p['Статус']);
-            const catIcon = currentCategory === 'Дроны' ? '🚁' : '🛴';
-            html += '<div class="list-row" onclick="selectSearchResult(\'' + escapeHtml(p['Артикул']) + '\')">'
+            const catIcon = p._cat === 'Дроны' ? '🚁' : '🛴';
+            html += '<div class="list-row" onclick="selectSearchResult(\'' + escapeHtml(p['Артикул']) + '\', \'' + escapeHtml(p._cat) + '\')">'
                 + '<span class="list-row-icon">' + catIcon + '</span>'
                 + '<div class="list-row-body">'
                 + '<div class="list-row-title">' + escapeHtml(p['Название'] || 'Без названия') + '</div>'
@@ -980,7 +1018,10 @@
         resultDiv.innerHTML = html;
     }
 
-    function selectSearchResult(sku) {
+    async function selectSearchResult(sku, cat) {
+        if (cat && cat !== currentCategory) {
+            await switchCategory(cat);
+        }
         const product = allProducts.find(p => p['Артикул'] === sku);
         if (product) {
             currentProduct = product;
@@ -999,17 +1040,17 @@
 
         if (resultDiv) resultDiv.innerHTML = '<div class="loading">🔍 Поиск...</div>';
 
-        // Сначала ищем локально
-        if (allProducts && allProducts.length) {
-            const q = sku.toLowerCase();
-            const matches = allProducts.filter(p =>
+        // Сначала ищем локально по обеим категориям
+        const q = sku.toLowerCase();
+        const localSource = getAllProductsForSearch();
+        if (localSource.length) {
+            const matches = localSource.filter(p =>
                 (p['Артикул'] || '').toLowerCase().includes(q) ||
                 (p['Название'] || '').toLowerCase().includes(q) ||
                 (p['Серийный номер'] || '').toLowerCase().includes(q)
             );
             if (matches.length === 1) {
-                currentProduct = matches[0];
-                displayProduct(matches[0], 'search-result');
+                await openSearchMatch(matches[0]);
                 return;
             }
             if (matches.length > 1) {
@@ -1018,23 +1059,27 @@
             }
         }
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-            const url = apiUrl({ serial: sku, category: currentCategory });
-            const response = await fetch(url, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            currentProduct = data;
-            displayProduct(data, 'search-result');
-        } catch (error) {
-            const offlineData = loadProductsFromLocalStorageForCategory(currentCategory);
+        // Не нашли локально — пробуем сеть по обеим категориям по очереди
+        for (const cat of ['Дроны', 'Самокаты']) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const response = await fetch(apiUrl({ serial: sku, category: cat }), { signal: controller.signal });
+                clearTimeout(timeoutId);
+                const data = await response.json();
+                if (data.error) continue;
+                await openSearchMatch({ ...data, _cat: cat });
+                return;
+            } catch (error) { /* пробуем следующую категорию */ }
+        }
+
+        // Сеть недоступна — офлайн-кэш по обеим категориям
+        for (const cat of ['Дроны', 'Самокаты']) {
+            const offlineData = loadProductsFromLocalStorageForCategory(cat);
             if (offlineData && offlineData.products) {
                 const offlineProduct = offlineData.products.find(p => p['Артикул'] === sku);
                 if (offlineProduct) {
-                    currentProduct = offlineProduct;
-                    displayProduct(offlineProduct, 'search-result');
+                    await openSearchMatch({ ...offlineProduct, _cat: cat });
                     if (resultDiv) {
                         const warning = document.createElement('div');
                         warning.className = 'loading';
@@ -1047,8 +1092,8 @@
                     return;
                 }
             }
-            if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ Товар с артикулом "' + escapeHtml(sku) + '" не найден</div>';
         }
+        if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ Товар с артикулом "' + escapeHtml(sku) + '" не найден</div>';
     }
 
     // FIX #7: Полный return data (был обрезан)
