@@ -135,7 +135,7 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Пароль доступа к аналитике ── */
+  /* ── PIN-доступ к аналитике ── */
   .auth-overlay {
     position: fixed; inset: 0;
     background: var(--bg);
@@ -143,39 +143,54 @@
     z-index: 5000;
     padding: 20px;
   }
-  .auth-card {
-    background: var(--sf);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 28px 24px;
-    max-width: 320px;
-    width: 100%;
-    text-align: center;
-  }
-  .auth-card .auth-icon {
+  .auth-card { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; max-width: 320px; width: 100%; }
+  .auth-icon {
     width: 52px; height: 52px;
     border-radius: 16px;
-    background: var(--lime);
-    color: var(--ink);
+    background: var(--sf);
+    border: 1px solid var(--line);
     display: flex; align-items: center; justify-content: center;
     font-size: 22px;
-    margin: 0 auto 16px;
+    margin: 0 auto;
   }
-  .auth-card h2 { font: 800 16px var(--f-head); color: var(--tx); margin-bottom: 16px; }
-  .auth-card input { text-align: center; letter-spacing: 3px; margin-bottom: 12px; }
-  .auth-error { display: none; color: var(--st-danger); font: 600 12.5px var(--f-head); margin-bottom: 10px; }
+  .auth-card h2 { font: 800 22px/1.15 var(--f-head); letter-spacing: -.01em; color: var(--tx); text-align: center; margin-top: 8px; }
+  .auth-card .auth-sub { font: 500 12.5px/1.5 var(--f-head); color: var(--tx2); text-align: center; max-width: 250px; margin: 0 auto; }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 6px 0; }
+  .pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--line); background: transparent; transition: background .15s, border-color .15s; }
+  .pin-dot.filled { background: var(--lime); border-color: var(--lime); }
+  .auth-error { text-align: center; font: 700 12px var(--f-head); color: var(--tx2); min-height: 16px; }
+  .auth-error.show { color: var(--st-danger); }
+  .pin-keypad { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; max-width: 270px; margin: 0 auto; width: 100%; }
+  .pin-key {
+    height: 58px;
+    border-radius: 20px;
+    background: var(--sf);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font: 600 22px var(--f-mono);
+    color: var(--tx);
+    cursor: pointer;
+  }
+  .pin-key.empty { background: transparent; border: none; cursor: default; }
+  .pin-key.backspace { font: 700 18px var(--f-head); }
 </style>
 </head>
 <body>
 
-<!-- Пароль доступа -->
+<!-- PIN-доступ -->
 <div id="auth-overlay" class="auth-overlay">
   <div class="auth-card">
     <div class="auth-icon">🔒</div>
-    <h2>Доступ к аналитике</h2>
-    <div class="auth-error" id="auth-error">Неверный пароль</div>
-    <input type="password" id="auth-password" placeholder="Пароль" inputmode="numeric" autocomplete="off" onkeydown="if(event.key==='Enter') submitAnalyticsPassword()">
-    <button onclick="submitAnalyticsPassword()" class="btn-lime btn-block">Войти</button>
+    <h2>Аналитика под PIN</h2>
+    <div class="auth-sub">Финансовые показатели видны только владельцу. Введите 4-значный код.</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="pin-keypad" id="pin-keypad"></div>
   </div>
 </div>
 
@@ -282,26 +297,63 @@ async function sha256Hex(text) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ── PIN-клавиатура (4 цифры, вводятся тапом) ──────────────────────
+let pinDigits = '';
+
+function buildPinKeypad() {
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  const keypad = document.getElementById('pin-keypad');
+  keypad.innerHTML = keys.map(k => {
+    if (k === '') return '<div class="pin-key empty"></div>';
+    if (k === '⌫') return '<div class="pin-key backspace" onclick="pinBackspace()">⌫</div>';
+    return '<div class="pin-key" onclick="pinTap(\'' + k + '\')">' + k + '</div>';
+  }).join('');
+}
+
+function renderPinDots() {
+  document.querySelectorAll('#pin-dots .pin-dot').forEach((dot, i) => {
+    dot.classList.toggle('filled', i < pinDigits.length);
+  });
+}
+
+async function pinTap(digit) {
+  if (pinDigits.length >= 4) return;
+  pinDigits += digit;
+  renderPinDots();
+  if (pinDigits.length === 4) await submitAnalyticsPassword();
+}
+
+function pinBackspace() {
+  pinDigits = pinDigits.slice(0, -1);
+  renderPinDots();
+  document.getElementById('auth-error').classList.remove('show');
+  document.getElementById('auth-error').textContent = '';
+}
+
 async function submitAnalyticsPassword() {
-  const input = document.getElementById('auth-password');
-  const hash = await sha256Hex(input.value);
+  const hash = await sha256Hex(pinDigits);
   if (hash === ANALYTICS_PASSWORD_HASH) {
     sessionStorage.setItem('analyticsAuthed', '1');
     document.getElementById('auth-overlay').style.display = 'none';
     init();
   } else {
-    document.getElementById('auth-error').style.display = 'block';
-    input.value = '';
-    input.focus();
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = 'Неверный код · попробуйте ещё раз';
+    errEl.classList.add('show');
+    setTimeout(() => {
+      pinDigits = '';
+      renderPinDots();
+      errEl.classList.remove('show');
+      errEl.textContent = '';
+    }, 700);
   }
 }
 
 function checkAnalyticsAuth() {
+  buildPinKeypad();
   if (sessionStorage.getItem('analyticsAuthed') === '1') {
     document.getElementById('auth-overlay').style.display = 'none';
     init();
-  } else {
-    document.getElementById('auth-password').focus();
   }
 }
 
