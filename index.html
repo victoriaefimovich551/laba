@@ -412,7 +412,7 @@
     </div>
 
     <div class="mobile-header">
-        <div style="display:flex; gap:8px;">
+        <div id="mobile-header-cat-group" style="display:flex; gap:8px;">
             <button id="btn-drones" class="category-btn active" onclick="switchCategory('Дроны')">🚁 Дроны</button>
             <button id="btn-scooters" class="category-btn" onclick="switchCategory('Самокаты')">🛴 Самокаты</button>
         </div>
@@ -802,6 +802,10 @@
         }
         if (tab === 'search') ensureAllCategoriesLoaded();
 
+        // На вкладке «Поиск» переключатель категории не нужен — поиск идёт сразу по всем товарам
+        const catGroup = document.getElementById('mobile-header-cat-group');
+        if (catGroup) catGroup.style.display = (tab === 'search') ? 'none' : '';
+
         const detailPanel = document.getElementById('desktop-detail-panel');
         if (detailPanel) detailPanel.classList.toggle('visible', tab === 'catalog');
         if (tab === 'scan' && html5QrCode && isScanning) {
@@ -1045,15 +1049,52 @@
     }
 
     // Живой поиск по мере набора — по локальному кэшу обеих категорий
+    // Полный список последних результатов живого поиска — нужен, чтобы «... и ещё N»
+    // можно было раскрыть без повторного запроса.
+    let lastSearchMatches = [];
+
+    function renderSearchResultsList(matches, expanded) {
+        const resultDiv = document.getElementById('search-result');
+        if (!resultDiv) return;
+        const visible = expanded ? matches : matches.slice(0, 10);
+        let html = '<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">';
+        visible.forEach(p => {
+            const si = getStatusIcon(p['Статус']);
+            const catIcon = p._cat === 'Дроны' ? '🚁' : '🛴';
+            let price = p['Цена закупка'];
+            price = (price && !isNaN(parseFloat(price))) ? parseFloat(price).toLocaleString('ru-RU') + ' ₽' : '';
+            html += '<div class="list-row" onclick="selectSearchResult(\'' + escapeHtml(p['Артикул']) + '\', \'' + escapeHtml(p._cat) + '\')">'
+                + '<span class="list-row-icon">' + catIcon + '</span>'
+                + '<div class="list-row-body">'
+                + '<div class="list-row-title">' + escapeHtml(p['Название'] || 'Без названия') + '</div>'
+                + '<div class="list-row-sub">' + escapeHtml(p['Артикул'] || '—') + '</div>'
+                + '</div>'
+                + '<div class="list-row-side">'
+                + (price ? '<div class="list-row-price">' + price + '</div>' : '')
+                + '<div class="list-row-status" style="color:' + si.color + ';">' + getStatusText(p['Статус']) + '</div>'
+                + '</div>'
+                + '</div>';
+        });
+        if (!expanded && matches.length > 10) {
+            html += '<div class="filter-pill" style="cursor:pointer; align-self:center;" onclick="expandSearchResults()">... и ещё ' + (matches.length - 10) + '</div>';
+        }
+        html += '</div>';
+        resultDiv.innerHTML = html;
+    }
+
+    function expandSearchResults() {
+        renderSearchResultsList(lastSearchMatches, true);
+    }
+
     async function searchLive(query) {
         const q = query.trim().toLowerCase();
         const resultDiv = document.getElementById('search-result');
         if (!resultDiv) return;
-        if (!q || q.length < 2) { resultDiv.innerHTML = ''; return; }
+        if (!q || q.length < 2) { resultDiv.innerHTML = ''; lastSearchMatches = []; return; }
         const source = getAllProductsForSearch();
         if (!source.length) return;
 
-        const matches = source.filter(p =>
+        let matches = source.filter(p =>
             (p['Артикул'] || '').toLowerCase().includes(q) ||
             (p['Название'] || '').toLowerCase().includes(q) ||
             (p['Серийный номер'] || '').toLowerCase().includes(q)
@@ -1061,29 +1102,18 @@
 
         if (!matches.length) {
             resultDiv.innerHTML = '<div class="error">💭 Ничего не найдено</div>';
+            lastSearchMatches = [];
             return;
         }
+        // Не продан → В доставке → Зарезервирован → Продан, как в каталоге
+        matches = sortByStatus(matches);
+
         if (matches.length === 1) {
             await openSearchMatch(matches[0]);
             return;
         }
-        // Несколько результатов — показываем список для выбора
-        let html = '<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">';
-        matches.slice(0, 10).forEach(p => {
-            const si = getStatusIcon(p['Статус']);
-            const catIcon = p._cat === 'Дроны' ? '🚁' : '🛴';
-            html += '<div class="list-row" onclick="selectSearchResult(\'' + escapeHtml(p['Артикул']) + '\', \'' + escapeHtml(p._cat) + '\')">'
-                + '<span class="list-row-icon">' + catIcon + '</span>'
-                + '<div class="list-row-body">'
-                + '<div class="list-row-title">' + escapeHtml(p['Название'] || 'Без названия') + '</div>'
-                + '<div class="list-row-sub">' + escapeHtml(p['Артикул'] || '—') + '</div>'
-                + '</div>'
-                + '<span class="status-badge" style="flex:none; background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + getStatusText(p['Статус']) + '</span>'
-                + '</div>';
-        });
-        if (matches.length > 10) html += '<div style="color:var(--tx2); font-size:13px; text-align:center;">... и ещё ' + (matches.length - 10) + '</div>';
-        html += '</div>';
-        resultDiv.innerHTML = html;
+        lastSearchMatches = matches;
+        renderSearchResultsList(matches, false);
     }
 
     async function selectSearchResult(sku, cat) {
