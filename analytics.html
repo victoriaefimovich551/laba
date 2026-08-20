@@ -1,10 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#101215">
+<link rel="icon" type="image/png" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-180.png">
 <title>Аналитика — Инвентарь</title>
 <script src="theme.js"></script>
 <script src="status.js"></script>
@@ -89,9 +90,26 @@
 
   /* ── Гистограмма по месяцам ── */
   .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
-  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; justify-content: flex-end; height: 100%; }
-  .chart-bar { width: 100%; border-radius: 6px; min-height: 2px; }
+  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; justify-content: flex-end; height: 100%; cursor: default; }
+  .chart-bar { position: relative; width: 100%; border-radius: 6px; min-height: 2px; }
   .chart-m { font: 600 9.5px var(--f-mono); color: var(--tx2); }
+  .chart-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--ink);
+    color: var(--lime);
+    font: 700 11px var(--f-mono);
+    padding: 5px 9px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease;
+    z-index: 10;
+  }
+  .chart-col:hover .chart-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* ── Топ моделей ── */
   .model-row { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--line); }
@@ -628,8 +646,11 @@ function renderChart(data) {
   document.getElementById('sales-chart').innerHTML = entries.map(e => {
     const heightPct = Math.max(3, Math.round((Math.abs(e.value) / maxAbs) * 100));
     const color = e.value >= 0 ? 'var(--lime)' : 'var(--st-danger)';
-    return `<div class="chart-col" title="${e.value.toLocaleString('ru-RU')} ₽">
-      <div class="chart-bar" style="height:${heightPct}%; background:${color}"></div>
+    const sum = e.value.toLocaleString('ru-RU') + ' ₽';
+    return `<div class="chart-col" title="${sum}">
+      <div class="chart-bar" style="height:${heightPct}%; background:${color}">
+        <span class="chart-tooltip">${sum}</span>
+      </div>
       <div class="chart-m">${e.label}</div>
     </div>`;
   }).join('');
