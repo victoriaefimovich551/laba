@@ -495,7 +495,7 @@ function render() {
     const style = STATUS_ANALYTICS_COLORS[status] || { color: 'var(--tx2)', bg: 'var(--sf2)' };
     const widthPct = Math.round((count / maxCount) * 100);
     return `<div class="status-row">
-      <div class="status-label">${status}</div>
+      <div class="status-label">${getStatusText(status)}</div>
       <div class="status-track"><div class="status-fill" style="width:${widthPct}%; background:${style.color}"></div></div>
       <div class="status-count">${count}</div>
     </div>`;
