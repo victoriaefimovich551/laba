@@ -327,7 +327,6 @@ textarea { border-radius: 16px; resize: vertical; min-height: 74px; }
 
 /* ── Каталог: сетка карточек ── */
 .products-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.product-item { display: flex; flex-direction: column; }
 
 /* ── Статистика / stat-карточки ── */
 .stat-card {
