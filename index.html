@@ -1516,7 +1516,7 @@
         const now = new Date();
         source.forEach(product => {
             total++;
-            const model = (product['Название'] || 'Без названия').trim().replace(/\s+/g, ' ');
+            const model = getModelGroupKey(product['Название'] || 'Без названия');
             stats[model] = (stats[model] || 0) + 1;
             switch(product['Статус']) {
                 case 'Продан':
@@ -1590,7 +1590,7 @@
 
     function filterCatalogDirectly(model) {
         activeStatusFilter = null;
-        let filtered = allProducts.filter(product => (product['Название'] || '').trim().replace(/\s+/g, ' ') === model);
+        let filtered = allProducts.filter(product => getModelGroupKey(product['Название'] || '') === model);
         filtered = sortByStatus(filtered);
         renderCatalog(filtered);
         updateStats(allProducts);
