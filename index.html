@@ -307,9 +307,50 @@
             .bottom-nav { display: none !important; }
 
             .products-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+            .catalog-head { align-items: flex-start; gap: 18px; }
+            .catalog-subtitle { display: block !important; font: 500 12.5px var(--f-head); color: var(--tx2); margin-top: 4px; }
+            .catalog-head-desktop-tools { display: flex !important; align-items: center; gap: 12px; }
+            .desktop-search-box {
+                display: flex; align-items: center; gap: 10px;
+                background: var(--sf); border: 1px solid var(--line);
+                border-radius: 999px; padding: 11px 18px; width: 320px;
+            }
+            .desktop-search-box .search-dot { width: 13px; height: 13px; border: 2px solid var(--tx2); border-radius: 50%; flex: none; }
+            .desktop-search-box input { background: transparent; border: none; padding: 0; font: 500 13px var(--f-head); }
+            .desktop-search-box input:focus { border: none; }
+            #mobile-print-btn { display: none; }
+            .desktop-kpi-row { display: flex !important; gap: 12px; margin-top: 16px; }
+
+            .desktop-detail-panel.visible {
+                display: flex !important;
+                flex-direction: column;
+                width: 372px;
+                flex: none;
+                border-left: 1px solid var(--line);
+                background: var(--sf2);
+                padding: 20px 22px;
+                gap: 14px;
+                overflow-y: auto;
+                height: 100vh;
+                position: sticky;
+                top: 0;
+            }
+            .detail-qr-box {
+                width: 76px; height: 76px; flex: none;
+                border-radius: 14px;
+                background: var(--sf); border: 1px solid var(--line);
+                display: flex; align-items: center; justify-content: center;
+                overflow: hidden;
+            }
+            .detail-qr-box img { width: 100%; height: 100%; object-fit: contain; }
         }
 
         .desktop-sidebar { display: none; }
+        .desktop-detail-panel { display: none; }
+        .catalog-subtitle { display: none; }
+        .catalog-head-desktop-tools { display: none; }
+        .desktop-kpi-row { display: none; }
     </style>
 </head>
 <body>
@@ -453,8 +494,24 @@
 
     <div id="catalog-panel" class="panel">
         <div class="catalog-head">
-            <div class="page-title">Каталог</div>
-            <button class="filter-pill" onclick="openPrintSelectMode()">🖨 Наклейки</button>
+            <div>
+                <div class="page-title" id="catalog-title">Каталог</div>
+                <div class="catalog-subtitle" id="catalog-subtitle"></div>
+            </div>
+            <div class="catalog-head-desktop-tools">
+                <div class="desktop-search-box">
+                    <span class="search-dot"></span>
+                    <input type="text" id="desktop-catalog-search" placeholder="Артикул, модель, серийный номер" oninput="filterCatalogSearch(this.value)">
+                </div>
+                <button class="btn-dark" onclick="switchTab('receive-noqr')">➕ Добавить товар</button>
+            </div>
+            <button class="filter-pill" id="mobile-print-btn" onclick="openPrintSelectMode()">🖨 Наклейки</button>
+        </div>
+        <div class="desktop-kpi-row" id="desktop-kpi-row">
+            <div class="stat-card"><span class="eyebrow">В наличии</span><div class="stat-value" id="dk-instock">—</div></div>
+            <div class="stat-card"><span class="eyebrow">В доставке</span><div class="stat-value" id="dk-transit">—</div></div>
+            <div class="stat-card"><span class="eyebrow">Резерв</span><div class="stat-value" id="dk-reserved">—</div></div>
+            <div class="stat-card"><span class="eyebrow">Продано за месяц</span><div class="stat-value" id="dk-soldmonth">—</div></div>
         </div>
         <div id="catalog-stats" class="stats-box">
             <strong class="eyebrow">Статистика по комплектациям</strong>
@@ -519,6 +576,9 @@
     </div>
 </div>
 
+<!-- Панель детали товара (десктоп, только вкладка «Каталог») -->
+<aside class="desktop-detail-panel" id="desktop-detail-panel"></aside>
+
 <!-- НИЖНЯЯ НАВИГАЦИЯ -->
 <nav class="bottom-nav">
     <button class="nav-item active" id="nav-home" onclick="switchTab('home', null, this)">
@@ -562,6 +622,7 @@
 
     let printSelectMode = false;
     let selectedForPrint = new Set();
+    let desktopDetailInitialized = false;
 
     function updateModelsForCategory(category) {
         const models = MODELS_BY_CATEGORY[category] || [];
@@ -689,6 +750,10 @@
     // ========== НАВИГАЦИЯ ==========
     let navigationStack = [];
 
+    function isDesktopLayout() {
+        return window.matchMedia('(min-width: 1024px)').matches;
+    }
+
     function goBack() {
         if (navigationStack.length > 1) {
             navigationStack.pop();
@@ -736,6 +801,9 @@
             updatePrintBar();
         }
         if (tab === 'search') ensureAllCategoriesLoaded();
+
+        const detailPanel = document.getElementById('desktop-detail-panel');
+        if (detailPanel) detailPanel.classList.toggle('visible', tab === 'catalog');
         if (tab === 'scan' && html5QrCode && isScanning) {
             html5QrCode.stop().then(() => { isScanning = false; setScannerPlaceholderVisible(true); });
         }
@@ -1236,18 +1304,34 @@
             return;
         }
         const stats = {};
-        let total = 0, sold = 0, reserved = 0, delivery = 0, unsold = 0;
+        let total = 0, sold = 0, reserved = 0, delivery = 0, unsold = 0, soldThisMonth = 0;
+        const now = new Date();
         source.forEach(product => {
             total++;
             const model = (product['Название'] || 'Без названия').trim().replace(/\s+/g, ' ');
             stats[model] = (stats[model] || 0) + 1;
             switch(product['Статус']) {
-                case 'Продан': sold++; break;
+                case 'Продан':
+                    sold++;
+                    const soldDate = parseRuDate(product['Дата продажи']);
+                    if (soldDate && soldDate.getFullYear() === now.getFullYear() && soldDate.getMonth() === now.getMonth()) soldThisMonth++;
+                    break;
                 case 'Зарезервирован': reserved++; break;
                 case 'В доставке': delivery++; break;
                 default: unsold++;
             }
         });
+
+        const catalogSubtitleEl = document.getElementById('catalog-subtitle');
+        if (catalogSubtitleEl) catalogSubtitleEl.textContent = total + ' ' + pluralPositions(total) + ' · обновлено ' + now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        const dkInstock = document.getElementById('dk-instock');
+        const dkTransit = document.getElementById('dk-transit');
+        const dkReserved = document.getElementById('dk-reserved');
+        const dkSoldMonth = document.getElementById('dk-soldmonth');
+        if (dkInstock) dkInstock.textContent = unsold;
+        if (dkTransit) dkTransit.textContent = delivery;
+        if (dkReserved) dkReserved.textContent = reserved;
+        if (dkSoldMonth) dkSoldMonth.textContent = soldThisMonth;
 
         // Пилюли фильтрации по статусу
         const mkBtn = (label, value, color, count) => {
@@ -1315,11 +1399,23 @@
         if (statsHeader) statsHeader.innerHTML = 'Статистика по комплектациям';
     }
 
+    // Поиск по каталогу в шапке десктопной раскладки (заполняется только там)
+    let desktopCatalogSearchQuery = '';
+    function filterCatalogSearch(query) {
+        desktopCatalogSearchQuery = query.trim().toLowerCase();
+        applyFilters();
+    }
+
     function applyFilters() {
         if (!allProducts || !allProducts.length) return;
         const statusFilter = activeStatusFilter || '';
+        const q = desktopCatalogSearchQuery;
         let filtered = allProducts.filter(product => {
             if (statusFilter && product['Статус'] !== statusFilter) return false;
+            if (q) {
+                const haystack = ((product['Название'] || '') + ' ' + (product['Артикул'] || '') + ' ' + (product['Серийный номер'] || '')).toLowerCase();
+                if (!haystack.includes(q)) return false;
+            }
             return true;
         });
         filtered = sortByStatus(filtered);
@@ -1363,6 +1459,11 @@
         });
         html += '</div>';
         container.innerHTML = html;
+
+        if (isDesktopLayout() && !desktopDetailInitialized) {
+            desktopDetailInitialized = true;
+            renderDesktopDetail(null);
+        }
     }
 
     function resetFilters() {
@@ -1411,10 +1512,93 @@
     }
 
     async function viewProductDetail(sku) {
+        if (isDesktopLayout()) {
+            const product = allProducts.find(p => p['Артикул'] === sku) || await findProductBySKU(sku);
+            currentProduct = product;
+            renderDesktopDetail(product);
+            return;
+        }
         switchTab('search');
         const serialInput = document.getElementById('serial-input');
         if (serialInput) serialInput.value = sku;
         await searchBySerial();
+    }
+
+    // Склонение «позиция/позиции/позиций» для подписи под заголовком каталога (десктоп)
+    function pluralPositions(n) {
+        const n100 = n % 100, n10 = n % 10;
+        if (n100 >= 11 && n100 <= 19) return 'позиций';
+        if (n10 === 1) return 'позиция';
+        if (n10 >= 2 && n10 <= 4) return 'позиции';
+        return 'позиций';
+    }
+
+    function parseRuDate(str) {
+        if (!str) return null;
+        const m = String(str).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+        if (!m) return null;
+        const d = new Date(+m[3], +m[2] - 1, +m[1]);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function daysSincePurchase(dateStr) {
+        const buy = parseRuDate(dateStr);
+        if (!buy) return null;
+        return Math.max(0, Math.round((new Date() - buy) / 86400000));
+    }
+
+    // Правая панель детали товара в десктопной раскладке каталога
+    function renderDesktopDetail(product) {
+        const panel = document.getElementById('desktop-detail-panel');
+        if (!panel) return;
+        if (!product) {
+            panel.innerHTML = '<div class="loading" style="margin-top:0;">Выберите товар из каталога</div>';
+            return;
+        }
+
+        let priceZakupka = product['Цена закупка'];
+        priceZakupka = (priceZakupka && !isNaN(parseFloat(priceZakupka))) ? parseFloat(priceZakupka).toLocaleString('ru-RU') + ' ₽' : '—';
+        let profit = product['Прибыль'];
+        profit = (profit && !isNaN(parseFloat(profit))) ? parseFloat(profit).toLocaleString('ru-RU') + ' ₽' : '—';
+
+        const si = getStatusIcon(product['Статус']);
+        const statusText = getStatusText(product['Статус']);
+        const escapedSku = escapeHtml(product['Артикул']);
+        const days = daysSincePurchase(product['Дата закупки']);
+
+        let html = '<div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px;">'
+            + '<div><div style="font:800 19px/1.2 var(--f-head); letter-spacing:-.01em;">' + escapeHtml(product['Название'] || 'Без названия') + '</div>'
+            + '<div class="list-row-sub" style="margin-top:6px;">' + escapedSku + '</div></div>'
+            + '<div class="detail-qr-box">' + (product['QR_Code'] ? '<img src="' + escapeHtml(product['QR_Code']) + '">' : '') + '</div>'
+            + '</div>'
+            + '<div class="status-badge" style="align-self:flex-start; background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + statusText + '</div>';
+
+        html += '<div style="display:flex; gap:10px;">'
+            + '<div class="stat-card"><span class="eyebrow">Закупка</span><div class="stat-value">' + priceZakupka + '</div></div>'
+            + '<div class="stat-card" style="background:var(--lime); color:var(--ink); border:none;"><span class="eyebrow" style="color:var(--ink); opacity:.6;">Прогноз прибыли</span><div class="stat-value" style="color:var(--ink);">' + profit + '</div></div>'
+            + '</div>';
+
+        html += '<div style="background:var(--sf); border:1px solid var(--line); border-radius:18px; padding:4px 16px;">';
+        html += '<div class="product-detail"><strong>Серийный номер</strong><span>' + escapeHtml(product['Серийный номер'] || '—') + '</span></div>';
+        if (product['Дата закупки']) html += '<div class="product-detail"><strong>Дата закупки</strong><span>' + escapeHtml(product['Дата закупки']) + '</span></div>';
+        if (days !== null) html += '<div class="product-detail"><strong>На складе</strong><span>' + days + ' дн</span></div>';
+        if (product['Ссылка на Авито']) html += '<div class="product-detail"><strong>Авито</strong><span><a href="' + escapeHtml(product['Ссылка на Авито']) + '" target="_blank" style="color:var(--lime);">Открыть →</a></span></div>';
+        html += '</div>';
+
+        if (product['Состояние'] && product['Состояние'] !== '—') {
+            html += '<div style="background:var(--sf); border:1px solid var(--line); border-radius:18px; padding:15px 16px;">'
+                + '<span class="eyebrow">Состояние</span><div class="state-list">' + formatStateText(product['Состояние']) + '</div></div>';
+        }
+
+        html += '<div style="margin-top:auto; display:flex; flex-direction:column; gap:9px;">'
+            + '<button class="btn-dark btn-block" style="margin-top:0;" onclick="printProductLabel(\'' + escapedSku + '\')">🖨 Напечатать наклейку</button>'
+            + '<div class="action-buttons-row">'
+            + '<button class="action-btn" onclick="editProduct(\'' + escapedSku + '\')">Изменить статус</button>'
+            + '<button class="action-btn" onclick="editProduct(\'' + escapedSku + '\')">Редактировать</button>'
+            + '</div>'
+            + '</div>';
+
+        panel.innerHTML = html;
     }
 
     // ========== КАТАЛОГ С КЭШИРОВАНИЕМ ==========
