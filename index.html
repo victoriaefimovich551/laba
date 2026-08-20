@@ -1,66 +1,23 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#1e3c72">
+    <meta name="theme-color" content="#101215">
     <link rel="manifest" href="manifest.json">
     <title>QR Сканер</title>
     <script src="theme.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="common.css">
     <style>
-        /* Блокируем transition при первой загрузке */
-        html.preload-dark .panel { background: #1e2a3a !important; color: #e2e8f0 !important; }
-
-        /* ── ПЛАВНЫЙ ПЕРЕХОД ТЕМЫ ── */
-        body, .panel, .product-item, .bottom-nav, .desktop-sidebar,
-        .kpi-card, .section, input, select, textarea, .product-card,
-        .status-filter-btn, .model-filter-btn, .confirm-dialog {
+        body, .list-row, .bottom-nav, .desktop-sidebar,
+        .stat-card, .panel, input, select, textarea, .product-card,
+        .filter-pill, .category-btn, .confirm-dialog {
             transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
-
-        /* ── ТЁМНАЯ ТЕМА ── */
-        body.dark-mode { background: linear-gradient(135deg, #0d1b2a 0%, #1a2744 100%); }
-        body.dark-mode .panel { background: #1e2a3a; color: #e2e8f0; }
-        body.dark-mode .panel h2 { color: #93c5fd; border-color: #2d3f55; }
-        body.dark-mode .product-item { background: #243447 !important; border-color: #2d3f55 !important; color: #e2e8f0 !important; }
-        body.dark-mode .product-item.is-sold { background: #1a2535 !important; opacity: 0.55; }
-        body.dark-mode .product-item strong { color: #e2e8f0 !important; }
-        body.dark-mode .product-item small { color: #94a3b8 !important; }
-        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #243447; color: #e2e8f0; border-color: #3a4f66; }
-        body.dark-mode .bottom-nav { background: #1a2535; }
-        body.dark-mode .nav-item .nav-label { color: #5a7090; }
-        body.dark-mode .nav-item.active .nav-label { color: #93c5fd; }
-        body.dark-mode .nav-item::before { background: #93c5fd; }
-        body.dark-mode .status-filter-btn { background: #243447 !important; color: #93c5fd !important; border-color: #3a5272 !important; }
-        body.dark-mode .status-filter-btn.active { background: #2d4a6e !important; border-color: #93c5fd !important; }
-        body.dark-mode #catalog-stats { background: #1e2a3a !important; color: #93c5fd !important; }
-        body.dark-mode #catalog-stats strong { color: #93c5fd !important; }
-        body.dark-mode #stats-content { color: #e2e8f0 !important; }
-        body.dark-mode .model-filter-btn { background: #243447 !important; color: #93c5fd !important; border-color: #3a5272 !important; }
-        body.dark-mode #catalog-content { color: #e2e8f0; }
-        body.dark-mode .error { background: #2d1f1f; color: #fca5a5; }
-        body.dark-mode .success { background: #1a2e1a; color: #86efac; }
-        body.dark-mode strong { color: #cbd5e1; }
-        body.dark-mode small { color: #94a3b8; }
-        body.dark-mode .form-group label { color: #93c5fd !important; }
-        body.dark-mode .panel p { color: #94a3b8 !important; }
-        body.dark-mode .panel h2 { color: #93c5fd !important; }
-        /* Placeholder */
-        body.dark-mode input::placeholder,
-        body.dark-mode textarea::placeholder { color: #5a7090 !important; opacity: 1; }
-        /* Карточка товара (детальный просмотр) */
-        body.dark-mode .product-card { background: #1e2a3a !important; border-left-color: #3b82f6 !important; }
-        body.dark-mode .product-card h3 { color: #93c5fd !important; }
-        body.dark-mode .product-detail { border-bottom-color: #2d3f55 !important; color: #e2e8f0 !important; }
-        body.dark-mode .product-detail strong { color: #94a3b8 !important; }
-        body.dark-mode .qr-code img { background: #1e2a3a !important; }
-        body.dark-mode .model-filter-btn { background: #243447 !important; color: #93c5fd !important; border-color: #3a5272 !important; }
-        /* Select в фильтрах */
-        body.dark-mode .filter-row select { background: #243447 !important; color: #e2e8f0 !important; border-color: #3a4f66 !important; }
-        /* Диалог подтверждения */
-        body.dark-mode .confirm-dialog { background: #1e2a3a !important; }
-        body.dark-mode .confirm-dialog p { color: #e2e8f0 !important; }
 
         /* ── PULL-TO-REFRESH ── */
         .ptr-indicator {
@@ -70,170 +27,96 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            background: rgba(42,82,152,0.95);
-            color: white;
-            font-size: 13px;
-            font-weight: 600;
+            background: var(--ink);
+            color: var(--lime);
+            font: 700 13px var(--f-head);
             height: 48px;
             transform: translateY(-100%);
             transition: transform 0.25s ease;
             z-index: 10000;
         }
         .ptr-indicator.visible { transform: translateY(0); }
-        .ptr-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: ptr-spin 0.7s linear infinite; }
+        .ptr-spinner { width: 18px; height: 18px; border: 2px solid rgba(205,245,100,0.35); border-top-color: var(--lime); border-radius: 50%; animation: ptr-spin 0.7s linear infinite; }
         @keyframes ptr-spin { to { transform: rotate(360deg); } }
 
-        body { padding: 16px; padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+        body { padding: 16px; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
         .container { max-width: min(600px, 100%); margin: 0 auto; }
 
-        /* ── ДЕСКТОП ── */
-        @media (min-width: 1024px) {
-            body { padding: 0; display: flex; min-height: 100vh; }
+        /* ── Мобильная шапка: переключатель категории + иконки ── */
+        .mobile-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+        .header-icons { display: flex; gap: 8px; flex: none; }
+        .category-btn {
+            background: var(--sf);
+            color: var(--tx2);
+            border: 1px solid var(--line);
+            padding: 9px 16px;
+            border-radius: 999px;
+            font: 700 12.5px var(--f-head);
+            cursor: pointer;
+        }
+        .category-btn.active { background: var(--lime); color: var(--ink); border-color: var(--lime); }
 
-            /* Сайдбар */
-            .desktop-sidebar {
-                display: flex !important;
-                flex-direction: column;
-                width: 220px;
-                min-height: 100vh;
-                background: rgba(0,0,0,0.25);
-                padding: 24px 16px;
-                flex-shrink: 0;
-                position: sticky;
-                top: 0;
-                height: 100vh;
-                overflow-y: auto;
-            }
-            .desktop-sidebar .sidebar-logo {
-                color: #fff;
-                font-size: 1.1rem;
-                font-weight: 800;
-                margin-bottom: 8px;
-                text-align: center;
-            }
-            .desktop-sidebar .sidebar-sub {
-                color: rgba(255,255,255,0.55);
-                font-size: 0.72rem;
-                text-align: center;
-                margin-bottom: 24px;
-            }
-            .desktop-sidebar .sidebar-nav {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                flex: 1;
-            }
-            .desktop-sidebar .sidebar-btn {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                background: transparent;
-                border: none;
-                color: rgba(255,255,255,0.75);
-                padding: 10px 14px;
-                border-radius: 12px;
-                font-size: 0.9rem;
-                font-weight: 600;
-                cursor: pointer;
-                text-align: left;
-                transition: background 0.15s, color 0.15s;
-            }
-            .desktop-sidebar .sidebar-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-            .desktop-sidebar .sidebar-btn.active { background: rgba(255,255,255,0.2); color: #fff; }
-            .desktop-sidebar .sidebar-btn .sb-icon { font-size: 1.2rem; width: 24px; text-align: center; }
-            .desktop-sidebar .sidebar-divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 12px 0; }
-            .desktop-sidebar .sidebar-cat {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                margin-bottom: 16px;
-            }
-            .desktop-sidebar .cat-item {
-                background: transparent;
-                border: 1.5px solid rgba(255,255,255,0.25);
-                color: rgba(255,255,255,0.7);
-                border-radius: 10px;
-                padding: 7px 12px;
-                font-size: 0.85rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.15s;
-                text-align: left;
-            }
-            .desktop-sidebar .cat-item.active { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.5); }
-            .desktop-sidebar .sidebar-bottom {
-                margin-top: auto;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-            .desktop-sidebar .theme-btn-side {
-                background: rgba(255,255,255,0.15);
-                border: none;
-                color: #fff;
-                border-radius: 10px;
-                padding: 8px 12px;
-                font-size: 0.85rem;
-                font-weight: 600;
-                cursor: pointer;
-                text-align: left;
-            }
-            .desktop-sidebar .stickers-btn-side {
-                background: rgba(255,255,255,0.1);
-                border: 1px solid rgba(255,255,255,0.2);
-                color: rgba(255,255,255,0.8);
-                border-radius: 10px;
-                padding: 8px 12px;
-                font-size: 0.85rem;
-                cursor: pointer;
-                text-decoration: none;
-                display: block;
-                font-weight: 600;
-            }
+        .install-banner { background: var(--sf); border: 1px solid var(--line); color: var(--tx); padding: 12px; border-radius: 16px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
 
-            /* Основной контент */
-            .container {
-                flex: 1;
-                max-width: none;
-                padding: 24px 32px;
-                padding-bottom: 24px;
-                overflow-y: auto;
-            }
+        .panel { display: none; }
+        .panel.active { display: block; }
 
-            /* Скрыть мобильные элементы */
-            .header { display: none !important; }
-            .bottom-nav { display: none !important; }
-            #mobile-cat-bar { display: none !important; }
+        #reader { width: 100%; max-width: 500px; min-height: 320px; margin: 16px auto 0; border-radius: 26px; overflow: hidden; border: 1px solid var(--line); background: var(--sf2); }
 
-            /* Панели */
-            .panel { border-radius: 20px; padding: 28px; margin-bottom: 20px; }
-            .panel h2 { font-size: 20px; }
-
-            /* Каталог — сетка 2 колонки */
-            .products-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 14px; }
-            .product-item { font-size: 0.95rem; }
+        button { cursor: pointer; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        @media (hover: hover) and (pointer: fine) {
+            button:hover:not(:disabled) { transform: scale(1.03); }
         }
 
-        .desktop-sidebar { display: none; } /* скрыт на мобильном */
-        .header { text-align: center; color: white; margin-bottom: 20px; }
-        .header h1 { font-size: 24px; margin-bottom: 5px; }
-        .category-switch { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; }
-        .category-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 20px; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .category-btn.active { background: white; color: #1e3c72; }
-        /* НИЖНЯЯ НАВИГАЦИЯ */
-        .tabs { display: none; } /* скрыты — заменены нижней навигацией */
+        .search-box { display: flex; gap: 10px; margin: 16px 0 0; }
+        .search-box input { flex: 1; }
+        .search-box button { width: auto; margin: 0; padding: 13px 22px; }
+
+        .catalog-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .stats-box { background: var(--sf); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; margin: 16px 0; }
+        .filter-group { margin-bottom: 14px; }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-row button { margin: 0; }
+
+        .model-search-input { margin-bottom: 8px; }
+
+        #print-select-bar {
+            display: none;
+            position: fixed;
+            left: 16px; right: 16px;
+            bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+            background: var(--sf2);
+            border: 1px solid var(--line);
+            color: var(--tx);
+            border-radius: 999px;
+            padding: 10px 12px 10px 20px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            z-index: 2500;
+            box-shadow: var(--sh);
+        }
+        #print-select-bar.visible { display: flex; }
+        #print-select-bar strong { font-family: var(--f-mono); }
+        .print-select-check { position: absolute; top: 10px; right: 10px; font-size: 16px; line-height: 1; }
+        .list-row.is-print-selected { border-color: var(--lime) !important; background: color-mix(in srgb, var(--lime) 12%, var(--sf)); }
+
+        .field-group { margin-bottom: 16px; }
+        .field-label { margin-bottom: 7px; display: block; }
+
+        /* ── НИЖНЯЯ НАВИГАЦИЯ ── */
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
-            height: calc(68px + env(safe-area-inset-bottom, 0px));
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-            background: #fff;
+            height: calc(76px + env(safe-area-inset-bottom, 0px));
+            padding: 8px 10px calc(14px + env(safe-area-inset-bottom, 0px));
+            background: var(--sf);
+            border-top: 1px solid var(--line);
             display: flex;
             align-items: stretch;
-            box-shadow: 0 -2px 16px rgba(0,0,0,0.15);
+            gap: 4px;
             z-index: 9999;
-            border-radius: 18px 18px 0 0;
-            will-change: transform;
         }
         .nav-item {
             flex: 1;
@@ -241,204 +124,157 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 3px;
+            gap: 5px;
             cursor: pointer;
             border: none;
             background: transparent;
-            padding: 8px 4px;
-            position: relative;
+            border-radius: 14px;
+            padding: 8px 2px;
             -webkit-tap-highlight-color: transparent;
-            transition: background 0.15s;
+            transition: background 0.15s, transform 0.15s;
         }
-        .nav-item:active { background: #f0f4ff; }
-        .nav-item .nav-icon { font-size: 1.4rem; line-height: 1; transition: transform 0.2s; }
-        .nav-item .nav-label { font-size: 0.58rem; font-weight: 600; color: #aab0c0; letter-spacing: 0.2px; text-align: center; line-height: 1.2; transition: color 0.2s; }
-        .nav-item.active .nav-icon { transform: translateY(-2px); }
-        .nav-item.active .nav-label { color: #2a5298; }
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 20%; right: 20%;
-            height: 3px;
-            background: #2a5298;
-            border-radius: 0 0 4px 4px;
-            transform: scaleX(0);
-            transition: transform 0.2s ease;
-        }
-        .nav-item.active::before { transform: scaleX(1); }
-
-        /* ── Выделенная центральная кнопка «Добавить» ── */
-        .nav-item-fab { justify-content: flex-start; padding-top: 0; }
-        .nav-item-fab::before { display: none; }
-        .nav-item-fab .nav-fab-circle {
-            width: 54px; height: 54px;
-            flex-shrink: 0;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            line-height: 1;
-            margin-top: -24px;
-            box-shadow: 0 6px 16px rgba(30,60,114,0.45);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .nav-item-fab .nav-label { margin-top: 3px; font-weight: 700; }
-        body.dark-mode .nav-item-fab .nav-fab-circle { box-shadow: 0 6px 16px rgba(0,0,0,0.5); }
-        .tab-btn { display: none; } /* скрыты, нижняя навигация управляет табами */
-        .panel { display: none; background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-        .panel.active { display: block; }
-        h2 { color: #1e3c72; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid #eef2f7; padding-bottom: 10px; }
-        #reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 16px; overflow: hidden; }
-        button { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; padding: 14px 28px; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 10px 0; width: 100%; transition: transform 0.15s ease; }
-        /* FIX #2: disabled кнопки */
-        button:disabled { opacity: 0.6; cursor: not-allowed; }
-        /* Лёгкое увеличение кнопок при наведении — только там, где есть настоящая мышь/трекпад,
-           чтобы не залипало на телефонах после тапа */
+        .nav-item .nav-icon { font-size: 17px; line-height: 1; }
+        .nav-item .nav-label { font: 700 9.5px var(--f-head); color: var(--tx2); letter-spacing: .01em; }
+        .nav-item.active { background: color-mix(in srgb, var(--lime) 16%, transparent); }
+        .nav-item.active .nav-label { color: var(--lime); }
         @media (hover: hover) and (pointer: fine) {
-            button:hover:not(:disabled) { transform: scale(1.05); }
-            .nav-item-fab:hover .nav-fab-circle { transform: scale(1.08); }
-        }
-        .search-box { display: flex; gap: 10px; margin: 15px 0; }
-        .search-box input { flex: 1; padding: 12px; border: 2px solid #e0e4e8; border-radius: 30px; font-size: 16px; }
-        .search-box button { width: auto; padding: 12px 20px; margin: 0; }
-        .product-card { background: #f8fafc; border-radius: 16px; padding: 20px; margin-top: 20px; border-left: 4px solid #2a5298; }
-        .product-card h3 { color: #1e3c72; margin-bottom: 15px; }
-        .product-detail { margin: 8px 0; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
-        .product-detail strong { display: inline-block; min-width: 110px; color: #475569; }
-        .status-sold { color: #16a34a; font-weight: bold; }
-        .status-reserved { color: #eab308; font-weight: bold; }
-        .status-delivery { color: #3b82f6; font-weight: bold; }
-        .status-unsold { color: #64748b; font-weight: bold; }
-        .qr-code { text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
-        .qr-code img { max-width: 120px; border-radius: 12px; padding: 8px; background: white; }
-        .error { background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center; }
-        .success { background: #dcfce7; color: #16a34a; padding: 12px; border-radius: 12px; margin-top: 15px; text-align: center; }
-        .loading { text-align: center; padding: 30px; color: #64748b; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; margin-top: 15px; }
-        .product-item { background: #f8fafc; border-radius: 12px; padding: 15px; cursor: pointer; border: 1px solid #e2e8f0; transition: opacity 0.2s; }
-        .product-item:active { transform: scale(0.98); }
-        .product-item.is-sold { opacity: 0.45; background: #f1f5f9; border-color: #cbd5e1; }
-        .product-item.is-delivery { border-left: 3px solid #3b82f6; }
-        .product-item.is-reserved { border-left: 3px solid #eab308; }
-        .product-item.is-print-selected { border: 2px solid #7c3aed; background: #f5f3ff; }
-        .print-select-check { position: absolute; top: 8px; right: 8px; font-size: 18px; line-height: 1; }
-        .product-item { position: relative; }
-        #print-select-bar {
-            display: none;
-            position: fixed;
-            left: 16px; right: 16px;
-            bottom: calc(84px + env(safe-area-inset-bottom, 0px));
-            background: #1e3c72;
-            color: white;
-            border-radius: 16px;
-            padding: 12px 16px;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            z-index: 2500;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-        }
-        #print-select-bar.visible { display: flex; }
-        .status-filter-btn { padding: 6px 14px; border-radius: 20px; border: 2px solid transparent; font-size: 13px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .status-filter-btn.active { border-color: currentColor; }
-        .model-filter-btn { background: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #e2e8f0; display: inline-block; transition: background 0.2s, color 0.2s; }
-        .filter-group { margin-bottom: 15px; }
-        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-        .filter-row select { flex: 1; padding: 10px; border: 2px solid #e0e4e8; border-radius: 30px; font-size: 14px; background: white; }
-        .filter-row button { flex: 1; text-align: center; }
-        .btn-reset { background: #64748b; width: auto; padding: 10px 20px; margin: 0; }
-        .install-banner { background: #eef2ff; padding: 12px; border-radius: 12px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
-        .action-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .action-btn { flex: 1; background: #64748b; width: auto; padding: 10px; margin: 0; font-size: 14px; text-align: center; cursor: pointer; border: none; border-radius: 30px; color: white; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #1e3c72; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e4e8; border-radius: 30px; font-size: 14px; }
-        .form-group textarea { border-radius: 20px; }
-        .state-list ul { margin: 5px 0 0 20px; padding-left: 0; list-style-type: disc; }
-        .state-list li { margin: 4px 0; line-height: 1.4; }
-
-        /* FIX #6: Поиск моделей */
-        .model-search-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #e0e4e8;
-            border-radius: 30px;
-            font-size: 14px;
-            margin-bottom: 8px;
+            .nav-item:hover { transform: scale(1.03); }
         }
 
-        /* FIX #11: Кастомный диалог подтверждения */
-        .confirm-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+        /* ── ДЕСКТОП ── */
+        @media (min-width: 1024px) {
+            body { padding: 0; display: flex; min-height: 100vh; }
+
+            .desktop-sidebar {
+                display: flex !important;
+                flex-direction: column;
+                width: 248px;
+                min-height: 100vh;
+                background: #101215;
+                color: #f4f6f2;
+                padding: 24px 18px;
+                gap: 22px;
+                flex-shrink: 0;
+                position: sticky;
+                top: 0;
+                height: 100vh;
+                overflow-y: auto;
+            }
+            .desktop-sidebar .sidebar-logo-row { display: flex; align-items: center; gap: 11px; }
+            .desktop-sidebar .sidebar-mark { width: 38px; height: 38px; border-radius: 12px; background: var(--lime); color: var(--ink); display: flex; align-items: center; justify-content: center; font: 800 17px var(--f-head); flex-shrink: 0; }
+            .desktop-sidebar .sidebar-title { font: 800 15px var(--f-head); }
+            .desktop-sidebar .sidebar-sub { font: 500 11px var(--f-mono); color: #969c95; margin-top: 1px; }
+            .desktop-sidebar .sidebar-section-label { font: 700 10px var(--f-head); color: #969c95; text-transform: uppercase; letter-spacing: .09em; }
+
+            .desktop-sidebar .sidebar-cat { display: flex; flex-direction: column; gap: 7px; }
+            .desktop-sidebar .cat-item {
+                display: flex; align-items: center; gap: 9px;
+                background: transparent;
+                border: none;
+                color: #c6cbc4;
+                border-radius: 13px;
+                padding: 10px 13px;
+                font: 700 13px var(--f-head);
+                cursor: pointer;
+                text-align: left;
+                transition: background 0.15s, color 0.15s;
+            }
+            .desktop-sidebar .cat-item.active { background: var(--lime); color: var(--ink); }
+
+            .desktop-sidebar .sidebar-nav { display: flex; flex-direction: column; gap: 5px; }
+            .desktop-sidebar .sidebar-btn {
+                display: flex; align-items: center; gap: 11px;
+                background: transparent;
+                border: none;
+                color: #c6cbc4;
+                padding: 11px 13px;
+                border-radius: 13px;
+                font: 600 13.5px var(--f-head);
+                cursor: pointer;
+                text-align: left;
+                text-decoration: none;
+                transition: background 0.15s, color 0.15s;
+            }
+            .desktop-sidebar .sidebar-btn:hover { background: rgba(255,255,255,0.06); color: #f4f6f2; }
+            .desktop-sidebar .sidebar-btn.active { background: rgba(255,255,255,0.08); color: #f4f6f2; font-weight: 700; }
+            .desktop-sidebar .sidebar-btn .sb-icon { font-size: 16px; }
+
+            .desktop-sidebar .sidebar-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+            .desktop-sidebar .sidebar-cta { background: var(--lime); color: var(--ink); border-radius: 18px; padding: 16px; cursor: pointer; }
+            .desktop-sidebar .sidebar-cta-title { font: 800 15px var(--f-head); }
+            .desktop-sidebar .sidebar-cta-sub { font: 600 11.5px var(--f-head); opacity: .65; margin-top: 4px; }
+            .desktop-sidebar .sidebar-theme-btn {
+                background: transparent;
+                border: 1px solid rgba(255,255,255,0.14);
+                color: #c6cbc4;
+                border-radius: 13px;
+                padding: 10px 13px;
+                font: 600 12.5px var(--f-head);
+                cursor: pointer;
+                text-align: left;
+                margin: 0;
+                width: 100%;
+            }
+
+            .container { flex: 1; max-width: none; padding: 24px 32px; padding-bottom: 24px; overflow-y: auto; }
+
+            .mobile-header { display: none !important; }
+            .bottom-nav { display: none !important; }
+
+            .products-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
         }
-        .confirm-dialog {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            max-width: 360px;
-            width: 90%;
-            text-align: center;
-        }
-        .confirm-dialog p {
-            margin-bottom: 20px;
-            color: #333;
-            font-size: 16px;
-        }
-        .confirm-dialog .confirm-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        .confirm-dialog .confirm-buttons button {
-            flex: 1;
-            margin: 0;
-            padding: 12px;
-            font-size: 14px;
-        }
+
+        .desktop-sidebar { display: none; }
     </style>
 </head>
 <body>
 
 <!-- САЙДБАР (десктоп) -->
 <aside class="desktop-sidebar">
-    <div class="sidebar-logo">📦 Инвентарь</div>
-    <div class="sidebar-sub">Дроны &middot; Самокаты</div>
-
-    <div class="sidebar-cat">
-        <button class="cat-item active" id="sb-drones" onclick="switchCategory('Дроны'); setSbCat(this)">🚁 Дроны</button>
-        <button class="cat-item" id="sb-scooters" onclick="switchCategory('Самокаты'); setSbCat(this)">🛴 Самокаты</button>
+    <div class="sidebar-logo-row">
+        <div class="sidebar-mark">Q</div>
+        <div>
+            <div class="sidebar-title">Инвентарь</div>
+            <div class="sidebar-sub">дроны · самокаты</div>
+        </div>
     </div>
 
-    <hr class="sidebar-divider">
+    <div class="sidebar-section-label">Категория</div>
+    <div class="sidebar-cat">
+        <button class="cat-item active" id="sb-drones" onclick="switchCategory('Дроны'); setSbCat(this)"><span>🚁</span> Дроны</button>
+        <button class="cat-item" id="sb-scooters" onclick="switchCategory('Самокаты'); setSbCat(this)"><span>🛴</span> Самокаты</button>
+    </div>
 
-    <nav class="sidebar-nav">
-        <button class="sidebar-btn active" id="sb-nav-scan" onclick="switchTab('scan'); setSbNav(this)">
-            <span class="sb-icon">📷</span> Сканер
-        </button>
-        <button class="sidebar-btn" id="sb-nav-search" onclick="switchTab('search'); setSbNav(this)">
-            <span class="sb-icon">🔍</span> Поиск
-        </button>
-        <button class="sidebar-btn" id="sb-nav-catalog" onclick="switchTab('catalog'); setSbNav(this)">
-            <span class="sb-icon">📦</span> Каталог
-        </button>
-        <button class="sidebar-btn" id="sb-nav-receive-noqr" onclick="switchTab('receive-noqr'); setSbNav(this)">
-            <span class="sb-icon">➕</span> Добавление товара
-        </button>
-    </nav>
+    <div>
+        <div class="sidebar-section-label" style="margin-bottom:4px;">Разделы</div>
+        <nav class="sidebar-nav">
+            <button class="sidebar-btn active" id="sb-nav-scan" onclick="switchTab('scan'); setSbNav(this)">
+                <span class="sb-icon">📷</span> Сканер
+            </button>
+            <button class="sidebar-btn" id="sb-nav-search" onclick="switchTab('search'); setSbNav(this)">
+                <span class="sb-icon">🔍</span> Поиск
+            </button>
+            <button class="sidebar-btn" id="sb-nav-catalog" onclick="switchTab('catalog'); setSbNav(this)">
+                <span class="sb-icon">📦</span> Каталог
+            </button>
+            <button class="sidebar-btn" id="sb-nav-receive-noqr" onclick="switchTab('receive-noqr'); setSbNav(this)">
+                <span class="sb-icon">➕</span> Добавление товара
+            </button>
+            <button class="sidebar-btn" onclick="openPrintSelectMode()">
+                <span class="sb-icon">🖨</span> Наклейки
+            </button>
+            <a class="sidebar-btn" href="analytics.html">
+                <span class="sb-icon">📊</span> Аналитика
+            </a>
+        </nav>
+    </div>
 
     <div class="sidebar-bottom">
-        <hr class="sidebar-divider">
-        <a href="analytics.html" class="stickers-btn-side">📊 Аналитика</a>
-        <button class="stickers-btn-side" onclick="openPrintSelectMode()">🖨️ Наклейки</button>
-        <button class="theme-btn-side" id="sb-theme-btn" onclick="toggleTheme()" data-theme-label="Тема">🌙 Тема</button>
+        <div class="sidebar-cta" onclick="switchTab('scan'); setSbNav(document.getElementById('sb-nav-scan'))">
+            <div class="sidebar-cta-title">Сканировать QR</div>
+            <div class="sidebar-cta-sub">камера или ручной ввод</div>
+        </div>
+        <button class="sidebar-theme-btn" id="sb-theme-btn" onclick="toggleTheme()" data-theme-label="Тёмная тема">🌙 Тёмная тема</button>
     </div>
 </aside>
 
@@ -449,53 +285,51 @@
         <span id="ptr-text">Обновление...</span>
     </div>
 
-    <!-- ШАПКА: категории слева, аналитика (📊) и тема справа -->
-<div class="header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px;">
-    <div id="mobile-cat-bar" style="display:flex; gap:8px;">
-        <button id="btn-drones" class="category-btn active" onclick="switchCategory('Дроны')">🚁 Дроны</button>
-        <button id="btn-scooters" class="category-btn" onclick="switchCategory('Самокаты')">🛴 Самокаты</button>
+    <div class="mobile-header">
+        <div style="display:flex; gap:8px;">
+            <button id="btn-drones" class="category-btn active" onclick="switchCategory('Дроны')">🚁 Дроны</button>
+            <button id="btn-scooters" class="category-btn" onclick="switchCategory('Самокаты')">🛴 Самокаты</button>
+        </div>
+        <div class="header-icons">
+            <a href="analytics.html" class="icon-btn" title="Аналитика">📊</a>
+            <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
+        </div>
     </div>
-    <div style="display:flex; gap:8px;">
-        <button class="theme-toggle" title="Аналитика" onclick="window.location.href='analytics.html'">📊</button>
-        <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Тема" data-theme-icon>☀️</button>
-    </div>
-</div>
-
-
 
     <div id="install-banner" class="install-banner">
-        <div id="android-install" style="display: none;"><button id="install-btn">📲 Установить</button></div>
+        <div id="android-install" style="display: none;"><button id="install-btn" class="btn-dark btn-block">📲 Установить</button></div>
         <div id="ios-install" style="display: none;">📱 Поделиться → На экран «Домой»</div>
     </div>
 
-    <!-- Нижняя навигация заменяет верхние табы -->
-
     <div id="scan-panel" class="panel active">
-        <h2>📷 Поиск по QR-коду</h2>
+        <div class="page-title">Сканер</div>
         <div id="reader"></div>
         <div id="scan-result"></div>
-        <button id="start-scan-btn">▶ Запустить камеру</button>
+        <button id="start-scan-btn" class="btn-lime btn-block">▶ Запустить камеру</button>
     </div>
 
     <div id="search-panel" class="panel">
-        <h2>🔍 Поиск</h2>
+        <div class="page-title">Поиск</div>
         <div class="search-box">
             <input type="text" id="serial-input" placeholder="Артикул, название или серийный номер..." oninput="searchLive(this.value)">
-            <button onclick="searchBySerial()">Найти</button>
+            <button onclick="searchBySerial()" class="btn-dark">Найти</button>
         </div>
         <div id="search-result"></div>
     </div>
 
     <div id="catalog-panel" class="panel">
-        <h2>📦 Каталог</h2>
-        <div id="catalog-stats" style="background: #eef2ff; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 14px;">
-            <strong>📊 Статистика по комплектациям:</strong>
+        <div class="catalog-head">
+            <div class="page-title">Каталог</div>
+            <button class="filter-pill" onclick="openPrintSelectMode()">🖨 Наклейки</button>
+        </div>
+        <div id="catalog-stats" class="stats-box">
+            <strong class="eyebrow">Статистика по комплектациям</strong>
             <div id="stats-content">Загрузка...</div>
         </div>
         <div class="filter-group">
             <div class="filter-row">
-                <button id="refresh-catalog-btn" class="btn-reset" style="background: #3b82f6; flex:1;">🔄 Обновить данные</button>
-                <button id="print-select-btn" class="btn-reset" style="background: #7c3aed; flex:1;">🖨️ Печать наклеек</button>
+                <button id="refresh-catalog-btn" class="btn-ghost" style="flex:1;">🔄 Обновить данные</button>
+                <button id="print-select-btn" class="btn-ghost" style="flex:1;">🖨️ Печать наклеек</button>
             </div>
         </div>
         <div id="catalog-content" class="loading">⏳ Загрузка...</div>
@@ -504,20 +338,20 @@
     <div id="print-select-bar">
         <span>Выбрано: <strong id="print-select-count">0</strong></span>
         <div style="display:flex; gap:8px;">
-            <button onclick="printSelectedLabels()" style="width:auto; margin:0; padding:8px 16px; background:#16a34a;">🖨️ Напечатать</button>
-            <button onclick="togglePrintSelectMode()" style="width:auto; margin:0; padding:8px 16px; background:#64748b;">Отмена</button>
+            <button onclick="printSelectedLabels()" class="btn-lime" style="width:auto; margin:0; padding:10px 18px;">🖨️ Напечатать</button>
+            <button onclick="togglePrintSelectMode()" class="btn-ghost" style="width:auto; margin:0; padding:10px 18px;">Отмена</button>
         </div>
     </div>
 
     <div id="receive-noqr-panel" class="panel">
-        <h2>➕ Добавление товара</h2>
-        <p style="color: #666; margin-bottom: 15px;">Заполните информацию о товаре. QR-код для наклейки будет сгенерирован автоматически после добавления.</p>
+        <div class="page-title">Новый товар</div>
+        <div class="page-sub">Артикул и QR-код создадутся автоматически после сохранения.</div>
 
-        <div class="form-group">
-            <label>🚁 Модель *</label>
-            <div style="display:flex; gap:8px; margin-bottom:8px;">
-                <button type="button" id="noqr-mode-list" onclick="switchModelMode('list')" style="flex:1; padding:8px; margin:0; font-size:13px; background:#1e3c72;">📋 Из списка</button>
-                <button type="button" id="noqr-mode-manual" onclick="switchModelMode('manual')" style="flex:1; padding:8px; margin:0; font-size:13px; background:rgba(30,60,114,0.3);">✏️ Ввести вручную</button>
+        <div class="field-group" style="margin-top:16px;">
+            <div class="eyebrow field-label">Модель *</div>
+            <div class="pill-switch" style="margin-bottom:10px;">
+                <button type="button" id="noqr-mode-list" class="pill-switch-btn active" onclick="switchModelMode('list')">Из списка</button>
+                <button type="button" id="noqr-mode-manual" class="pill-switch-btn" onclick="switchModelMode('manual')">Вручную</button>
             </div>
             <div id="noqr-list-block">
                 <input type="text" class="model-search-input" id="receive-noqr-model-search" placeholder="Поиск модели..." oninput="filterModels(this.value, 'receive-noqr-model')">
@@ -526,44 +360,48 @@
                 </select>
             </div>
             <div id="noqr-manual-block" style="display:none;">
-                <input type="text" id="receive-noqr-model-manual" placeholder="Введите название модели..." style="width:100%; padding:12px; border:2px solid #e0e4e8; border-radius:30px; font-size:14px;">
+                <input type="text" id="receive-noqr-model-manual" placeholder="Введите название модели...">
             </div>
         </div>
 
-        <div class="form-group">
-            <label>🔢 Серийный номер (заводской)</label>
+        <div class="field-group">
+            <div class="eyebrow field-label">Серийный номер</div>
             <input type="text" id="receive-noqr-serial" placeholder="Например: 3YTBJ4900301RC">
         </div>
 
-        <div class="form-group">
-            <label>💰 Цена закупки</label>
+        <div class="field-group">
+            <div class="eyebrow field-label">Цена закупки</div>
             <input type="number" id="receive-noqr-price" placeholder="0">
         </div>
 
-        <div class="form-group">
-            <label>📝 Состояние / Описание</label>
+        <div class="field-group">
+            <div class="eyebrow field-label">Состояние / описание</div>
             <textarea id="receive-noqr-description" rows="3" placeholder="Состояние, комплектация, примечания..."></textarea>
         </div>
 
         <div id="receive-noqr-result"></div>
-        <button id="submit-noqr-btn" style="background: #16a34a;">✅ Добавить товар (QR создастся автоматически)</button>
-        <button id="clear-noqr-btn" style="background: #64748b;">🗑️ Очистить</button>
+        <button id="submit-noqr-btn" class="btn-lime btn-block">Добавить товар</button>
+        <button id="clear-noqr-btn" class="btn-ghost btn-block">🗑️ Очистить</button>
     </div>
 </div>
 
-<!-- НИЖНЯЯ НАВИГАЦИЯ: 4 таба, без аналитики -->
+<!-- НИЖНЯЯ НАВИГАЦИЯ -->
 <nav class="bottom-nav">
     <button class="nav-item active" id="nav-scan" onclick="switchTab('scan', null, this)">
-        <span class="nav-icon">📷</span><span class="nav-label">Сканер</span>
+        <span class="nav-icon">📷</span>
+        <span class="nav-label">Сканер</span>
     </button>
     <button class="nav-item" id="nav-search" onclick="switchTab('search', null, this)">
-        <span class="nav-icon">🔍</span><span class="nav-label">Поиск</span>
+        <span class="nav-icon">🔍</span>
+        <span class="nav-label">Поиск</span>
     </button>
     <button class="nav-item" id="nav-catalog" onclick="switchTab('catalog', null, this)">
-        <span class="nav-icon">📦</span><span class="nav-label">Каталог</span>
+        <span class="nav-icon">📦</span>
+        <span class="nav-label">Каталог</span>
     </button>
     <button class="nav-item" id="nav-receive-noqr" onclick="switchTab('receive-noqr', null, this)">
-        <span class="nav-icon">➕</span><span class="nav-label">Добавить</span>
+        <span class="nav-icon">➕</span>
+        <span class="nav-label">Добавить</span>
     </button>
 </nav>
 
@@ -616,13 +454,13 @@
         if (mode === 'manual') {
             listBlock.style.display   = 'none';
             manualBlock.style.display = 'block';
-            btnManual.style.background = '#1e3c72';
-            btnList.style.background   = 'rgba(30,60,114,0.3)';
+            btnManual.classList.add('active');
+            btnList.classList.remove('active');
         } else {
             listBlock.style.display   = 'block';
             manualBlock.style.display = 'none';
-            btnList.style.background   = '#1e3c72';
-            btnManual.style.background = 'rgba(30,60,114,0.3)';
+            btnList.classList.add('active');
+            btnManual.classList.remove('active');
         }
     }
 
@@ -696,8 +534,8 @@
                 <div class="confirm-dialog">
                     <p>${escapeHtml(message)}</p>
                     <div class="confirm-buttons">
-                        <button id="confirm-yes" style="background: #dc2626;">Да</button>
-                        <button id="confirm-no" style="background: #64748b;">Нет</button>
+                        <button id="confirm-yes" class="btn-ghost" style="flex:1; color:var(--st-danger); border-color:var(--st-danger);">Да</button>
+                        <button id="confirm-no" class="btn-ghost" style="flex:1;">Нет</button>
                     </div>
                 </div>
             `;
@@ -847,7 +685,7 @@
             if (data.success) {
                 if (resultDiv) {
                     resultDiv.innerHTML = '<div class="success">' + escapeHtml(data.message) + '<br>🔢 Артикул: ' + escapeHtml(data.sku) + '</div>'
-                        + '<button id="print-new-label-btn" style="background:#7c3aed; margin-top:10px;">🖨️ Напечатать наклейку</button>';
+                        + '<button id="print-new-label-btn" class="btn-dark btn-block">🖨️ Напечатать наклейку</button>';
                     const printBtn = document.getElementById('print-new-label-btn');
                     if (printBtn) printBtn.onclick = () => printLabels([{ 'Артикул': data.sku, 'Название': model }]);
                 }
@@ -920,22 +758,20 @@
             return;
         }
         // Несколько результатов — показываем список для выбора
-        let html = '<div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">';
+        let html = '<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">';
         matches.slice(0, 10).forEach(p => {
-            const statusClass = getStatusClass(p['Статус']);
-            const statusText  = getStatusText(p['Статус']);
-            const isDark = document.body.classList.contains('dark-mode');
-            const cardBg = isDark ? '#243447' : '#f8fafc';
-            const cardBorder = isDark ? '#2d3f55' : '#e2e8f0';
-            const cardColor = isDark ? '#e2e8f0' : '';
-            html += '<div style="background:' + cardBg + '; border:1px solid ' + cardBorder + '; border-radius:12px; padding:12px; cursor:pointer;' + (cardColor ? ' color:' + cardColor + ';' : '') + '" '
-                + 'onclick="selectSearchResult(\'' + escapeHtml(p['Артикул']) + '\')">'
-                + '<strong>' + escapeHtml(p['Название'] || 'Без названия') + '</strong><br>'
-                + '<small>🔢 ' + escapeHtml(p['Артикул'] || '—') + '</small> &nbsp; '
-                + '<small class="' + statusClass + '">' + statusText + '</small>'
+            const si = getStatusIcon(p['Статус']);
+            const catIcon = currentCategory === 'Дроны' ? '🚁' : '🛴';
+            html += '<div class="list-row" onclick="selectSearchResult(\'' + escapeHtml(p['Артикул']) + '\')">'
+                + '<span class="list-row-icon">' + catIcon + '</span>'
+                + '<div class="list-row-body">'
+                + '<div class="list-row-title">' + escapeHtml(p['Название'] || 'Без названия') + '</div>'
+                + '<div class="list-row-sub">' + escapeHtml(p['Артикул'] || '—') + '</div>'
+                + '</div>'
+                + '<span title="' + si.title + '" style="font-size:16px; flex:none;">' + si.icon + '</span>'
                 + '</div>';
         });
-        if (matches.length > 10) html += '<div style="color:#64748b; font-size:13px; text-align:center;">... и ещё ' + (matches.length - 10) + '</div>';
+        if (matches.length > 10) html += '<div style="color:var(--tx2); font-size:13px; text-align:center;">... и ещё ' + (matches.length - 10) + '</div>';
         html += '</div>';
         resultDiv.innerHTML = html;
     }
@@ -1051,37 +887,48 @@
         let deliveryCost = p['Затраты доставка'];
         if (deliveryCost && !isNaN(parseFloat(deliveryCost))) deliveryCost = parseFloat(deliveryCost).toLocaleString('ru-RU') + ' ₽';
 
-        const statusClass = getStatusClass(p['Статус']);
+        const si = getStatusIcon(p['Статус']);
         const statusText = getStatusText(p['Статус']);
-
         const escapedSku = escapeHtml(p['Артикул']);
+        const catIcon = currentCategory === 'Дроны' ? '🚁' : '🛴';
 
         let html = '<div class="product-card" id="product-card-' + escapedSku + '">'
-            + '<h3>🚁 ' + escapeHtml(p['Название'] || 'Без названия') + '</h3>'
-            + '<div class="product-detail"><strong>🔢 Артикул:</strong> ' + escapeHtml(p['Артикул'] || '—') + '</div>'
-            + '<div class="product-detail"><strong>📇 Серийный номер:</strong> ' + escapeHtml(p['Серийный номер'] || '—') + '</div>'
-            + '<div class="product-detail"><strong>📝 Состояние:</strong><div class="state-list">' + formatStateText(p['Состояние'] || '—') + '</div></div>'
-            + '<div class="product-detail"><strong>💰 Цена закупки:</strong> ' + (priceZakupka || '—') + '</div>'
-            + '<div class="product-detail"><strong>💰 Цена продажи:</strong> ' + (priceProdazha || '—') + '</div>';
+            + '<div class="product-card-head">'
+            + '<div><h3>' + catIcon + ' ' + escapeHtml(p['Название'] || 'Без названия') + '</h3>'
+            + '<div class="list-row-sub" style="margin-top:6px;">' + escapeHtml(p['Артикул'] || '—') + '</div></div>';
+        if (p['QR_Code']) html += '<div class="qr-code"><img src="' + escapeHtml(p['QR_Code']) + '"></div>';
+        html += '</div>'
+            + '<div class="status-badge" style="margin-top:12px; background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + si.icon + ' ' + statusText + '</div>';
 
-        if (repairCost) html += '<div class="product-detail"><strong>🔧 Затраты (ремонт):</strong> ' + repairCost + '</div>';
-        if (deliveryCost) html += '<div class="product-detail"><strong>📦 Затраты (доставка):</strong> ' + deliveryCost + '</div>';
-        if (profit) html += '<div class="product-detail"><strong>💰 Прибыль:</strong> ' + profit + '</div>';
+        html += '<div style="display:flex; gap:10px; margin-top:14px;">'
+            + '<div class="stat-card"><span class="eyebrow">Закупка</span><div class="stat-value">' + (priceZakupka || '—') + '</div></div>'
+            + '<div class="stat-card" style="background:var(--lime); color:var(--ink); border:none;"><span class="eyebrow" style="color:var(--ink); opacity:.6;">' + (profit ? 'Прибыль' : 'Цена продажи') + '</span><div class="stat-value" style="color:var(--ink);">' + (profit || priceProdazha || '—') + '</div></div>'
+            + '</div>';
 
-        html += '<div class="product-detail"><strong>📌 Статус:</strong> <span class="' + statusClass + '">' + statusText + '</span></div>';
+        html += '<div style="margin-top:14px;">';
+        html += '<div class="product-detail"><strong>Серийный номер</strong><span>' + escapeHtml(p['Серийный номер'] || '—') + '</span></div>';
+        if (repairCost) html += '<div class="product-detail"><strong>Затраты (ремонт)</strong><span>' + repairCost + '</span></div>';
+        if (deliveryCost) html += '<div class="product-detail"><strong>Затраты (доставка)</strong><span>' + deliveryCost + '</span></div>';
+        if (p['Дата закупки']) html += '<div class="product-detail"><strong>Дата закупки</strong><span>' + escapeHtml(p['Дата закупки']) + '</span></div>';
+        if (p['Дата продажи']) html += '<div class="product-detail"><strong>Дата продажи</strong><span>' + escapeHtml(p['Дата продажи']) + '</span></div>';
+        if (p['Ссылка на Авито']) html += '<div class="product-detail"><strong>Авито</strong><span><a href="' + escapeHtml(p['Ссылка на Авито']) + '" target="_blank" style="color:var(--lime);">Открыть →</a></span></div>';
+        if (p['Фото'] && p['Фото'] !== 'IMAGE') html += '<div class="product-detail"><strong>Фото</strong><span><a href="' + escapeHtml(p['Фото']) + '" target="_blank" style="color:var(--lime);">Посмотреть</a></span></div>';
+        html += '</div>';
 
-        if (p['Дата закупки']) html += '<div class="product-detail"><strong>📅 Дата закупки:</strong> ' + escapeHtml(p['Дата закупки']) + '</div>';
-        if (p['Дата продажи']) html += '<div class="product-detail"><strong>📆 Дата продажи:</strong> ' + escapeHtml(p['Дата продажи']) + '</div>';
-        if (p['Ссылка на Авито']) html += '<div class="product-detail"><strong>🔗 Авито:</strong> <a href="' + escapeHtml(p['Ссылка на Авито']) + '" target="_blank">Открыть →</a></div>';
-        if (p['Фото'] && p['Фото'] !== 'IMAGE') html += '<div class="product-detail"><strong>📷 Фото:</strong> <a href="' + escapeHtml(p['Фото']) + '" target="_blank">Посмотреть</a></div>';
-        if (p['QR_Code']) html += '<div class="qr-code"><strong>📱 QR-код:</strong><br><img src="' + escapeHtml(p['QR_Code']) + '" style="max-width:120px"></div>';
+        if (p['Состояние'] && p['Состояние'] !== '—') {
+            html += '<div style="margin-top:14px;"><span class="eyebrow">Состояние</span><div class="state-list">' + formatStateText(p['Состояние']) + '</div></div>';
+        }
 
         html += '<div class="action-buttons">'
-            + '<button class="action-btn" onclick="goBack()" style="background: #475569;">⬅️ Назад</button>'
+            + '<button class="btn-lime btn-block" onclick="printProductLabel(\'' + escapedSku + '\')" style="margin-top:0;">🖨 Напечатать наклейку</button>'
+            + '<div class="action-buttons-row">'
+            + '<button class="action-btn" onclick="editProduct(\'' + escapedSku + '\')">✏️ Редактировать</button>'
             + '<button class="action-btn" onclick="shareProduct(\'' + escapedSku + '\')">📤 Поделиться</button>'
-            + '<button class="action-btn" onclick="printProductLabel(\'' + escapedSku + '\')" style="background: #7c3aed;">🖨️ Наклейка</button>'
-            + '<button class="action-btn" onclick="editProduct(\'' + escapedSku + '\')" style="background: #eab308;">✏️ Редактировать</button>'
-            + '<button class="action-btn" onclick="deleteProduct(\'' + escapedSku + '\')" style="background: #dc2626;">🗑️ Удалить</button>'
+            + '</div>'
+            + '<div class="action-buttons-row">'
+            + '<button class="action-btn" onclick="goBack()">⬅️ Назад</button>'
+            + '<button class="action-btn" style="color:var(--st-danger); border-color:var(--st-danger);" onclick="deleteProduct(\'' + escapedSku + '\')">🗑️ Удалить</button>'
+            + '</div>'
             + '</div>';
 
         html += '</div>';
@@ -1118,8 +965,8 @@
         if (text.includes('*')) {
             const items = text.split('*').filter(item => item.trim().length > 0);
             if (items.length > 0) {
-                let html = '<ul style="margin: 5px 0 0 20px; padding-left: 0;">';
-                items.forEach(item => { html += '<li style="margin: 3px 0;">' + escapeHtml(item.trim()) + '</li>'; });
+                let html = '<ul>';
+                items.forEach(item => { html += '<li>' + escapeHtml(item.trim()) + '</li>'; });
                 html += '</ul>';
                 return html;
             }
@@ -1152,29 +999,27 @@
             }
         });
 
-        // Кнопки фильтрации по статусу
+        // Пилюли фильтрации по статусу
         const mkBtn = (label, value, color, count) => {
             const isActive = activeStatusFilter === value;
-            const darkMode = document.body.classList.contains('dark-mode');
-            const inactiveBg = darkMode ? '#243447' : 'white';
-            return '<button class="status-filter-btn' + (isActive ? ' active' : '') + '" '
-                + 'style="background:' + (isActive ? color + '22' : inactiveBg) + '; color:' + color + '; border-color:' + (isActive ? color : 'transparent') + ';" '
-                + 'onclick="filterByStatus(\'' + value + '\')">'
+            return '<button class="filter-pill' + (isActive ? ' active' : '') + '" '
+                + (isActive ? '' : 'style="color:' + color + ';"')
+                + ' onclick="filterByStatus(\'' + value + '\')">'
                 + label + ' <strong>' + count + '</strong></button>';
         };
 
         let statsHtml = '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">'
-            + mkBtn('📦 Все', '', '#475569', total)
-            + mkBtn('🟢 В наличии', 'Не продан', '#16a34a', unsold)
-            + mkBtn('🚚 В доставке', 'В доставке', '#3b82f6', delivery)
-            + mkBtn('🔒 Зарезервирован', 'Зарезервирован', '#eab308', reserved)
-            + mkBtn('✅ Продан', 'Продан', '#94a3b8', sold)
+            + mkBtn('📦 Все', '', 'var(--tx2)', total)
+            + mkBtn('🟢 В наличии', 'Не продан', 'var(--st-ok)', unsold)
+            + mkBtn('🚚 В доставке', 'В доставке', 'var(--st-info)', delivery)
+            + mkBtn('🔒 Зарезервирован', 'Зарезервирован', 'var(--st-warn)', reserved)
+            + mkBtn('✅ Продан', 'Продан', 'var(--st-off)', sold)
             + '</div>';
 
-        // Кнопки моделей
+        // Пилюли моделей
         statsHtml += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
         for (const [model, count] of Object.entries(stats).sort()) {
-            statsHtml += '<span class="model-filter-btn" onclick="filterCatalogDirectly(\'' + escapeHtml(model) + '\')">'
+            statsHtml += '<span class="filter-pill" style="cursor:pointer;" onclick="filterCatalogDirectly(\'' + escapeHtml(model) + '\')">'
                 + escapeHtml(model) + ': <strong>' + count + '</strong>'
                 + '</span>';
         }
@@ -1196,8 +1041,8 @@
         renderCatalog(filtered);
         updateStats(allProducts);
         const statsHeader = document.querySelector('#catalog-stats strong');
-        if (statsHeader) statsHeader.innerHTML = '📊 Фильтр: ' + escapeHtml(model)
-            + ' &nbsp;<button onclick="resetCatalogFilter()" style="background:#475569;border:none;color:white;padding:3px 10px;border-radius:12px;font-size:12px;cursor:pointer;">✕ Сбросить</button>';
+        if (statsHeader) statsHeader.innerHTML = 'Фильтр: ' + escapeHtml(model)
+            + ' <button class="filter-pill" style="margin-left:8px;" onclick="resetCatalogFilter()">✕ Сбросить</button>';
     }
 
     function resetCatalogFilter() {
@@ -1205,7 +1050,7 @@
         renderCatalog(sortByStatus(allProducts));
         updateStats(allProducts);
         const statsHeader = document.querySelector('#catalog-stats strong');
-        if (statsHeader) statsHeader.innerHTML = '📊 Статистика по комплектациям:';
+        if (statsHeader) statsHeader.innerHTML = 'Статистика по комплектациям';
     }
 
     function applyFilters() {
@@ -1220,58 +1065,50 @@
     }
 
     function renderCatalog(products) {
-    const container = document.getElementById('catalog-content');
-    if (!container) return;
-    if (!products || products.length === 0) {
-        container.innerHTML = '<div class="error">📭 Товары не найдены.</div>';
-        return;
+        const container = document.getElementById('catalog-content');
+        if (!container) return;
+        if (!products || products.length === 0) {
+            container.innerHTML = '<div class="error">📭 Товары не найдены.</div>';
+            return;
+        }
+        let html = '<div class="products-grid">';
+        products.forEach(product => {
+            const status = product['Статус'] || '';
+            const si = getStatusIcon(status);
+            const sku = product['Артикул'] || '';
+            const isSelected = selectedForPrint.has(sku);
+            let itemClass = 'list-row product-item';
+            if (status === 'Продан') itemClass += ' is-dim';
+            if (printSelectMode && isSelected) itemClass += ' is-print-selected';
+            const catIcon = currentCategory === 'Дроны' ? '🚁' : '🛴';
+            const clickHandler = printSelectMode
+                ? "togglePrintSelection('" + escapeHtml(sku) + "')"
+                : "viewProductDetail('" + escapeHtml(sku) + "')";
+            let price = product['Цена закупка'];
+            price = (price && !isNaN(parseFloat(price))) ? parseFloat(price).toLocaleString('ru-RU') + ' ₽' : '';
+            html += '<div class="' + itemClass + '" style="border-left:3px solid ' + si.color + ';" onclick="' + clickHandler + '">'
+                + (printSelectMode ? '<span class="print-select-check">' + (isSelected ? '✅' : '⬜') + '</span>' : '')
+                + '<span class="list-row-icon">' + catIcon + '</span>'
+                + '<div class="list-row-body">'
+                + '<div class="list-row-title">' + escapeHtml(product['Название'] || 'Без названия') + '</div>'
+                + '<div class="list-row-sub">' + escapeHtml(sku || '—') + '</div>'
+                + '</div>'
+                + (printSelectMode ? '' : '<div class="list-row-side">'
+                    + (price ? '<div class="list-row-price">' + price + '</div>' : '')
+                    + '<div class="list-row-status" style="color:' + si.color + ';">' + getStatusText(status) + '</div>'
+                    + '</div>')
+                + '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
     }
-    const STATUS_UI = {
-        'Не продан':      { cls: 'is-unsold',   color: 'var(--ok)',   label: 'В наличии' },
-        'В доставке':     { cls: 'is-delivery', color: 'var(--info)', label: 'В доставке' },
-        'Зарезервирован': { cls: 'is-reserved', color: 'var(--warn)', label: 'Резерв' },
-        'Продан':         { cls: 'is-sold',     color: 'var(--mute)', label: 'Продан' }
-    };
-    let html = '<div class="products-grid">';
-    products.forEach(product => {
-        const status = product['Статус'] || 'Не продан';
-        const ui = STATUS_UI[status] || STATUS_UI['Не продан'];
-        const sku = product['Артикул'] || '';
-        const isSelected = selectedForPrint.has(sku);
-        let itemClass = 'product-item ' + ui.cls;
-        if (printSelectMode && isSelected) itemClass += ' is-print-selected';
-        const catIcon = currentCategory === 'Дроны' ? '🚁' : '🛴';
-        const price = product['Цена закупка'] && !isNaN(parseFloat(product['Цена закупка']))
-            ? parseFloat(product['Цена закупка']).toLocaleString('ru-RU') + ' ₽' : '—';
-        const clickHandler = printSelectMode
-            ? "togglePrintSelection('" + escapeHtml(sku) + "')"
-            : "viewProductDetail('" + escapeHtml(sku) + "')";
-        html += '<div class="' + itemClass + '" onclick="' + clickHandler + '">'
-            + (printSelectMode ? '<span class="print-select-check">' + (isSelected ? '✅' : '⬜') + '</span>' : '')
-            + '<div style="display:flex; align-items:flex-start; gap:10px;">'
-            +   '<span style="font-size:20px; line-height:1.2; flex:none;">' + catIcon + '</span>'
-            +   '<div style="flex:1; min-width:0; text-align:left;">'
-            +     '<strong>' + escapeHtml(product['Название'] || 'Без названия') + '</strong>'
-            +     '<small>' + escapeHtml(sku || '—') + '</small>'
-            +   '</div>'
-            +   (printSelectMode ? '' :
-                '<div style="text-align:right; flex:none;">'
-                + '<div style="font:700 12.5px \'IBM Plex Mono\',monospace; color:var(--tx);">' + price + '</div>'
-                + '<div style="font:700 10.5px \'Plus Jakarta Sans\',sans-serif; color:' + ui.color + '; margin-top:3px;">' + ui.label + '</div>'
-                + '</div>')
-            + '</div>'
-            + '</div>';
-    });
-    html += '</div>';
-    container.innerHTML = html;
-}
 
     function resetFilters() {
         activeStatusFilter = null;
         applyFilters();
         updateStats(allProducts);
         const statsHeader = document.querySelector('#catalog-stats strong');
-        if (statsHeader) statsHeader.innerHTML = '📊 Статистика по комплектациям:';
+        if (statsHeader) statsHeader.innerHTML = 'Статистика по комплектациям';
     }
 
     // ── Печать наклеек списком ──────────────────────────────────
@@ -1367,8 +1204,8 @@
                     catalogLoaded = true;
                     renderCatalog(products);
                     updateStats(products);
-                    const headerTitle = document.querySelector('#catalog-panel h2');
-                    if (headerTitle) headerTitle.textContent = '📦 Каталог ' + category;
+                    const headerTitle = document.querySelector('#catalog-panel .page-title');
+                    if (headerTitle) headerTitle.textContent = 'Каталог · ' + category;
                 }
             }
         } catch (error) { console.log('Фоновое обновление не удалось:', error); }
@@ -1391,8 +1228,8 @@
 
         updateModelsForCategory(category);
 
-        const headerTitle = document.querySelector('#catalog-panel h2');
-        if (headerTitle) headerTitle.textContent = '📦 Каталог ' + category;
+        const headerTitle = document.querySelector('#catalog-panel .page-title');
+        if (headerTitle) headerTitle.textContent = 'Каталог · ' + category;
 
         const cacheKey = 'cachedProducts_' + category;
         if (window[cacheKey] && window[cacheKey].length > 0) {
@@ -1518,18 +1355,15 @@
         if (!currentProduct) return;
 
         const modal = document.createElement('div');
-        modal.style.cssText = 'position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:1000;';
-        const isDarkModal = document.body.classList.contains('dark-mode');
-        const modalBg = isDarkModal ? '#1e2a3a' : 'white';
-        const modalH3Color = isDarkModal ? '#93c5fd' : '#1e3c72';
-        modal.innerHTML = '<div style="background:' + modalBg + '; border-radius:20px; padding:20px; max-width:500px; width:90%; max-height:80%; overflow-y:auto; color:' + (isDarkModal ? '#e2e8f0' : 'inherit') + ';">'
-            + '<h3 style="color:' + modalH3Color + ';">✏️ Редактирование: ' + escapeHtml(currentProduct['Артикул']) + '</h3>'
-            + '<div class="form-group"><label>🚁 Название</label><input type="text" id="edit-name" value="' + escapeHtml(currentProduct['Название']) + '"></div>'
-            + '<div class="form-group"><label>📇 Серийный номер</label><input type="text" id="edit-serial" value="' + escapeHtml(currentProduct['Серийный номер']) + '"></div>'
-            + '<div class="form-group"><label>📝 Состояние</label><textarea id="edit-description" rows="3">' + escapeHtml(currentProduct['Состояние']) + '</textarea></div>'
-            + '<div class="form-group"><label>💰 Цена закупки</label><input type="number" id="edit-purchase-price" value="' + (currentProduct['Цена закупка'] || '') + '"></div>'
-            + '<div class="form-group"><label>💰 Цена продажи</label><input type="number" id="edit-sale-price" value="' + (currentProduct['Цена продажа'] || '') + '"></div>'
-            + '<div class="form-group"><label>📌 Статус</label>'
+        modal.className = 'confirm-overlay';
+        modal.innerHTML = '<div class="confirm-dialog" style="max-width:500px; max-height:80vh; overflow-y:auto; text-align:left;">'
+            + '<h3 style="font:800 17px var(--f-head); margin-bottom:16px; color:var(--tx);">✏️ Редактирование: ' + escapeHtml(currentProduct['Артикул']) + '</h3>'
+            + '<div class="field-group"><div class="eyebrow field-label">Название</div><input type="text" id="edit-name" value="' + escapeHtml(currentProduct['Название']) + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Серийный номер</div><input type="text" id="edit-serial" value="' + escapeHtml(currentProduct['Серийный номер']) + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Состояние</div><textarea id="edit-description" rows="3">' + escapeHtml(currentProduct['Состояние']) + '</textarea></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Цена закупки</div><input type="number" id="edit-purchase-price" value="' + (currentProduct['Цена закупка'] || '') + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Цена продажи</div><input type="number" id="edit-sale-price" value="' + (currentProduct['Цена продажа'] || '') + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Статус</div>'
             +     '<select id="edit-status">'
             +         '<option value="Не продан"' + (currentProduct['Статус'] === 'Не продан' ? ' selected' : '') + '>Не продан</option>'
             +         '<option value="Продан"' + (currentProduct['Статус'] === 'Продан' ? ' selected' : '') + '>Продан</option>'
@@ -1537,10 +1371,10 @@
             +         '<option value="В доставке"' + (currentProduct['Статус'] === 'В доставке' ? ' selected' : '') + '>В доставке</option>'
             +     '</select>'
             + '</div>'
-            + '<div class="form-group"><label>🔗 Авито</label><input type="url" id="edit-avito" value="' + escapeHtml(currentProduct['Ссылка на Авито'] || '') + '"></div>'
-            + '<div class="form-group"><label>🔧 Затраты (ремонт)</label><input type="number" id="edit-repair-cost" value="' + (currentProduct['Затраты ремонт'] || '') + '"></div>'
-            + '<div class="form-group"><label>📦 Затраты (доставка)</label><input type="number" id="edit-delivery-cost" value="' + (currentProduct['Затраты доставка'] || '') + '"></div>'
-            + '<div class="action-buttons"><button id="save-edit-btn" style="background:#16a34a;">💾 Сохранить</button><button id="cancel-edit-btn" style="background:#64748b;">❌ Отмена</button></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Авито</div><input type="url" id="edit-avito" value="' + escapeHtml(currentProduct['Ссылка на Авито'] || '') + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Затраты (ремонт)</div><input type="number" id="edit-repair-cost" value="' + (currentProduct['Затраты ремонт'] || '') + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Затраты (доставка)</div><input type="number" id="edit-delivery-cost" value="' + (currentProduct['Затраты доставка'] || '') + '"></div>'
+            + '<div class="action-buttons-row" style="margin-top:16px;"><button id="save-edit-btn" class="btn-lime" style="flex:1; height:46px;">💾 Сохранить</button><button id="cancel-edit-btn" class="btn-ghost" style="flex:1; height:46px;">Отмена</button></div>'
             + '</div>';
         document.body.appendChild(modal);
 
@@ -1654,8 +1488,8 @@
             } else {
                 document.getElementById('btn-scooters').classList.add('active');
             }
-            const headerTitle = document.querySelector('#catalog-panel h2');
-            if (headerTitle) headerTitle.textContent = '📦 Каталог ' + category;
+            const headerTitle = document.querySelector('#catalog-panel .page-title');
+            if (headerTitle) headerTitle.textContent = 'Каталог · ' + category;
             catalogLoaded = false;
             cachedProducts = null;
             loadCatalog(true);
