@@ -75,9 +75,10 @@
 
         .catalog-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
         .stats-box { background: var(--sf); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; margin: 16px 0; }
+        #stats-content { margin-top: 14px; }
         .filter-group { margin-bottom: 14px; }
-        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
-        .filter-row button { margin: 0; }
+        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-row button { margin: 0; flex: 1; min-width: 140px; height: 48px; font-size: 13px; white-space: nowrap; }
 
         .model-search-input { margin-bottom: 8px; }
 
@@ -1145,7 +1146,7 @@
                 + label + ' <strong>' + count + '</strong></button>';
         };
 
-        let statsHtml = '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">'
+        let statsHtml = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:12px;">'
             + mkBtn('📦 Все', '', 'var(--tx2)', total)
             + mkBtn('🟢 В наличии', 'Не продан', 'var(--st-ok)', unsold)
             + mkBtn('🚚 В доставке', 'В доставке', 'var(--st-info)', delivery)
