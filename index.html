@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -428,7 +429,6 @@
 
     <div id="install-banner" class="install-banner">
         <div id="android-install" style="display: none;"><button id="install-btn" class="btn-dark btn-block">📲 Установить</button></div>
-        <div id="ios-install" style="display: none;">📱 Поделиться → На экран «Домой»</div>
     </div>
 
     <div id="home-panel" class="panel active">
@@ -471,7 +471,7 @@
             <div id="reader"></div>
             <div class="scanner-placeholder" id="scanner-placeholder">
                 <div class="scanner-hatch"></div>
-                <div class="scanner-placeholder-text">камера · html5-qrcode</div>
+                <div class="scanner-placeholder-text">камера</div>
             </div>
             <div class="scanner-viewfinder">
                 <span class="vf-corner vf-tl"></span>
@@ -482,8 +482,8 @@
             </div>
             <div class="scanner-caption">Наведите на QR-код наклейки</div>
         </div>
-        <div id="scan-result"></div>
         <button id="start-scan-btn" class="btn-lime btn-block">Сканировать</button>
+        <div id="scan-result"></div>
         <div class="eyebrow" style="margin-top:18px;">Последние сканы</div>
         <div id="scan-recent-scans"></div>
     </div>
@@ -694,7 +694,6 @@
     }
 
     // PWA
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isAndroid = /Android/.test(navigator.userAgent);
     if (isAndroid) {
         document.getElementById('android-install').style.display = 'block';
@@ -709,9 +708,6 @@
             deferredPrompt.prompt();
             deferredPrompt = null;
         });
-    } else if (isIOS) {
-        document.getElementById('ios-install').style.display = 'block';
-        document.getElementById('install-banner').style.display = 'block';
     }
 
     // ========== УТИЛИТЫ ==========
@@ -804,7 +800,7 @@
             selectedForPrint.clear();
             updatePrintBar();
         }
-        if (tab === 'search') ensureAllCategoriesLoaded();
+        if (tab === 'search' || tab === 'scan') ensureAllCategoriesLoaded();
 
         // На вкладке «Поиск» переключатель категории не нужен — поиск идёт сразу по всем товарам
         const catGroup = document.getElementById('mobile-header-cat-group');
@@ -859,13 +855,47 @@
         if (!resultDiv) return;
         resultDiv.innerHTML = '<div class="loading">🔍 Поиск...</div>';
         try {
-            const product = await findProductBySKU(qrData);
-            currentProduct = product;
-            displayProduct(product, 'scan-result');
-            recordRecentScan(product);
+            const found = await findProductAcrossCategories(qrData);
+            if (!found) throw new Error('Товар с артикулом "' + qrData + '" не найден');
+            if (found.cat !== currentCategory) {
+                await switchCategory(found.cat);
+            }
+            currentProduct = found.product;
+            displayProduct(found.product, 'scan-result');
+            recordRecentScan(found.product);
         } catch(e) {
             resultDiv.innerHTML = '<div class="error">❌ ' + escapeHtml(e.message) + '</div>';
         }
+    }
+
+    // Скан QR не зависит от выбранной наверху категории — ищет товар и в дронах, и в самокатах.
+    async function findProductAcrossCategories(sku) {
+        for (const cat of ['Дроны', 'Самокаты']) {
+            const cached = window['cachedProducts_' + cat];
+            if (cached && cached.length) {
+                const found = cached.find(p => p['Артикул'] === sku);
+                if (found) return { product: found, cat: cat };
+            }
+        }
+        for (const cat of ['Дроны', 'Самокаты']) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const res = await fetch(apiUrl({ serial: sku, category: cat }), { signal: controller.signal });
+                clearTimeout(timeoutId);
+                const data = await res.json();
+                if (data.error) continue;
+                return { product: data, cat: cat };
+            } catch (error) { /* пробуем следующую категорию */ }
+        }
+        for (const cat of ['Дроны', 'Самокаты']) {
+            const offlineData = loadProductsFromLocalStorageForCategory(cat);
+            if (offlineData && offlineData.products) {
+                const found = offlineData.products.find(p => p['Артикул'] === sku);
+                if (found) return { product: found, cat: cat };
+            }
+        }
+        return null;
     }
 
     // ========== ПОСЛЕДНИЕ СКАНЫ (для «Главная» и «Сканер») ==========
@@ -1625,10 +1655,7 @@
 
         html += '<div style="margin-top:auto; display:flex; flex-direction:column; gap:9px;">'
             + '<button class="btn-dark btn-block" style="margin-top:0;" onclick="printProductLabel(\'' + escapedSku + '\')">🖨 Напечатать наклейку</button>'
-            + '<div class="action-buttons-row">'
-            + '<button class="action-btn" onclick="editProduct(\'' + escapedSku + '\')">Изменить статус</button>'
-            + '<button class="action-btn" onclick="editProduct(\'' + escapedSku + '\')">Редактировать</button>'
-            + '</div>'
+            + '<button class="action-btn" style="width:100%;" onclick="editProduct(\'' + escapedSku + '\')">Редактировать</button>'
             + '</div>';
 
         panel.innerHTML = html;
