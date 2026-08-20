@@ -1458,11 +1458,14 @@
         return urls.join('|');
     }
 
-    // Строка мини-превью для формы редактирования / добавления товара
+    // Строка мини-превью с кнопкой удаления — для формы редактирования товара
     function photoThumbsHtml(photoField) {
         const urls = getPhotoUrls(photoField);
         return urls.map(function (url) {
-            return '<img src="' + escapeHtml(url) + '" style="width:60px; height:60px; object-fit:cover; border-radius:10px; border:1px solid var(--line); flex:none; background:var(--sf);">';
+            return '<div style="position:relative; flex:none;">'
+                + '<img src="' + escapeHtml(url) + '" style="width:60px; height:60px; object-fit:cover; border-radius:10px; border:1px solid var(--line); display:block; background:var(--sf);">'
+                + '<button type="button" class="photo-thumb-remove" data-url="' + escapeHtml(url) + '" style="position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:none; background:#e5484d; color:#fff; font:700 13px/1 var(--f-head); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">×</button>'
+                + '</div>';
         }).join('');
     }
 
@@ -2086,6 +2089,26 @@
             photoStatus.textContent = '✅ Фото загружено';
             photoInput.value = '';
             photoBtn.disabled = false;
+        };
+
+        photoPreview.onclick = async (e) => {
+            const removeBtn = e.target.closest('.photo-thumb-remove');
+            if (!removeBtn) return;
+            const url = removeBtn.dataset.url;
+            const confirmed = await showConfirmDialog('Удалить это фото?');
+            if (!confirmed) return;
+            photoStatus.textContent = '⏳ Удаление фото...';
+            try {
+                const remaining = getPhotoUrls(currentProduct['Фото']).filter(u => u !== url).join('|');
+                const result = await apiPost({ action: 'updateProduct', sku: currentProduct['Артикул'], category: currentCategory, photos: remaining });
+                if (!result.success) throw new Error(result.message || 'Не удалось удалить фото');
+                currentProduct['Фото'] = remaining;
+                photoPreview.innerHTML = photoThumbsHtml(currentProduct['Фото']);
+                photoStatus.textContent = '✅ Фото удалено';
+                refreshVisibleProductCard();
+            } catch (err) {
+                photoStatus.textContent = '❌ ' + err.message;
+            }
         };
 
         document.getElementById('save-edit-btn').onclick = async () => {
