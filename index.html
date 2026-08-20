@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -403,7 +404,7 @@
             <div class="sidebar-cta-title">Сканировать QR</div>
             <div class="sidebar-cta-sub">камера или ручной ввод</div>
         </div>
-        <button class="sidebar-theme-btn" id="sb-theme-btn" onclick="toggleTheme()" data-theme-label="Тёмная тема">🌙 Тёмная тема</button>
+        <button class="sidebar-theme-btn" id="sb-theme-btn" onclick="toggleTheme()">🌙 Тёмная тема</button>
     </div>
 </aside>
 
@@ -460,8 +461,8 @@
                 <span class="quick-action-arrow">→</span>
             </a>
         </div>
-        <div class="eyebrow" style="margin-top:2px;">Последние сканы</div>
-        <div id="home-recent-scans"></div>
+        <div class="eyebrow" style="margin-top:22px;">Последние сканы</div>
+        <div id="home-recent-scans" style="margin-top:10px;"></div>
     </div>
 
     <div id="scan-panel" class="panel">
@@ -1996,6 +1997,13 @@
 
 
     // Кнопки Назад/Главная удалены — навигация через нижнюю панель
+
+    // Кнопка темы в сайдбаре десктопа показывает, НА какую тему переключит клик
+    // (а не название текущей) — в отличие от иконок toggle-кнопок в шапке.
+    window.addEventListener('themechange', function (e) {
+        const btn = document.getElementById('sb-theme-btn');
+        if (btn) btn.textContent = e.detail.dark ? '☀️ Светлая тема' : '🌙 Тёмная тема';
+    });
 
     window.onload = function() {
         handleUrlParams();
