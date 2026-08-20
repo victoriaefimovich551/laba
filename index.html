@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -1382,7 +1381,7 @@
             + mkBtn('📦 Все', '', 'var(--tx2)', total)
             + mkBtn('🟢 В наличии', 'Не продан', 'var(--st-ok)', unsold)
             + mkBtn('🚚 В доставке', 'В доставке', 'var(--st-info)', delivery)
-            + mkBtn('🔒 Зарезервирован', 'Зарезервирован', 'var(--st-warn)', reserved)
+            + mkBtn('🔒 Резерв', 'Зарезервирован', 'var(--st-warn)', reserved)
             + mkBtn('✅ Продан', 'Продан', 'var(--st-off)', sold)
             + '</div>';
 
@@ -1846,7 +1845,7 @@
             +     '<select id="edit-status">'
             +         '<option value="Не продан"' + (currentProduct['Статус'] === 'Не продан' ? ' selected' : '') + '>Не продан</option>'
             +         '<option value="Продан"' + (currentProduct['Статус'] === 'Продан' ? ' selected' : '') + '>Продан</option>'
-            +         '<option value="Зарезервирован"' + (currentProduct['Статус'] === 'Зарезервирован' ? ' selected' : '') + '>Зарезервирован</option>'
+            +         '<option value="Зарезервирован"' + (currentProduct['Статус'] === 'Зарезервирован' ? ' selected' : '') + '>Резерв</option>'
             +         '<option value="В доставке"' + (currentProduct['Статус'] === 'В доставке' ? ' selected' : '') + '>В доставке</option>'
             +     '</select>'
             + '</div>'
