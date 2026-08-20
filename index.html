@@ -972,7 +972,7 @@
                 + '<div class="list-row-title">' + escapeHtml(p['Название'] || 'Без названия') + '</div>'
                 + '<div class="list-row-sub">' + escapeHtml(p['Артикул'] || '—') + '</div>'
                 + '</div>'
-                + '<span title="' + si.title + '" style="font-size:16px; flex:none;">' + si.icon + '</span>'
+                + '<span class="status-badge" style="flex:none; background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + getStatusText(p['Статус']) + '</span>'
                 + '</div>';
         });
         if (matches.length > 10) html += '<div style="color:var(--tx2); font-size:13px; text-align:center;">... и ещё ' + (matches.length - 10) + '</div>';
@@ -1102,7 +1102,7 @@
             + '<div class="list-row-sub" style="margin-top:6px;">' + escapeHtml(p['Артикул'] || '—') + '</div></div>';
         if (p['QR_Code']) html += '<div class="qr-code"><img src="' + escapeHtml(p['QR_Code']) + '"></div>';
         html += '</div>'
-            + '<div class="status-badge" style="margin-top:12px; background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + si.icon + ' ' + statusText + '</div>';
+            + '<div class="status-badge" style="margin-top:12px; background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + statusText + '</div>';
 
         html += '<div style="display:flex; gap:10px; margin-top:14px;">'
             + '<div class="stat-card"><span class="eyebrow">Закупка</span><div class="stat-value">' + (priceZakupka || '—') + '</div></div>'
