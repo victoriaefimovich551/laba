@@ -356,6 +356,36 @@
         .catalog-subtitle { display: none; }
         .catalog-head-desktop-tools { display: none; }
         .desktop-kpi-row { display: none; }
+
+        /* ── ГАЛЕРЕЯ ФОТО ТОВАРА (прокрутка свайпом) ── */
+        .photo-gallery {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 8px;
+            border-radius: 16px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .photo-gallery::-webkit-scrollbar { display: none; }
+        .photo-gallery-item {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--sf);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .photo-gallery-item img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .photo-gallery-count {
+            text-align: center;
+            font: 600 12px var(--f-head);
+            color: var(--tx2);
+            margin-top: 6px;
+        }
     </style>
 </head>
 <body>
@@ -577,8 +607,8 @@
 
         <div class="field-group">
             <div class="eyebrow field-label">Фото товара</div>
-            <div id="noqr-photo-preview" style="margin-bottom:8px;"></div>
-            <input type="file" id="noqr-photo-input" accept="image/*" style="display:none;">
+            <div id="noqr-photo-preview" style="display:flex; gap:8px; overflow-x:auto; margin-bottom:8px;"></div>
+            <input type="file" id="noqr-photo-input" accept="image/*" multiple style="display:none;">
             <button type="button" id="noqr-photo-btn" class="btn-ghost" style="width:100%; height:44px;">📷 Добавить фото</button>
         </div>
 
@@ -635,7 +665,7 @@
     let printSelectMode = false;
     let selectedForPrint = new Set();
 
-    let noqrSelectedPhotoFile = null;
+    let noqrSelectedPhotoFiles = [];
 
     function updateModelsForCategory(category) {
         const models = MODELS_BY_CATEGORY[category] || [];
@@ -1011,11 +1041,19 @@
                     const printBtn = document.getElementById('print-new-label-btn');
                     if (printBtn) printBtn.onclick = () => printLabels([{ 'Артикул': data.sku, 'Название': model }]);
                 }
-                if (noqrSelectedPhotoFile) {
-                    const photoToUpload = noqrSelectedPhotoFile;
-                    uploadProductPhoto(data.sku, currentCategory, photoToUpload).catch(err => {
-                        showToast('Товар добавлен, но фото не загрузилось: ' + err.message, 'error');
-                    });
+                if (noqrSelectedPhotoFiles.length) {
+                    const photosToUpload = noqrSelectedPhotoFiles;
+                    const sku = data.sku;
+                    (async () => {
+                        for (const photoFile of photosToUpload) {
+                            try {
+                                await uploadProductPhoto(sku, currentCategory, photoFile);
+                            } catch (err) {
+                                showToast('Товар добавлен, но часть фото не загрузилась: ' + err.message, 'error');
+                                break;
+                            }
+                        }
+                    })();
                 }
                 const receiveNoqrModel = document.getElementById('receive-noqr-model');
                 const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
@@ -1063,7 +1101,7 @@
     }
 
     function resetNoqrPhotoPicker() {
-        noqrSelectedPhotoFile = null;
+        noqrSelectedPhotoFiles = [];
         const preview = document.getElementById('noqr-photo-preview');
         const input = document.getElementById('noqr-photo-input');
         const btn = document.getElementById('noqr-photo-btn');
@@ -1324,11 +1362,7 @@
         if (p['Ссылка на Авито']) html += '<div class="product-detail"><strong>Авито</strong><span><a href="' + escapeHtml(p['Ссылка на Авито']) + '" target="_blank" style="color:var(--lime);">Открыть →</a></span></div>';
         html += '</div>';
 
-        if (p['Фото'] && p['Фото'] !== 'IMAGE') {
-            html += '<a href="' + escapeHtml(p['Фото']) + '" target="_blank" style="display:block; margin-top:14px;">'
-                + '<img src="' + escapeHtml(p['Фото']) + '" alt="Фото товара" style="width:100%; max-height:240px; object-fit:cover; border-radius:16px; display:block; border:1px solid var(--line);">'
-                + '</a>';
-        }
+        html += renderPhotoGallery(p['Фото'], 240, 14);
 
         if (p['Состояние'] && p['Состояние'] !== '—') {
             html += '<div style="margin-top:14px;"><span class="eyebrow">Состояние</span><div class="state-list">' + formatStateText(p['Состояние']) + '</div></div>';
@@ -1410,6 +1444,40 @@
         const result = await apiPost({ action: 'uploadPhoto', sku: sku, category: category, photoBase64: photoBase64 });
         if (!result.success) throw new Error(result.message || 'Не удалось загрузить фото');
         return result.url;
+    }
+
+    // Поле "Фото" хранит несколько ссылок через разделитель "|" (пишет backend при добавлении фото)
+    function getPhotoUrls(photoField) {
+        if (!photoField || photoField === 'IMAGE') return [];
+        return String(photoField).split('|').map(s => s.trim()).filter(s => s && s !== 'IMAGE');
+    }
+
+    function appendPhotoUrl(photoField, newUrl) {
+        const urls = getPhotoUrls(photoField);
+        urls.push(newUrl);
+        return urls.join('|');
+    }
+
+    // Строка мини-превью для формы редактирования / добавления товара
+    function photoThumbsHtml(photoField) {
+        const urls = getPhotoUrls(photoField);
+        return urls.map(function (url) {
+            return '<img src="' + escapeHtml(url) + '" style="width:60px; height:60px; object-fit:cover; border-radius:10px; border:1px solid var(--line); flex:none; background:var(--sf);">';
+        }).join('');
+    }
+
+    // Галерея фото товара с горизонтальной прокруткой (свайп)
+    function renderPhotoGallery(photoField, heightPx, marginTop) {
+        const urls = getPhotoUrls(photoField);
+        if (!urls.length) return '';
+        let html = '<div class="photo-gallery" style="height:' + heightPx + 'px;' + (marginTop ? ' margin-top:' + marginTop + 'px;' : '') + '">';
+        urls.forEach(function (url) {
+            html += '<a href="' + escapeHtml(url) + '" target="_blank" class="photo-gallery-item">'
+                + '<img src="' + escapeHtml(url) + '" alt="Фото товара">'
+                + '</a>';
+        });
+        html += '</div>';
+        return html;
     }
 
     function formatStateText(text) {
@@ -1717,11 +1785,7 @@
         if (product['Ссылка на Авито']) html += '<div class="product-detail"><strong>Авито</strong><span><a href="' + escapeHtml(product['Ссылка на Авито']) + '" target="_blank" style="color:var(--lime);">Открыть →</a></span></div>';
         html += '</div>';
 
-        if (product['Фото'] && product['Фото'] !== 'IMAGE') {
-            html += '<a href="' + escapeHtml(product['Фото']) + '" target="_blank" style="display:block;">'
-                + '<img src="' + escapeHtml(product['Фото']) + '" alt="Фото товара" style="width:100%; max-height:220px; object-fit:cover; border-radius:16px; display:block; border:1px solid var(--line);">'
-                + '</a>';
-        }
+        html += renderPhotoGallery(product['Фото'], 220, 0);
 
         if (product['Состояние'] && product['Состояние'] !== '—') {
             html += '<div style="background:var(--sf); border:1px solid var(--line); border-radius:18px; padding:15px 16px;">'
@@ -1967,9 +2031,9 @@
         modal.innerHTML = '<div class="confirm-dialog" style="max-width:500px; max-height:80vh; overflow-y:auto; text-align:left;">'
             + '<h3 style="font:800 17px var(--f-head); margin-bottom:16px; color:var(--tx);">✏️ Редактирование: ' + escapeHtml(currentProduct['Артикул']) + '</h3>'
             + '<div class="field-group"><div class="eyebrow field-label">Фото товара</div>'
-            +     '<div id="edit-photo-preview" style="margin-bottom:8px;">' + (currentProduct['Фото'] && currentProduct['Фото'] !== 'IMAGE' ? '<img src="' + escapeHtml(currentProduct['Фото']) + '" style="width:100%; max-height:180px; object-fit:cover; border-radius:14px; display:block; border:1px solid var(--line);">' : '') + '</div>'
-            +     '<input type="file" id="edit-photo-input" accept="image/*" style="display:none;">'
-            +     '<button type="button" id="edit-photo-btn" class="btn-ghost" style="width:100%; height:44px;">📷 ' + (currentProduct['Фото'] && currentProduct['Фото'] !== 'IMAGE' ? 'Заменить фото' : 'Добавить фото') + '</button>'
+            +     '<div id="edit-photo-preview" style="display:flex; gap:8px; overflow-x:auto; margin-bottom:8px;">' + photoThumbsHtml(currentProduct['Фото']) + '</div>'
+            +     '<input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none;">'
+            +     '<button type="button" id="edit-photo-btn" class="btn-ghost" style="width:100%; height:44px;">📷 Добавить фото</button>'
             +     '<div id="edit-photo-status" style="font-size:12px; color:var(--tx2); margin-top:6px;"></div>'
             + '</div>'
             + '<div class="field-group"><div class="eyebrow field-label">Название</div><input type="text" id="edit-name" value="' + escapeHtml(currentProduct['Название']) + '"></div>'
@@ -2003,22 +2067,25 @@
         const photoPreview = document.getElementById('edit-photo-preview');
         photoBtn.onclick = () => photoInput.click();
         photoInput.onchange = async () => {
-            const file = photoInput.files[0];
-            if (!file) return;
+            const files = Array.from(photoInput.files || []);
+            if (!files.length) return;
             photoBtn.disabled = true;
-            photoStatus.textContent = '⏳ Загрузка фото...';
-            try {
-                const url = await uploadProductPhoto(currentProduct['Артикул'], currentCategory, file);
-                currentProduct['Фото'] = url;
-                photoPreview.innerHTML = '<img src="' + escapeHtml(url) + '" style="width:100%; max-height:180px; object-fit:cover; border-radius:14px; display:block; border:1px solid var(--line);">';
-                photoBtn.textContent = '📷 Заменить фото';
-                photoStatus.textContent = '✅ Фото загружено';
-                refreshVisibleProductCard();
-            } catch (err) {
-                photoStatus.textContent = '❌ ' + err.message;
-            } finally {
-                photoBtn.disabled = false;
+            for (let i = 0; i < files.length; i++) {
+                photoStatus.textContent = '⏳ Загрузка фото ' + (i + 1) + ' из ' + files.length + '...';
+                try {
+                    const url = await uploadProductPhoto(currentProduct['Артикул'], currentCategory, files[i]);
+                    currentProduct['Фото'] = appendPhotoUrl(currentProduct['Фото'], url);
+                    photoPreview.innerHTML = photoThumbsHtml(currentProduct['Фото']);
+                    refreshVisibleProductCard();
+                } catch (err) {
+                    photoStatus.textContent = '❌ ' + err.message;
+                    photoBtn.disabled = false;
+                    return;
+                }
             }
+            photoStatus.textContent = '✅ Фото загружено';
+            photoInput.value = '';
+            photoBtn.disabled = false;
         };
 
         document.getElementById('save-edit-btn').onclick = async () => {
@@ -2156,12 +2223,16 @@
     if (noqrPhotoBtn && noqrPhotoInput) {
         noqrPhotoBtn.onclick = () => noqrPhotoInput.click();
         noqrPhotoInput.onchange = () => {
-            const file = noqrPhotoInput.files[0];
-            if (!file) return;
-            noqrSelectedPhotoFile = file;
+            const files = Array.from(noqrPhotoInput.files || []);
+            if (!files.length) return;
+            noqrSelectedPhotoFiles = noqrSelectedPhotoFiles.concat(files);
             const preview = document.getElementById('noqr-photo-preview');
-            if (preview) preview.innerHTML = '<img src="' + URL.createObjectURL(file) + '" style="width:100%; max-height:180px; object-fit:cover; border-radius:14px; display:block; border:1px solid var(--line);">';
-            noqrPhotoBtn.textContent = '📷 Заменить фото';
+            if (preview) {
+                preview.innerHTML = noqrSelectedPhotoFiles.map(f =>
+                    '<img src="' + URL.createObjectURL(f) + '" style="width:60px; height:60px; object-fit:cover; border-radius:10px; border:1px solid var(--line); flex:none; background:var(--sf);">'
+                ).join('');
+            }
+            noqrPhotoInput.value = '';
         };
     }
 
