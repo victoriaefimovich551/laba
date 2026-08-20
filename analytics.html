@@ -173,6 +173,32 @@
   }
   .pin-key.empty { background: transparent; border: none; cursor: default; }
   .pin-key.backspace { font: 700 18px var(--f-head); }
+
+  .dashboard-grid { display: block; }
+  .dashboard-main, .dashboard-side { display: flex; flex-direction: column; gap: 14px; }
+
+  /* ── Десктоп ── */
+  @media (min-width: 1024px) {
+    body { max-width: 1180px; padding: 32px 40px 60px; }
+
+    .an-header { margin-bottom: 26px; }
+    .an-header-title .page-title { font-size: 26px; }
+    .back-btn { padding: 10px 16px; }
+
+    .filters-row { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+    .cat-bar { margin-bottom: 0; flex: none; width: auto; }
+    .cat-bar .pill-switch-btn { flex: none; padding: 9px 18px; }
+    .period-bar { margin-bottom: 0; flex: 1; max-width: 460px; }
+
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+
+    .kpi-lime { padding: 26px 30px; }
+    .kpi-lime .kpi-value { font-size: 44px; }
+    .kpi-row .stat-card { padding: 18px 20px; }
+
+    .section { padding: 20px 22px; }
+    .chart-bars { height: 160px; }
+  }
 </style>
 </head>
 <body>
@@ -204,19 +230,21 @@
   <button class="theme-toggle theme-toggle-an" id="theme-toggle-an" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
 </div>
 
-<!-- Category toggle -->
-<div class="cat-bar pill-switch">
-  <button class="pill-switch-btn active" onclick="switchCat('all', this)">🌐 Все</button>
-  <button class="pill-switch-btn" onclick="switchCat('Дроны', this)">🚁 Дроны</button>
-  <button class="pill-switch-btn" onclick="switchCat('Самокаты', this)">🛴 Самокаты</button>
-</div>
+<div class="filters-row">
+  <!-- Category toggle -->
+  <div class="cat-bar pill-switch">
+    <button class="pill-switch-btn active" onclick="switchCat('all', this)">🌐 Все</button>
+    <button class="pill-switch-btn" onclick="switchCat('Дроны', this)">🚁 Дроны</button>
+    <button class="pill-switch-btn" onclick="switchCat('Самокаты', this)">🛴 Самокаты</button>
+  </div>
 
-<!-- Period filter -->
-<div class="period-bar">
-  <button class="period-btn active" onclick="setPeriod('month', this)">Этот месяц</button>
-  <button class="period-btn" onclick="setPeriod('quarter', this)">Квартал</button>
-  <button class="period-btn" onclick="setPeriod('year', this)">Год</button>
-  <button class="period-btn" onclick="setPeriod('all', this)">Всё время</button>
+  <!-- Period filter -->
+  <div class="period-bar">
+    <button class="period-btn active" onclick="setPeriod('month', this)">Этот месяц</button>
+    <button class="period-btn" onclick="setPeriod('quarter', this)">Квартал</button>
+    <button class="period-btn" onclick="setPeriod('year', this)">Год</button>
+    <button class="period-btn" onclick="setPeriod('all', this)">Всё время</button>
+  </div>
 </div>
 
 <!-- Loading -->
@@ -230,56 +258,63 @@
 
 <!-- Dashboard -->
 <div id="dashboard" style="display:none;">
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
 
-  <!-- KPI -->
-  <div class="kpi-lime">
-    <div class="eyebrow">Прибыль за период</div>
-    <div class="kpi-value" id="kpi-profit">—</div>
-    <div class="kpi-sub" id="kpi-profit-sub"></div>
-  </div>
+      <!-- KPI -->
+      <div class="kpi-lime">
+        <div class="eyebrow">Прибыль за период</div>
+        <div class="kpi-value" id="kpi-profit">—</div>
+        <div class="kpi-sub" id="kpi-profit-sub"></div>
+      </div>
 
-  <div class="kpi-row">
-    <div class="stat-card">
-      <span class="eyebrow">Склад</span>
-      <div class="stat-value" id="kpi-stock">—</div>
-      <div class="stat-sub" id="kpi-stock-sub"></div>
+      <div class="kpi-row">
+        <div class="stat-card">
+          <span class="eyebrow">Склад</span>
+          <div class="stat-value" id="kpi-stock">—</div>
+          <div class="stat-sub" id="kpi-stock-sub"></div>
+        </div>
+        <div class="stat-card">
+          <span class="eyebrow">Продано</span>
+          <div class="stat-value" id="kpi-sold">—</div>
+          <div class="stat-sub" id="kpi-sold-sub"></div>
+        </div>
+        <div class="stat-card">
+          <span class="eyebrow">Ср. срок</span>
+          <div class="stat-value" id="kpi-avgdays">—</div>
+          <div class="stat-sub">дней на складе</div>
+        </div>
+      </div>
+
+      <!-- Динамика продаж -->
+      <div class="section">
+        <div class="section-title">Прибыль по месяцам</div>
+        <div class="chart-bars" id="sales-chart"></div>
+      </div>
+
+      <!-- Статусы -->
+      <div class="section">
+        <div class="section-title">Статусы товаров</div>
+        <div id="status-grid"></div>
+      </div>
+
     </div>
-    <div class="stat-card">
-      <span class="eyebrow">Продано</span>
-      <div class="stat-value" id="kpi-sold">—</div>
-      <div class="stat-sub" id="kpi-sold-sub"></div>
+    <div class="dashboard-side">
+
+      <!-- Топ моделей -->
+      <div class="section">
+        <div class="section-title">Топ моделей по прибыли</div>
+        <div id="top-models"></div>
+      </div>
+
+      <!-- Долго лежащие -->
+      <div class="section">
+        <div class="section-title">Долго лежат на складе</div>
+        <div id="stale-items"></div>
+      </div>
+
     </div>
-    <div class="stat-card">
-      <span class="eyebrow">Ср. срок</span>
-      <div class="stat-value" id="kpi-avgdays">—</div>
-      <div class="stat-sub">дней на складе</div>
-    </div>
   </div>
-
-  <!-- Статусы -->
-  <div class="section">
-    <div class="section-title">Статусы товаров</div>
-    <div id="status-grid"></div>
-  </div>
-
-  <!-- Динамика продаж -->
-  <div class="section">
-    <div class="section-title">Прибыль по месяцам</div>
-    <div class="chart-bars" id="sales-chart"></div>
-  </div>
-
-  <!-- Топ моделей -->
-  <div class="section">
-    <div class="section-title">Топ моделей по прибыли</div>
-    <div id="top-models"></div>
-  </div>
-
-  <!-- Долго лежащие -->
-  <div class="section">
-    <div class="section-title">Долго лежат на складе</div>
-    <div id="stale-items"></div>
-  </div>
-
 </div><!-- /dashboard -->
 
 <script src="config.js"></script>
