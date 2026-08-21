@@ -219,29 +219,20 @@
     .chart-bars { height: 160px; }
   }
 
-  /* ── Печатный отчёт (PDF через диалог печати браузера) ──
-     Цвета заданы напрямую (не через var(--tx) и т.п.), потому что на
-     печати страница должна быть чёрным по белому независимо от того,
-     тёмная сейчас тема на экране или светлая. */
+  /* ── Печатный отчёт (A4, PDF через диалог печати браузера) ──
+     Один лист A4, иерархия держится на толщине линеек (3/2/1px) и
+     одном чёрном блоке (прибыль) — читается и на ч/б лазернике.
+     Цвета заданы напрямую (не через var(--tx) и т.п.) — печать всегда
+     чёрным по белому, вне зависимости от темы на экране. */
   #print-report { display: none; }
+  @page { size: A4; margin: 0; }
   @media print {
     body > *:not(#print-report) { display: none !important; }
-    #print-report {
-      display: block !important;
-      background: #fff; color: #111;
-      font-family: Arial, Helvetica, sans-serif;
-      padding: 0;
-    }
-    #print-report .rp-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-    #print-report .rp-meta { font-size: 12px; color: #555; margin-bottom: 20px; }
-    #print-report .rp-kpis { display: flex; flex-wrap: wrap; gap: 22px; margin-bottom: 22px; }
-    #print-report .rp-kpi-label { font-size: 11px; color: #666; text-transform: uppercase; }
-    #print-report .rp-kpi-value { font-size: 16px; font-weight: 700; }
-    #print-report .rp-section-title { font-size: 13px; font-weight: 700; margin: 20px 0 8px; border-bottom: 2px solid #111; padding-bottom: 5px; }
-    #print-report table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 6px; }
-    #print-report th, #print-report td { border: 1px solid #ccc; padding: 5px 8px; text-align: left; }
-    #print-report th { background: #f0f0f0; }
-    #print-report td.rp-num, #print-report th.rp-num { text-align: right; }
+    #print-report { display: block !important; background: #fff; }
+    #print-report .report-sheet { width: auto; min-height: 100vh; box-shadow: none; break-after: page; }
+    #print-report .report-sheet:last-child { break-after: auto; }
+    #print-report .report-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #print-report .report-row { break-inside: avoid; }
   }
 </style>
 </head>
@@ -649,84 +640,208 @@ function render() {
   lastRenderState = { soldInPeriod, inStock, totalProfit, stockValue, avgDays, counts, topModels };
 }
 
-// ── Отчёт за период (печать / сохранение в PDF через диалог печати) ──
+// ── Отчёт за период (A4, печать / сохранение в PDF через диалог печати) ──
+// Разметка — по дизайн-хэндоффу: один лист A4, иерархия на толщине
+// линеек и одном чёрном блоке (прибыль), без заливок, которые на ч/б
+// принтере превратятся в серую кашу.
 function escapeHtmlRp(text) {
   const div = document.createElement('div');
   div.textContent = text == null ? '' : String(text);
   return div.innerHTML;
 }
 
+const RU_MONTHS_NOM = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+
 function periodLabel() {
   const now = new Date();
-  if (currentPeriod === 'month')   return 'этот месяц (' + now.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }) + ')';
-  if (currentPeriod === 'quarter') return 'текущий квартал';
+  if (currentPeriod === 'month')   return RU_MONTHS_NOM[now.getMonth()] + ' ' + now.getFullYear();
+  if (currentPeriod === 'quarter') return (Math.floor(now.getMonth() / 3) + 1) + '-й квартал ' + now.getFullYear();
   if (currentPeriod === 'year')    return now.getFullYear() + ' год';
   return 'всё время';
 }
 
+function categoryLabel() {
+  return currentCat === 'all' ? 'все категории' : currentCat.toLowerCase();
+}
+
+// Числа отчёта — единый формат "12 345 ₽" (Intl.NumberFormat + один
+// раз символ рубля через неразрывный пробел, без дублирования "₽₽").
+function fmtRp(n) {
+  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
+}
+
+function fmtDateShort(str) {
+  const m = String(str || '').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  return m ? (m[1] + '.' + m[2] + '.' + m[3].slice(2)) : (str || '');
+}
+
+function fmtDateTime(d) {
+  const p2 = (n) => String(n).padStart(2, '0');
+  return p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + '.' + d.getFullYear() + ' · ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+}
+
+function pluralPositionsRp(n) {
+  const n100 = n % 100, n10 = n % 10;
+  if (n100 >= 11 && n100 <= 19) return 'позиций';
+  if (n10 === 1) return 'позиция';
+  if (n10 >= 2 && n10 <= 4) return 'позиции';
+  return 'позиций';
+}
+
+function reportLogoHtml() {
+  return '<div style="width:28px;height:28px;border:1.5px solid #101215;border-radius:7px;display:flex;align-items:center;justify-content:center">'
+    + '<div style="width:58%;height:58%;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:9%">'
+    + '<div style="background:#101215;grid-column:1/3;grid-row:1/3"></div>'
+    + '<div style="background:#101215;grid-column:4/6;grid-row:1/3"></div>'
+    + '<div style="background:#101215;grid-column:1/3;grid-row:4/6"></div>'
+    + '<div style="background:#101215;grid-column:4;grid-row:4"></div>'
+    + '<div style="background:#101215;grid-column:5;grid-row:5"></div>'
+    + '<div style="background:#101215;grid-column:3;grid-row:3"></div>'
+    + '</div></div>';
+}
+
+function reportHeaderHtml(data) {
+  return '<div style="padding:40px 46px 26px;border-bottom:3px solid #101215;display:flex;flex-direction:column;gap:20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between">'
+    + '<div style="display:flex;align-items:center;gap:11px">' + reportLogoHtml()
+    + '<div style="font:700 13px \'Plus Jakarta Sans\',sans-serif;color:#101215;letter-spacing:.02em">Лаба</div></div>'
+    + '<div style="font:500 10px \'IBM Plex Mono\',monospace;color:#101215;letter-spacing:.06em">' + escapeHtmlRp(data.generatedAt) + '</div>'
+    + '</div>'
+    + '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">'
+    + '<div style="font:800 34px/1.1 \'Plus Jakarta Sans\',sans-serif;color:#101215;letter-spacing:-.02em">Отчёт по продажам</div>'
+    + '<div style="display:flex;gap:7px;flex-wrap:wrap;padding-bottom:4px">'
+    + '<div style="font:700 11px \'Plus Jakarta Sans\',sans-serif;color:#101215;border:1.5px solid #101215;padding:3px 10px;border-radius:20px">' + escapeHtmlRp(data.period) + '</div>'
+    + '<div style="font:600 11px \'Plus Jakarta Sans\',sans-serif;color:#101215;border:1px solid rgba(16,18,21,.4);padding:3px 10px;border-radius:20px">' + escapeHtmlRp(data.category) + '</div>'
+    + '</div></div></div>';
+}
+
+function reportMetricCell(label, value, dark) {
+  return '<div style="padding:14px 16px 15px;display:flex;flex-direction:column;gap:6px;grid-column:span 2;background:' + (dark ? '#101215' : '#fff') + '">'
+    + '<div style="font:700 8.5px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.13em;color:' + (dark ? 'rgba(255,255,255,.7)' : 'rgba(16,18,21,.55)') + '">' + label + '</div>'
+    + '<div style="font:600 21px \'IBM Plex Mono\',monospace;color:' + (dark ? '#fff' : '#101215') + '">' + value + '</div>'
+    + '</div>';
+}
+
+function reportMetricsHtml(data) {
+  return '<div style="padding:22px 46px 0">'
+    + '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:#101215;border:1px solid #101215;border-radius:8px;overflow:hidden">'
+    + reportMetricCell('ПРИБЫЛЬ', fmtRp(data.metrics.profit), true)
+    + reportMetricCell('ВЫРУЧКА', fmtRp(data.metrics.revenue), false)
+    + reportMetricCell('ПРОДАНО', data.metrics.soldCount + ' шт', false)
+    + '</div></div>';
+}
+
+function reportTableHeaders() {
+  const base = 'font:700 8.5px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.11em;color:#101215;padding:0 0 8px;border-bottom:2px solid #101215;';
+  return '<div style="' + base + '">АРТИКУЛ</div>'
+    + '<div style="' + base + '">НАЗВАНИЕ</div>'
+    + '<div style="' + base + '">ДАТА</div>'
+    + '<div style="' + base + 'text-align:right">ЗАКУПКА</div>'
+    + '<div style="' + base + 'text-align:right">ПРОДАЖА</div>'
+    + '<div style="' + base + 'text-align:right">ПРИБЫЛЬ</div>';
+}
+
+function reportRow(sale, zebra) {
+  const bg = zebra ? '#f2f2f0' : 'transparent';
+  const top = 'border-top:1px solid rgba(16,18,21,.28);background:' + bg + ';';
+  return '<div class="report-row" style="display:contents">'
+    + '<div style="font:600 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.sku) + '</div>'
+    + '<div style="font:600 12.5px \'Plus Jakarta Sans\',sans-serif;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.name) + '</div>'
+    + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.date) + '</div>'
+    + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.buy) + '</div>'
+    + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.sell) + '</div>'
+    + '<div style="font:700 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.profit) + '</div>'
+    + '</div>';
+}
+
+function reportTotalsRow(totals) {
+  return '<div class="report-row" style="display:contents">'
+    + '<div style="grid-column:1/5;font:700 11px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.08em;color:#101215;padding:11px 0;border-top:2px solid #101215">ИТОГО</div>'
+    + '<div style="font:600 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.sell) + '</div>'
+    + '<div style="font:700 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.profit) + '</div>'
+    + '</div>';
+}
+
+function reportTableSectionHtml(salesChunk, opts) {
+  let rowsHtml;
+  if (opts.isEmpty) {
+    rowsHtml = '<div style="grid-column:1/7;padding:24px 0;text-align:center;font:500 12px \'Plus Jakarta Sans\',sans-serif;color:rgba(16,18,21,.55)">За выбранный период продаж не было</div>';
+  } else {
+    rowsHtml = salesChunk.map((s, i) => reportRow(s, i % 2 === 0)).join('');
+    if (opts.showTotals) rowsHtml += reportTotalsRow(opts.totals);
+  }
+  return '<div style="padding:32px 46px 0;display:flex;flex-direction:column;gap:12px;flex:1">'
+    + '<div style="display:flex;align-items:baseline;justify-content:space-between">'
+    + '<div style="font:700 15px \'Plus Jakarta Sans\',sans-serif;color:#101215">Продажи за период</div>'
+    + '<div style="font:600 11px \'IBM Plex Mono\',monospace;color:#101215">' + opts.totalCount + ' ' + pluralPositionsRp(opts.totalCount) + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:88px 1fr 84px 92px 92px 96px">' + reportTableHeaders() + rowsHtml + '</div>'
+    + '</div>';
+}
+
+function reportFooterHtml(pageNum, totalPages) {
+  return '<div style="padding:16px 46px 22px;display:flex;align-items:center;justify-content:space-between;border-top:2px solid #101215;margin-top:26px">'
+    + '<div style="font:500 9.5px \'IBM Plex Mono\',monospace;color:#101215">Лаба · инвентаризация · сформировано автоматически</div>'
+    + '<div style="font:500 9.5px \'IBM Plex Mono\',monospace;color:#101215">' + pageNum + ' / ' + totalPages + '</div>'
+    + '</div>';
+}
+
+const REPORT_ROWS_PER_PAGE = 26;
+
+function renderReport(data) {
+  const sales = data.sales || [];
+  const isEmpty = sales.length === 0;
+  const chunks = [];
+  if (isEmpty) {
+    chunks.push([]);
+  } else {
+    for (let i = 0; i < sales.length; i += REPORT_ROWS_PER_PAGE) chunks.push(sales.slice(i, i + REPORT_ROWS_PER_PAGE));
+  }
+  const totalPages = chunks.length;
+
+  return chunks.map((chunk, pageIndex) => {
+    const isFirstPage = pageIndex === 0;
+    const isLastPage  = pageIndex === totalPages - 1;
+    return '<div class="report-sheet" style="width:794px;min-height:1123px;box-sizing:border-box;background:#fff;display:flex;flex-direction:column;">'
+      + reportHeaderHtml(data)
+      + (isFirstPage ? reportMetricsHtml(data) : '')
+      + reportTableSectionHtml(chunk, {
+          totalCount: sales.length,
+          showTotals: isLastPage && !isEmpty,
+          totals: data.totals,
+          isEmpty: isEmpty
+        })
+      + reportFooterHtml(pageIndex + 1, totalPages)
+      + '</div>';
+  }).join('');
+}
+
 function downloadMonthlyReport() {
   if (!lastRenderState) return;
-  const { soldInPeriod, inStock, totalProfit, stockValue, avgDays, counts, topModels } = lastRenderState;
-  const catLabel = currentCat === 'all' ? 'все категории' : currentCat;
-  const revenue  = soldInPeriod.reduce((s, p) => s + (parseFloat(p['Цена продажа']) || 0), 0);
-  const now      = new Date();
+  const { soldInPeriod, totalProfit } = lastRenderState;
+  const revenue = soldInPeriod.reduce((s, p) => s + (parseFloat(p['Цена продажа']) || 0), 0);
 
-  let html = '<div class="rp-title">Лаба — отчёт по продажам</div>'
-    + '<div class="rp-meta">Период: ' + escapeHtmlRp(periodLabel()) + ' · Категория: ' + escapeHtmlRp(catLabel)
-    + ' · Сформирован: ' + escapeHtmlRp(now.toLocaleString('ru-RU')) + '</div>';
+  const sales = soldInPeriod.slice()
+    .sort((a, b) => (parseDate(a['Дата продажи']) || 0) - (parseDate(b['Дата продажи']) || 0))
+    .map(p => ({
+      sku:    p['Артикул'] || '',
+      name:   p['Название'] || '',
+      date:   fmtDateShort(p['Дата продажи']),
+      buy:    parseFloat(p['Цена закупка']) || 0,
+      sell:   parseFloat(p['Цена продажа']) || 0,
+      profit: parseFloat(p['Прибыль']) || 0
+    }));
 
-  html += '<div class="rp-kpis">'
-    + '<div><div class="rp-kpi-label">Прибыль за период</div><div class="rp-kpi-value">' + fmt(totalProfit) + '</div></div>'
-    + '<div><div class="rp-kpi-label">Продаж</div><div class="rp-kpi-value">' + soldInPeriod.length + ' шт</div></div>'
-    + '<div><div class="rp-kpi-label">Выручка</div><div class="rp-kpi-value">' + fmt(revenue) + '</div></div>'
-    + '<div><div class="rp-kpi-label">Стоимость склада</div><div class="rp-kpi-value">' + fmt(stockValue) + '</div></div>'
-    + '<div><div class="rp-kpi-label">На складе</div><div class="rp-kpi-value">' + inStock.length + ' шт</div></div>'
-    + '<div><div class="rp-kpi-label">Ср. срок продажи</div><div class="rp-kpi-value">' + (avgDays !== null ? avgDays + ' дн' : '—') + '</div></div>'
-    + '</div>';
+  const data = {
+    period:      periodLabel(),
+    category:    categoryLabel(),
+    generatedAt: fmtDateTime(new Date()),
+    metrics:     { profit: totalProfit, revenue: revenue, soldCount: soldInPeriod.length },
+    sales:       sales,
+    totals:      { sell: revenue, profit: totalProfit }
+  };
 
-  html += '<div class="rp-section-title">Продажи за период (' + soldInPeriod.length + ')</div>';
-  if (soldInPeriod.length) {
-    html += '<table><thead><tr>'
-      + '<th>Артикул</th><th>Название</th><th>Дата продажи</th>'
-      + '<th class="rp-num">Закупка</th><th class="rp-num">Продажа</th><th class="rp-num">Прибыль</th>'
-      + '</tr></thead><tbody>';
-    soldInPeriod.slice()
-      .sort((a, b) => (parseDate(a['Дата продажи']) || 0) - (parseDate(b['Дата продажи']) || 0))
-      .forEach(p => {
-        html += '<tr>'
-          + '<td>' + escapeHtmlRp(p['Артикул']) + '</td>'
-          + '<td>' + escapeHtmlRp(p['Название']) + '</td>'
-          + '<td>' + escapeHtmlRp(p['Дата продажи']) + '</td>'
-          + '<td class="rp-num">' + fmt(p['Цена закупка']) + '</td>'
-          + '<td class="rp-num">' + fmt(p['Цена продажа']) + '</td>'
-          + '<td class="rp-num">' + fmt(p['Прибыль']) + '</td>'
-          + '</tr>';
-      });
-    html += '<tr><td colspan="3"><strong>Итого</strong></td><td class="rp-num"></td>'
-      + '<td class="rp-num"><strong>' + fmt(revenue) + '</strong></td>'
-      + '<td class="rp-num"><strong>' + fmt(totalProfit) + '</strong></td></tr>';
-    html += '</tbody></table>';
-  } else {
-    html += '<div style="font-size:12px;color:#666;">Нет продаж за выбранный период</div>';
-  }
-
-  html += '<div class="rp-section-title">Статусы товаров</div>';
-  html += '<table><thead><tr><th>Статус</th><th class="rp-num">Количество</th></tr></thead><tbody>';
-  Object.entries(counts).forEach(([status, count]) => {
-    html += '<tr><td>' + escapeHtmlRp(getStatusText(status)) + '</td><td class="rp-num">' + count + '</td></tr>';
-  });
-  html += '</tbody></table>';
-
-  if (topModels.length) {
-    html += '<div class="rp-section-title">Топ моделей по прибыли</div>';
-    html += '<table><thead><tr><th>Модель</th><th class="rp-num">Продаж</th><th class="rp-num">Прибыль</th></tr></thead><tbody>';
-    topModels.forEach(([name, s]) => {
-      html += '<tr><td>' + escapeHtmlRp(name) + '</td><td class="rp-num">' + s.sold + '</td><td class="rp-num">' + fmt(Math.round(s.profit)) + '</td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-
-  document.getElementById('print-report').innerHTML = html;
+  document.getElementById('print-report').innerHTML = renderReport(data);
   window.print();
 }
 
