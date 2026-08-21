@@ -752,47 +752,62 @@ function reportMetricsHtml(data) {
     + '</div></div>';
 }
 
+// Настоящая <table> вместо CSS grid: у браузеров десятилетиями зрелая,
+// надёжная поддержка разбивки строк таблицы между страницами при
+// печати (thead автоматически повторяется, tr с break-inside:avoid
+// не разрезается) — у CSS grid с этим по печати давние проблемы в
+// части браузеров (контент может "уехать" не на ту страницу).
 function reportTableHeaders() {
   const base = 'font:700 8.5px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.11em;color:#101215;padding:0 0 8px;border-bottom:2px solid #101215;';
-  return '<div style="' + base + '">АРТИКУЛ</div>'
-    + '<div style="' + base + '">НАЗВАНИЕ</div>'
-    + '<div style="' + base + '">ДАТА</div>'
-    + '<div style="' + base + 'text-align:right">ЗАКУПКА</div>'
-    + '<div style="' + base + 'text-align:right">ПРОДАЖА</div>'
-    + '<div style="' + base + 'text-align:right">ПРИБЫЛЬ</div>';
+  return '<tr>'
+    + '<th style="' + base + 'text-align:left;">АРТИКУЛ</th>'
+    + '<th style="' + base + 'text-align:left;">НАЗВАНИЕ</th>'
+    + '<th style="' + base + 'text-align:left;">ДАТА</th>'
+    + '<th style="' + base + 'text-align:right;">ЗАКУПКА</th>'
+    + '<th style="' + base + 'text-align:right;">ПРОДАЖА</th>'
+    + '<th style="' + base + 'text-align:right;">ПРИБЫЛЬ</th>'
+    + '</tr>';
 }
 
 function reportRow(sale, zebra) {
   const bg = zebra ? '#f2f2f0' : 'transparent';
   const top = 'border-top:1px solid rgba(16,18,21,.28);background:' + bg + ';';
-  return '<div style="font:600 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.sku) + '</div>'
-    + '<div style="font:600 12.5px \'Plus Jakarta Sans\',sans-serif;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.name) + '</div>'
-    + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.date) + '</div>'
-    + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.buy) + '</div>'
-    + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.sell) + '</div>'
-    + '<div style="font:700 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.profit) + '</div>';
+  return '<tr style="break-inside:avoid;">'
+    + '<td style="font:600 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.sku) + '</td>'
+    + '<td style="font:600 12.5px \'Plus Jakarta Sans\',sans-serif;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.name) + '</td>'
+    + '<td style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.date) + '</td>'
+    + '<td style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.buy) + '</td>'
+    + '<td style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.sell) + '</td>'
+    + '<td style="font:700 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.profit) + '</td>'
+    + '</tr>';
 }
 
 function reportTotalsRow(totals) {
-  return '<div style="grid-column:1/5;font:700 11px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.08em;color:#101215;padding:11px 0;border-top:2px solid #101215">ИТОГО</div>'
-    + '<div style="font:600 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.sell) + '</div>'
-    + '<div style="font:700 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.profit) + '</div>';
+  return '<tr>'
+    + '<td colspan="4" style="font:700 11px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.08em;color:#101215;padding:11px 0;border-top:2px solid #101215">ИТОГО</td>'
+    + '<td style="font:600 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.sell) + '</td>'
+    + '<td style="font:700 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.profit) + '</td>'
+    + '</tr>';
 }
 
 function reportTableSectionHtml(salesChunk, opts) {
-  let rowsHtml;
+  let bodyHtml;
   if (opts.isEmpty) {
-    rowsHtml = '<div style="grid-column:1/7;padding:24px 0;text-align:center;font:500 12px \'Plus Jakarta Sans\',sans-serif;color:rgba(16,18,21,.55)">За выбранный период продаж не было</div>';
+    bodyHtml = '<tr><td colspan="6" style="padding:24px 0;text-align:center;font:500 12px \'Plus Jakarta Sans\',sans-serif;color:rgba(16,18,21,.55)">За выбранный период продаж не было</td></tr>';
   } else {
-    rowsHtml = salesChunk.map((s, i) => reportRow(s, i % 2 === 0)).join('');
-    if (opts.showTotals) rowsHtml += reportTotalsRow(opts.totals);
+    bodyHtml = salesChunk.map((s, i) => reportRow(s, i % 2 === 0)).join('');
+    if (opts.showTotals) bodyHtml += reportTotalsRow(opts.totals);
   }
   return '<div style="padding:32px 46px 0;display:flex;flex-direction:column;gap:12px;flex:1">'
     + '<div style="display:flex;align-items:baseline;justify-content:space-between">'
     + '<div style="font:700 15px \'Plus Jakarta Sans\',sans-serif;color:#101215">Продажи за период</div>'
     + '<div style="font:600 11px \'IBM Plex Mono\',monospace;color:#101215">' + opts.totalCount + ' ' + pluralPositionsRp(opts.totalCount) + '</div>'
     + '</div>'
-    + '<div style="display:grid;grid-template-columns:88px 1fr 84px 92px 92px 96px">' + reportTableHeaders() + rowsHtml + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;">'
+    + '<colgroup><col style="width:88px"><col><col style="width:84px"><col style="width:92px"><col style="width:92px"><col style="width:96px"></colgroup>'
+    + '<thead>' + reportTableHeaders() + '</thead>'
+    + '<tbody>' + bodyHtml + '</tbody>'
+    + '</table>'
     + '</div>';
 }
 
