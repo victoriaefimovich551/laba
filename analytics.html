@@ -218,6 +218,31 @@
     .section { padding: 20px 22px; }
     .chart-bars { height: 160px; }
   }
+
+  /* ── Печатный отчёт (PDF через диалог печати браузера) ──
+     Цвета заданы напрямую (не через var(--tx) и т.п.), потому что на
+     печати страница должна быть чёрным по белому независимо от того,
+     тёмная сейчас тема на экране или светлая. */
+  #print-report { display: none; }
+  @media print {
+    body > *:not(#print-report) { display: none !important; }
+    #print-report {
+      display: block !important;
+      background: #fff; color: #111;
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 0;
+    }
+    #print-report .rp-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    #print-report .rp-meta { font-size: 12px; color: #555; margin-bottom: 20px; }
+    #print-report .rp-kpis { display: flex; flex-wrap: wrap; gap: 22px; margin-bottom: 22px; }
+    #print-report .rp-kpi-label { font-size: 11px; color: #666; text-transform: uppercase; }
+    #print-report .rp-kpi-value { font-size: 16px; font-weight: 700; }
+    #print-report .rp-section-title { font-size: 13px; font-weight: 700; margin: 20px 0 8px; border-bottom: 2px solid #111; padding-bottom: 5px; }
+    #print-report table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 6px; }
+    #print-report th, #print-report td { border: 1px solid #ccc; padding: 5px 8px; text-align: left; }
+    #print-report th { background: #f0f0f0; }
+    #print-report td.rp-num, #print-report th.rp-num { text-align: right; }
+  }
 </style>
 </head>
 <body>
@@ -246,6 +271,7 @@
     <div class="page-title" style="font-size:20px;">Аналитика</div>
     <p id="last-update">Загрузка данных...</p>
   </div>
+  <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период" style="margin-left:auto;">📄 Отчёт</button>
   <button class="theme-toggle theme-toggle-an" id="theme-toggle-an" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
 </div>
 
@@ -336,6 +362,8 @@
   </div>
 </div><!-- /dashboard -->
 
+<div id="print-report"></div>
+
 <script src="config.js"></script>
 <script>
 // ── Пароль доступа к аналитике ──────────────────────────────────
@@ -414,6 +442,7 @@ function checkAnalyticsAuth() {
 let allData    = [];   // все товары (дроны + самокаты)
 let currentCat = 'all';
 let currentPeriod = 'month';
+let lastRenderState = null; // снимок последнего render() — используется для отчёта
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
@@ -616,6 +645,89 @@ function render() {
         <div class="stale-price">${fmt(p['Цена закупка'])}</div>
       </div>`).join('')
     : '<div style="color:var(--tx2);font-size:13px;text-align:center;padding:20px">Нет товаров на складе</div>';
+
+  lastRenderState = { soldInPeriod, inStock, totalProfit, stockValue, avgDays, counts, topModels };
+}
+
+// ── Отчёт за период (печать / сохранение в PDF через диалог печати) ──
+function escapeHtmlRp(text) {
+  const div = document.createElement('div');
+  div.textContent = text == null ? '' : String(text);
+  return div.innerHTML;
+}
+
+function periodLabel() {
+  const now = new Date();
+  if (currentPeriod === 'month')   return 'этот месяц (' + now.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }) + ')';
+  if (currentPeriod === 'quarter') return 'текущий квартал';
+  if (currentPeriod === 'year')    return now.getFullYear() + ' год';
+  return 'всё время';
+}
+
+function downloadMonthlyReport() {
+  if (!lastRenderState) return;
+  const { soldInPeriod, inStock, totalProfit, stockValue, avgDays, counts, topModels } = lastRenderState;
+  const catLabel = currentCat === 'all' ? 'все категории' : currentCat;
+  const revenue  = soldInPeriod.reduce((s, p) => s + (parseFloat(p['Цена продажа']) || 0), 0);
+  const now      = new Date();
+
+  let html = '<div class="rp-title">Лаба — отчёт по продажам</div>'
+    + '<div class="rp-meta">Период: ' + escapeHtmlRp(periodLabel()) + ' · Категория: ' + escapeHtmlRp(catLabel)
+    + ' · Сформирован: ' + escapeHtmlRp(now.toLocaleString('ru-RU')) + '</div>';
+
+  html += '<div class="rp-kpis">'
+    + '<div><div class="rp-kpi-label">Прибыль за период</div><div class="rp-kpi-value">' + fmt(totalProfit) + '</div></div>'
+    + '<div><div class="rp-kpi-label">Продаж</div><div class="rp-kpi-value">' + soldInPeriod.length + ' шт</div></div>'
+    + '<div><div class="rp-kpi-label">Выручка</div><div class="rp-kpi-value">' + fmt(revenue) + '</div></div>'
+    + '<div><div class="rp-kpi-label">Стоимость склада</div><div class="rp-kpi-value">' + fmt(stockValue) + '</div></div>'
+    + '<div><div class="rp-kpi-label">На складе</div><div class="rp-kpi-value">' + inStock.length + ' шт</div></div>'
+    + '<div><div class="rp-kpi-label">Ср. срок продажи</div><div class="rp-kpi-value">' + (avgDays !== null ? avgDays + ' дн' : '—') + '</div></div>'
+    + '</div>';
+
+  html += '<div class="rp-section-title">Продажи за период (' + soldInPeriod.length + ')</div>';
+  if (soldInPeriod.length) {
+    html += '<table><thead><tr>'
+      + '<th>Артикул</th><th>Название</th><th>Дата продажи</th>'
+      + '<th class="rp-num">Закупка</th><th class="rp-num">Продажа</th><th class="rp-num">Прибыль</th>'
+      + '</tr></thead><tbody>';
+    soldInPeriod.slice()
+      .sort((a, b) => (parseDate(a['Дата продажи']) || 0) - (parseDate(b['Дата продажи']) || 0))
+      .forEach(p => {
+        html += '<tr>'
+          + '<td>' + escapeHtmlRp(p['Артикул']) + '</td>'
+          + '<td>' + escapeHtmlRp(p['Название']) + '</td>'
+          + '<td>' + escapeHtmlRp(p['Дата продажи']) + '</td>'
+          + '<td class="rp-num">' + fmt(p['Цена закупка']) + '</td>'
+          + '<td class="rp-num">' + fmt(p['Цена продажа']) + '</td>'
+          + '<td class="rp-num">' + fmt(p['Прибыль']) + '</td>'
+          + '</tr>';
+      });
+    html += '<tr><td colspan="3"><strong>Итого</strong></td><td class="rp-num"></td>'
+      + '<td class="rp-num"><strong>' + fmt(revenue) + '</strong></td>'
+      + '<td class="rp-num"><strong>' + fmt(totalProfit) + '</strong></td></tr>';
+    html += '</tbody></table>';
+  } else {
+    html += '<div style="font-size:12px;color:#666;">Нет продаж за выбранный период</div>';
+  }
+
+  html += '<div class="rp-section-title">Статусы товаров</div>';
+  html += '<table><thead><tr><th>Статус</th><th class="rp-num">Количество</th></tr></thead><tbody>';
+  Object.entries(counts).forEach(([status, count]) => {
+    html += '<tr><td>' + escapeHtmlRp(getStatusText(status)) + '</td><td class="rp-num">' + count + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  if (topModels.length) {
+    html += '<div class="rp-section-title">Топ моделей по прибыли</div>';
+    html += '<table><thead><tr><th>Модель</th><th class="rp-num">Продаж</th><th class="rp-num">Прибыль</th></tr></thead><tbody>';
+    topModels.forEach(([name, s]) => {
+      html += '<tr><td>' + escapeHtmlRp(name) + '</td><td class="rp-num">' + s.sold + '</td><td class="rp-num">' + fmt(Math.round(s.profit)) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  document.getElementById('print-report').innerHTML = html;
+  window.print();
 }
 
 // ── Гистограмма прибыли по месяцам (CSS-бары, без внешних библиотек) ──
