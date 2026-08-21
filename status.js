@@ -17,12 +17,16 @@ const STATUS_META = {
     'Продан':         { icon: '💰', color: 'var(--st-off)',  title: 'Продан',         cssClass: 'status-sold',     label: 'Продан' }
 };
 
-// Цвета статусов на дашборде аналитики (текст + фон бейджа = цвет статуса с прозрачностью)
+// Цвета статусов на дашборде аналитики (текст + фон бейджа = цвет статуса с прозрачностью).
+// Отдельная палитра от --st-* (которые используют "светофорные" зелёный/синий/
+// жёлтый/серый для бейджей каталога) — здесь цвета подобраны под лаймово-тёмный
+// дизайн: акцентный лайм для "в наличии", приглушённые дополняющие тона для
+// остального, вместо генеральной палитры типового саас-дашборда.
 const STATUS_ANALYTICS_COLORS = {
-    'Не продан':      { color: 'var(--st-ok)',   bg: 'color-mix(in srgb, var(--st-ok) 16%, transparent)' },
-    'В доставке':     { color: 'var(--st-info)', bg: 'color-mix(in srgb, var(--st-info) 16%, transparent)' },
-    'Зарезервирован': { color: 'var(--st-warn)', bg: 'color-mix(in srgb, var(--st-warn) 16%, transparent)' },
-    'Продан':         { color: 'var(--st-off)',  bg: 'color-mix(in srgb, var(--st-off) 16%, transparent)' }
+    'Не продан':      { color: 'var(--lime)',       bg: 'color-mix(in srgb, var(--lime) 20%, transparent)' },
+    'В доставке':     { color: 'var(--an-transit)',  bg: 'color-mix(in srgb, var(--an-transit) 18%, transparent)' },
+    'Зарезервирован': { color: 'var(--an-reserved)', bg: 'color-mix(in srgb, var(--an-reserved) 18%, transparent)' },
+    'Продан':         { color: 'var(--tx2)',         bg: 'color-mix(in srgb, var(--tx2) 16%, transparent)' }
 };
 
 function getStatusIcon(status) {
