@@ -1746,6 +1746,18 @@
         return isNaN(d.getTime()) ? null : d;
     }
 
+    // Конвертация для <input type="date"> — он всегда хранит значение в ISO
+    // (yyyy-MM-dd), а вся остальная таблица/бэкенд работают в формате dd.MM.yyyy.
+    function ruDateToIso(str) {
+        const m = String(str || '').match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+        return m ? (m[3] + '-' + m[2] + '-' + m[1]) : '';
+    }
+
+    function isoDateToRu(str) {
+        const m = String(str || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? (m[3] + '.' + m[2] + '.' + m[1]) : '';
+    }
+
     function daysSincePurchase(dateStr) {
         const buy = parseRuDate(dateStr);
         if (!buy) return null;
@@ -2045,7 +2057,9 @@
             + '<div class="field-group"><div class="eyebrow field-label">Серийный номер</div><input type="text" id="edit-serial" value="' + escapeHtml(currentProduct['Серийный номер']) + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Состояние</div><textarea id="edit-description" rows="3">' + escapeHtml(currentProduct['Состояние']) + '</textarea></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Цена закупки</div><input type="number" id="edit-purchase-price" value="' + (currentProduct['Цена закупка'] || '') + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Дата закупки</div><input type="date" id="edit-purchase-date" value="' + ruDateToIso(currentProduct['Дата закупки']) + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Цена продажи</div><input type="number" id="edit-sale-price" value="' + (currentProduct['Цена продажа'] || '') + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Дата продажи</div><input type="date" id="edit-sale-date" value="' + ruDateToIso(currentProduct['Дата продажи']) + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Статус</div>'
             +     '<select id="edit-status">'
             +         '<option value="Не продан"' + (currentProduct['Статус'] === 'Не продан' ? ' selected' : '') + '>Не продан</option>'
@@ -2120,7 +2134,9 @@
                 serialNumber: document.getElementById('edit-serial').value,
                 description: document.getElementById('edit-description').value,
                 purchasePrice: document.getElementById('edit-purchase-price').value,
+                purchaseDate: isoDateToRu(document.getElementById('edit-purchase-date').value),
                 salePrice: document.getElementById('edit-sale-price').value,
+                saleDate: isoDateToRu(document.getElementById('edit-sale-date').value),
                 status: document.getElementById('edit-status').value,
                 avitoLink: document.getElementById('edit-avito').value,
                 repairCost: document.getElementById('edit-repair-cost').value,
@@ -2151,7 +2167,9 @@
                 serialNumber:   data.serialNumber,
                 description:    data.description,
                 purchasePrice:  data.purchasePrice,
+                purchaseDate:   data.purchaseDate,
                 salePrice:      data.salePrice,
+                saleDate:       data.saleDate,
                 status:         data.status,
                 avitoLink:      data.avitoLink || '',
                 repairCost:     data.repairCost || '',
