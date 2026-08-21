@@ -204,6 +204,12 @@ input::placeholder, textarea::placeholder { color: var(--tx2); opacity: 1; }
 input:focus, select:focus, textarea:focus { border-color: var(--lime); }
 textarea { border-radius: 16px; resize: vertical; min-height: 74px; }
 
+/* Нативный календарик у input[type=date]: цвет иконки/попапа подстраиваем
+   под тему, иначе на тёмном фоне иконка календаря (чёрная по умолчанию)
+   почти не видна. */
+body:not(.light-mode) input[type="date"] { color-scheme: dark; }
+body:not(.light-mode) input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.85); cursor: pointer; }
+
 /* ── Пилюли-переключатели (категория, режим ввода, период аналитики) ── */
 .pill-switch {
     display: flex;
