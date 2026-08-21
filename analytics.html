@@ -244,7 +244,6 @@
     #print-report .report-sheet { width: auto !important; min-height: 0 !important; box-shadow: none; break-after: page; }
     #print-report .report-sheet:last-child { break-after: auto; }
     #print-report .report-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    #print-report .report-row { break-inside: avoid; }
   }
 </style>
 </head>
@@ -756,22 +755,18 @@ function reportTableHeaders() {
 function reportRow(sale, zebra) {
   const bg = zebra ? '#f2f2f0' : 'transparent';
   const top = 'border-top:1px solid rgba(16,18,21,.28);background:' + bg + ';';
-  return '<div class="report-row" style="display:contents">'
-    + '<div style="font:600 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.sku) + '</div>'
+  return '<div style="font:600 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.sku) + '</div>'
     + '<div style="font:600 12.5px \'Plus Jakarta Sans\',sans-serif;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.name) + '</div>'
     + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 8px 11px 0;' + top + '">' + escapeHtmlRp(sale.date) + '</div>'
     + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.buy) + '</div>'
     + '<div style="font:400 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.sell) + '</div>'
-    + '<div style="font:700 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.profit) + '</div>'
-    + '</div>';
+    + '<div style="font:700 11.5px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;' + top + 'text-align:right">' + fmtRp(sale.profit) + '</div>';
 }
 
 function reportTotalsRow(totals) {
-  return '<div class="report-row" style="display:contents">'
-    + '<div style="grid-column:1/5;font:700 11px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.08em;color:#101215;padding:11px 0;border-top:2px solid #101215">ИТОГО</div>'
+  return '<div style="grid-column:1/5;font:700 11px \'Plus Jakarta Sans\',sans-serif;letter-spacing:.08em;color:#101215;padding:11px 0;border-top:2px solid #101215">ИТОГО</div>'
     + '<div style="font:600 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.sell) + '</div>'
-    + '<div style="font:700 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.profit) + '</div>'
-    + '</div>';
+    + '<div style="font:700 12px \'IBM Plex Mono\',monospace;color:#101215;padding:11px 0;border-top:2px solid #101215;text-align:right">' + fmtRp(totals.profit) + '</div>';
 }
 
 function reportTableSectionHtml(salesChunk, opts) {
