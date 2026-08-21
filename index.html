@@ -404,8 +404,8 @@
 
     <div class="sidebar-section-label">Категория</div>
     <div class="sidebar-cat">
-        <button class="cat-item active" id="sb-drones" onclick="switchCategory('Дроны'); setSbCat(this)"><span>🚁</span> Дроны</button>
-        <button class="cat-item" id="sb-scooters" onclick="switchCategory('Самокаты'); setSbCat(this)"><span>🛴</span> Самокаты</button>
+        <button class="cat-item" id="sb-drones" onclick="switchCategory('Дроны'); setSbCat(this)"><span>🚁</span> Дроны</button>
+        <button class="cat-item active" id="sb-scooters" onclick="switchCategory('Самокаты'); setSbCat(this)"><span>🛴</span> Самокаты</button>
     </div>
 
     <div>
@@ -450,8 +450,8 @@
 
     <div class="mobile-header">
         <div id="mobile-header-cat-group" style="display:flex; gap:8px;">
-            <button id="btn-drones" class="category-btn active" onclick="switchCategory('Дроны')">🚁 Дроны</button>
-            <button id="btn-scooters" class="category-btn" onclick="switchCategory('Самокаты')">🛴 Самокаты</button>
+            <button id="btn-drones" class="category-btn" onclick="switchCategory('Дроны')">🚁 Дроны</button>
+            <button id="btn-scooters" class="category-btn active" onclick="switchCategory('Самокаты')">🛴 Самокаты</button>
         </div>
         <div class="header-icons">
             <a href="analytics.html" class="icon-btn" title="Аналитика">📊</a>
@@ -659,7 +659,7 @@
     let isScanning = false;
     let allProducts = [];
     let currentProduct = null;
-    let currentCategory = 'Дроны';
+    let currentCategory = 'Самокаты';
 
     let cachedProducts = null;
     let catalogLoaded = false;
@@ -1561,7 +1561,7 @@
         // Пилюли моделей
         statsHtml += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
         for (const [model, count] of Object.entries(stats).sort()) {
-            statsHtml += '<span class="filter-pill" style="cursor:pointer;" onclick="filterCatalogDirectly(\'' + escapeHtml(model) + '\')">'
+            statsHtml += '<span class="filter-pill filter-pill-wrap" style="cursor:pointer;" onclick="filterCatalogDirectly(\'' + escapeHtml(model) + '\')">'
                 + escapeHtml(model) + ': <strong>' + count + '</strong>'
                 + '</span>';
         }
