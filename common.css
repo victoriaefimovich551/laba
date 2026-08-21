@@ -23,6 +23,11 @@
     --st-off:    #94a3b8; /* продан */
     --st-danger: #f87171; /* долго лежит на складе (>60 дн) */
 
+    /* Статусы товара — палитра для полос-прогресса в аналитике (свой набор,
+       вписанный в тёмный/лаймовый дизайн, вместо "светофорных" --st-*). */
+    --an-transit:  #93a3f5; /* в доставке */
+    --an-reserved: #e3b273; /* резерв */
+
     --f-head: 'Plus Jakarta Sans', -apple-system, sans-serif;
     --f-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
@@ -43,6 +48,9 @@ body.light-mode {
     --st-warn:   #d97706;
     --st-off:    #64748b;
     --st-danger: #dc2626;
+
+    --an-transit:  #6b7fd1;
+    --an-reserved: #c08a3e;
 }
 
 body {
@@ -237,6 +245,15 @@ textarea { border-radius: 16px; resize: vertical; min-height: 74px; }
 }
 .filter-pill.active { background: var(--ink); color: var(--lime); border-color: var(--ink); }
 .filter-pill strong, .filter-pill span.fp-count { font-family: var(--f-mono); }
+
+/* Пилюли с длинным динамическим текстом (названия моделей в статистике) —
+   переносят текст по словам вместо того, чтобы вылезать за край контейнера. */
+.filter-pill-wrap {
+    white-space: normal;
+    max-width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+}
 
 /* ── Список-строка (последние сканы, результаты поиска, каталог) ── */
 .list-row {
