@@ -227,9 +227,21 @@
   #print-report { display: none; }
   @page { size: A4; margin: 0; }
   @media print {
+    html, body { background: #fff !important; }
     body > *:not(#print-report) { display: none !important; }
     #print-report { display: block !important; background: #fff; }
-    #print-report .report-sheet { width: auto; min-height: 100vh; box-shadow: none; break-after: page; }
+    /* !important обязателен: у каждого .report-sheet есть инлайновый
+       width:794px/min-height:1123px (для пиксель-точного вида на A4
+       при 96dpi) — он специфичнее этого правила и без !important
+       побеждал бы даже здесь, из-за чего лист не подстраивался под
+       реальную печатную область (та зависит от полей, которые
+       выставляет диалог печати, а не только от @page).
+       min-height не задаём вовсе — vh на печати не всегда равен
+       реальной высоте страницы (зависит от браузера/драйвера), из-за
+       этого лист "переливался" на лишний пустой второй лист. Разбивку
+       на страницы держат только break-after у листа и то, что продажи
+       уже нарезаны по строкам на лист (см. REPORT_ROWS_PER_PAGE). */
+    #print-report .report-sheet { width: auto !important; min-height: 0 !important; box-shadow: none; break-after: page; }
     #print-report .report-sheet:last-child { break-after: auto; }
     #print-report .report-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     #print-report .report-row { break-inside: avoid; }
@@ -786,7 +798,10 @@ function reportFooterHtml(pageNum, totalPages) {
     + '</div>';
 }
 
-const REPORT_ROWS_PER_PAGE = 26;
+// Консервативная оценка: 26 строк, которые советовал хэндофф, реально
+// умещаются только при однострочных названиях — с расчётом на то, что
+// первая страница ещё несёт блок метрик (меньше места), взяли с запасом.
+const REPORT_ROWS_PER_PAGE = 18;
 
 function renderReport(data) {
   const sales = data.sales || [];
