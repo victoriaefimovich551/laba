@@ -233,7 +233,11 @@
        без сброса он ограничивал ширину листа даже на честном A4 без
        полей, из-за чего лист выглядел у́же страницы и заголовок
        переносился на две строки. */
-    body { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+    /* body ещё несёт min-height:100vh (общее правило в common.css,
+       не только для этой страницы) — та же проблема, что была у
+       .report-sheet: vh на печати не всегда равен высоте физической
+       страницы, и это тоже могло раздувать body на лишний пустой лист. */
+    body { max-width: none !important; padding: 0 !important; margin: 0 !important; min-height: 0 !important; }
     body > *:not(#print-report) { display: none !important; }
     #print-report { display: block !important; background: #fff; }
     /* !important обязателен: у каждого .report-sheet есть инлайновый
