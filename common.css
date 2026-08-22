@@ -202,6 +202,12 @@ input, select, textarea {
 }
 input::placeholder, textarea::placeholder { color: var(--tx2); opacity: 1; }
 input:focus, select:focus, textarea:focus { border-color: var(--lime); }
+
+/* input[type=date] игнорирует обычный вертикальный padding по-своему
+   в разных браузерах (в Safari/iOS особенно сильно) и получается
+   заметно выше остальных полей — фиксируем высоту явно, чтобы все
+   поля в форме были одного размера. */
+input[type="date"] { height: 44px; padding-top: 0; padding-bottom: 0; }
 textarea { border-radius: 16px; resize: vertical; min-height: 74px; }
 
 /* Нативный календарик у input[type=date]: цвет иконки/попапа подстраиваем
