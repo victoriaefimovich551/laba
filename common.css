@@ -203,11 +203,22 @@ input, select, textarea {
 input::placeholder, textarea::placeholder { color: var(--tx2); opacity: 1; }
 input:focus, select:focus, textarea:focus { border-color: var(--lime); }
 
-/* input[type=date] игнорирует обычный вертикальный padding по-своему
-   в разных браузерах (в Safari/iOS особенно сильно) и получается
-   заметно выше остальных полей — фиксируем высоту явно, чтобы все
-   поля в форме были одного размера. */
-input[type="date"] { height: 44px; padding-top: 0; padding-bottom: 0; }
+/* input[type=date]: в Safari/iOS явная высота через CSS не помогает —
+   там своя внутренняя вёрстка поля, которая игнорирует обычный
+   height/padding. -webkit-appearance:none отключает родной вид поля
+   и отдаёт нам полный контроль над размером (overflow:hidden — на
+   случай, если внутренний рендер всё равно попробует вылезти за
+   рамки). Иконка календаря при этом у части версий Safari может
+   пропасть — на этот случай в JS есть отдельный клик-по-полю,
+   открывающий календарь через showPicker(). */
+input[type="date"] {
+    height: 44px;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    -webkit-appearance: none;
+    appearance: none;
+}
 textarea { border-radius: 16px; resize: vertical; min-height: 74px; }
 
 /* Нативный календарик у input[type=date]: цвет иконки/попапа подстраиваем
