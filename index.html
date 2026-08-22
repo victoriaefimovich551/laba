@@ -2080,6 +2080,19 @@
             if (e.target === modal) modal.remove();
         });
 
+        // Подстраховка для полей даты: -webkit-appearance:none (нужен, чтобы
+        // задать полям одинаковую высоту) в части версий Safari прячет
+        // родную иконку календаря — тап по всему полю всё равно открывает
+        // календарь через showPicker(), если браузер его поддерживает.
+        ['edit-purchase-date', 'edit-sale-date'].forEach(id => {
+            const dateEl = document.getElementById(id);
+            if (dateEl && dateEl.showPicker) {
+                dateEl.addEventListener('click', () => {
+                    try { dateEl.showPicker(); } catch (e) {}
+                });
+            }
+        });
+
         const photoBtn = document.getElementById('edit-photo-btn');
         const photoInput = document.getElementById('edit-photo-input');
         const photoStatus = document.getElementById('edit-photo-status');
