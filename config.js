@@ -8,7 +8,7 @@
 // этой страницы, его увидит. Не используйте для по-настоящему секретных
 // данных и не публикуйте этот файл с реальным токеном в открытом виде,
 // если это для вас критично.
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMI8Q18FlMSUfDFhgmuH6st-3NFn6Dpx8aUDu6SICf6QraBxlLNRs3UU15c-sJ0D-zdg/exec';
+const GOOGLE_SCRIPT_URL = 'https://laba-2wkt.onrender.com';
 const APP_TOKEN = 'kUsqq5tD9pQ5j-wUtlKOlyQiT4snxeKA0kUC8cSQO-c';
 
 // Строит URL для чтения (GET) с автоматически добавленным токеном.
