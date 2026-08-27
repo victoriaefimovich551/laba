@@ -10,7 +10,7 @@
 <title>Аналитика — Инвентарь</title>
 <script src="theme.js"></script>
 <script src="status.js"></script>
-<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -886,7 +886,11 @@ function downloadMonthlyReport() {
 // в файле никак не влияют на реальные данные, это просто снимок на момент
 // скачивания) ──
 function downloadDataExport() {
-  if (!allData.length || typeof XLSX === 'undefined') return;
+  if (!allData.length) return;
+  if (typeof XLSX === 'undefined') {
+    alert('Не удалось загрузить модуль Excel (xlsx.full.min.js). Обнови страницу (⌘⇧R) и попробуй ещё раз.');
+    return;
+  }
 
   const headers = [
     'Категория', 'Артикул', 'Название', 'Серийный номер', 'Статус',
