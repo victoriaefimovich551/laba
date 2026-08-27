@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -602,6 +603,21 @@
         </div>
 
         <div class="field-group">
+            <div class="eyebrow field-label">Затраты (ремонт)</div>
+            <input type="number" id="receive-noqr-repair-cost" placeholder="0">
+        </div>
+
+        <div class="field-group">
+            <div class="eyebrow field-label">Затраты (доставка)</div>
+            <input type="number" id="receive-noqr-delivery-cost" placeholder="0">
+        </div>
+
+        <div class="field-group">
+            <div class="eyebrow field-label">Авито</div>
+            <input type="url" id="receive-noqr-avito" placeholder="Ссылка на объявление">
+        </div>
+
+        <div class="field-group">
             <div class="eyebrow field-label">Состояние / описание</div>
             <textarea id="receive-noqr-description" rows="3" placeholder="Состояние, комплектация, примечания..."></textarea>
         </div>
@@ -1002,6 +1018,9 @@
         const model = getModelValue();
         const serialNumber = document.getElementById('receive-noqr-serial')?.value.trim() || '';
         const purchasePrice = document.getElementById('receive-noqr-price')?.value || '';
+        const repairCost = document.getElementById('receive-noqr-repair-cost')?.value || '';
+        const deliveryCost = document.getElementById('receive-noqr-delivery-cost')?.value || '';
+        const avitoLink = document.getElementById('receive-noqr-avito')?.value || '';
         const description = document.getElementById('receive-noqr-description')?.value || '';
 
         if (!model) {
@@ -1039,6 +1058,9 @@
                 model:          model,
                 serialNumber:   serialNumber,
                 purchasePrice:  purchasePrice,
+                repairCost:     repairCost,
+                deliveryCost:   deliveryCost,
+                avitoLink:      avitoLink,
                 description:    description,
                 category:       currentCategory
             });
@@ -1067,10 +1089,16 @@
                 const receiveNoqrModel = document.getElementById('receive-noqr-model');
                 const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
                 const receiveNoqrPrice = document.getElementById('receive-noqr-price');
+                const receiveNoqrRepairCost = document.getElementById('receive-noqr-repair-cost');
+                const receiveNoqrDeliveryCost = document.getElementById('receive-noqr-delivery-cost');
+                const receiveNoqrAvito = document.getElementById('receive-noqr-avito');
                 const receiveNoqrDescription = document.getElementById('receive-noqr-description');
                 if (receiveNoqrModel) receiveNoqrModel.value = '';
                 if (receiveNoqrSerial) receiveNoqrSerial.value = '';
                 if (receiveNoqrPrice) receiveNoqrPrice.value = '';
+                if (receiveNoqrRepairCost) receiveNoqrRepairCost.value = '';
+                if (receiveNoqrDeliveryCost) receiveNoqrDeliveryCost.value = '';
+                if (receiveNoqrAvito) receiveNoqrAvito.value = '';
                 if (receiveNoqrDescription) receiveNoqrDescription.value = '';
                 const receiveNoqrModelManualEl = document.getElementById('receive-noqr-model-manual');
                 if (receiveNoqrModelManualEl) receiveNoqrModelManualEl.value = '';
@@ -1096,11 +1124,17 @@
         const receiveNoqrModel = document.getElementById('receive-noqr-model');
         const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
         const receiveNoqrPrice = document.getElementById('receive-noqr-price');
+        const receiveNoqrRepairCost = document.getElementById('receive-noqr-repair-cost');
+        const receiveNoqrDeliveryCost = document.getElementById('receive-noqr-delivery-cost');
+        const receiveNoqrAvito = document.getElementById('receive-noqr-avito');
         const receiveNoqrDescription = document.getElementById('receive-noqr-description');
         const receiveNoqrResult = document.getElementById('receive-noqr-result');
         if (receiveNoqrModel) receiveNoqrModel.value = '';
         if (receiveNoqrSerial) receiveNoqrSerial.value = '';
         if (receiveNoqrPrice) receiveNoqrPrice.value = '';
+        if (receiveNoqrRepairCost) receiveNoqrRepairCost.value = '';
+        if (receiveNoqrDeliveryCost) receiveNoqrDeliveryCost.value = '';
+        if (receiveNoqrAvito) receiveNoqrAvito.value = '';
         if (receiveNoqrDescription) receiveNoqrDescription.value = '';
         if (receiveNoqrResult) receiveNoqrResult.innerHTML = '';
         const receiveNoqrModelManual = document.getElementById('receive-noqr-model-manual');
@@ -1305,8 +1339,8 @@
     }
 
     // FIX #7: Полный return data (был обрезан)
-    async function findProductBySKU(sku) {
-        if (allProducts && allProducts.length) {
+    async function findProductBySKU(sku, forceFresh) {
+        if (!forceFresh && allProducts && allProducts.length) {
             const found = allProducts.find(p => p['Артикул'] === sku);
             if (found) return found;
         }
@@ -2198,8 +2232,12 @@
             });
             if (result.success) {
                 showToast('✅ Товар обновлён');
-                const updatedProduct = await findProductBySKU(data.sku);
+                const updatedProduct = await findProductBySKU(data.sku, true);
                 currentProduct = updatedProduct;
+                if (allProducts && allProducts.length) {
+                    const idx = allProducts.findIndex(p => p['Артикул'] === data.sku);
+                    if (idx !== -1) allProducts[idx] = updatedProduct;
+                }
                 if (isDesktopLayout()) {
                     renderDesktopDetail(updatedProduct);
                 } else if (resultContainer) {
