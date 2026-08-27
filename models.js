@@ -81,6 +81,7 @@ const MODELS_BY_CATEGORY = {
         'NanRobot D4+', 'NanRobot LS7', 'InMotion S1', 'InMotion L9',
         'E-TWOW Booster S', 'E-TWOW GT', 'Glion Dolly', 'Unagi Model One', 'Unagi Model One Voyager',
         'Swagtron Swagger', 'Mercane WideWheel', 'Splach Twin', 'Yume X11',
-        'RION RE90', 'WEPED FS', 'NAMI Burn-E', 'NAMI Burn-E 2', 'NAMI Burn-E 2 Max'
+        'RION RE90', 'WEPED FS', 'NAMI Burn-E', 'NAMI Burn-E 2', 'NAMI Burn-E 2 Max',
+        'Syccyba'
     ]
 };
