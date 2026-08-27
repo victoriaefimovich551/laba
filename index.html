@@ -2094,6 +2094,9 @@
             +     '<button type="button" id="edit-photo-btn" class="btn-ghost" style="width:100%; height:44px;">📷 Добавить фото</button>'
             +     '<div id="edit-photo-status" style="font-size:12px; color:var(--tx2); margin-top:6px;"></div>'
             + '</div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Артикул</div><input type="text" id="edit-sku" value="' + escapeHtml(currentProduct['Артикул']) + '">'
+            +     '<div style="font-size:12px; color:var(--tx2); margin-top:4px;">⚠️ При смене артикула старая наклейка с QR-кодом перестанет действовать — потребуется напечатать новую.</div>'
+            + '</div>'
             + '<div class="field-group"><div class="eyebrow field-label">Название</div><input type="text" id="edit-name" value="' + escapeHtml(currentProduct['Название']) + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Серийный номер</div><input type="text" id="edit-serial" value="' + escapeHtml(currentProduct['Серийный номер']) + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Состояние</div><textarea id="edit-description" rows="3">' + escapeHtml(currentProduct['Состояние']) + '</textarea></div>'
@@ -2184,6 +2187,7 @@
         document.getElementById('save-edit-btn').onclick = async () => {
             const updatedData = {
                 sku: currentProduct['Артикул'],
+                newSku: document.getElementById('edit-sku').value.trim(),
                 name: document.getElementById('edit-name').value,
                 serialNumber: document.getElementById('edit-serial').value,
                 description: document.getElementById('edit-description').value,
@@ -2217,6 +2221,7 @@
             const result = await apiPost({
                 action:         'updateProduct',
                 sku:            data.sku,
+                newSku:         data.newSku,
                 name:           data.name,
                 serialNumber:   data.serialNumber,
                 description:    data.description,
@@ -2231,8 +2236,9 @@
                 category:       currentCategory
             });
             if (result.success) {
+                const finalSku = result.sku || data.sku;
                 showToast('✅ Товар обновлён');
-                const updatedProduct = await findProductBySKU(data.sku, true);
+                const updatedProduct = await findProductBySKU(finalSku, true);
                 currentProduct = updatedProduct;
                 if (allProducts && allProducts.length) {
                     const idx = allProducts.findIndex(p => p['Артикул'] === data.sku);
@@ -2245,6 +2251,15 @@
                 }
                 catalogLoaded = false;
                 loadCatalog();
+
+                if (result.skuChanged) {
+                    const reprint = await showConfirmDialog(
+                        '🔢 Артикул изменён на ' + finalSku + '. Старая наклейка с QR-кодом больше не действует.\nНапечатать новую наклейку сейчас?'
+                    );
+                    if (reprint) {
+                        printLabels([{ 'Артикул': finalSku, 'Название': updatedProduct['Название'] }]);
+                    }
+                }
             } else {
                 showToast('❌ Ошибка: ' + result.message, 'error');
             }
