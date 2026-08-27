@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,6 +10,7 @@
 <title>Аналитика — Инвентарь</title>
 <script src="theme.js"></script>
 <script src="status.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -282,7 +284,7 @@
     <div class="page-title" style="font-size:20px;">Аналитика</div>
     <p id="last-update">Загрузка данных...</p>
   </div>
-  <button class="back-btn" id="download-export-btn" onclick="downloadDataExport()" title="Скачать таблицу всех товаров для просмотра (CSV)" style="margin-left:auto;">📋 Таблица</button>
+  <button class="back-btn" id="download-export-btn" onclick="downloadDataExport()" title="Скачать таблицу всех товаров для просмотра (Excel)" style="margin-left:auto;">📋 Таблица</button>
   <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период">📄 Отчёт</button>
   <button class="theme-toggle theme-toggle-an" id="theme-toggle-an" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
 </div>
@@ -880,17 +882,11 @@ function downloadMonthlyReport() {
   window.print();
 }
 
-// ── Выгрузка всей таблицы товаров в CSV (только для просмотра — правки в
-// файле никак не влияют на реальные данные, это просто снимок на момент
+// ── Выгрузка всей таблицы товаров в Excel (только для просмотра — правки
+// в файле никак не влияют на реальные данные, это просто снимок на момент
 // скачивания) ──
-function csvCell(value) {
-  const str = (value === null || value === undefined) ? '' : String(value);
-  if (/[",\n;]/.test(str)) return '"' + str.replace(/"/g, '""') + '"';
-  return str;
-}
-
 function downloadDataExport() {
-  if (!allData.length) return;
+  if (!allData.length || typeof XLSX === 'undefined') return;
 
   const headers = [
     'Категория', 'Артикул', 'Название', 'Серийный номер', 'Статус',
@@ -898,34 +894,39 @@ function downloadDataExport() {
     'Затраты ремонт', 'Затраты доставка', 'Ссылка на Авито', 'Состояние / описание'
   ];
 
+  const toNum = (v) => {
+    const n = parseFloat(v);
+    return (v !== undefined && v !== null && v !== '' && !isNaN(n)) ? n : '';
+  };
+
   const rows = allData.map(p => [
     p._cat || '',
     p['Артикул'] || '',
     p['Название'] || '',
     p['Серийный номер'] || '',
     getStatusText(p['Статус']),
-    p['Цена закупка'] || '',
+    toNum(p['Цена закупка']),
     p['Дата закупки'] || '',
-    p['Цена продажа'] || '',
+    toNum(p['Цена продажа']),
     p['Дата продажи'] || '',
-    p['Прибыль'] || '',
-    p['Затраты ремонт'] || '',
-    p['Затраты доставка'] || '',
+    toNum(p['Прибыль']),
+    toNum(p['Затраты ремонт']),
+    toNum(p['Затраты доставка']),
     p['Ссылка на Авито'] || '',
     p['Состояние'] || ''
   ]);
 
-  const csv = [headers, ...rows].map(r => r.map(csvCell).join(';')).join('\r\n');
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [
+    { wch: 10 }, { wch: 10 }, { wch: 28 }, { wch: 16 }, { wch: 14 },
+    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+    { wch: 12 }, { wch: 12 }, { wch: 24 }, { wch: 34 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Товары');
   const stamp = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = 'laba-tovary-' + stamp + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  XLSX.writeFile(wb, 'laba-tovary-' + stamp + '.xlsx');
 }
 
 // ── Гистограмма прибыли по месяцам (CSS-бары, без внешних библиотек) ──
