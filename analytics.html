@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -283,7 +282,8 @@
     <div class="page-title" style="font-size:20px;">Аналитика</div>
     <p id="last-update">Загрузка данных...</p>
   </div>
-  <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период" style="margin-left:auto;">📄 Отчёт</button>
+  <button class="back-btn" id="download-export-btn" onclick="downloadDataExport()" title="Скачать таблицу всех товаров для просмотра (CSV)" style="margin-left:auto;">📋 Таблица</button>
+  <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период">📄 Отчёт</button>
   <button class="theme-toggle theme-toggle-an" id="theme-toggle-an" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
 </div>
 
@@ -878,6 +878,54 @@ function downloadMonthlyReport() {
 
   document.getElementById('print-report').innerHTML = renderReport(data);
   window.print();
+}
+
+// ── Выгрузка всей таблицы товаров в CSV (только для просмотра — правки в
+// файле никак не влияют на реальные данные, это просто снимок на момент
+// скачивания) ──
+function csvCell(value) {
+  const str = (value === null || value === undefined) ? '' : String(value);
+  if (/[",\n;]/.test(str)) return '"' + str.replace(/"/g, '""') + '"';
+  return str;
+}
+
+function downloadDataExport() {
+  if (!allData.length) return;
+
+  const headers = [
+    'Категория', 'Артикул', 'Название', 'Серийный номер', 'Статус',
+    'Цена закупки', 'Дата закупки', 'Цена продажа', 'Дата продажи', 'Прибыль',
+    'Затраты ремонт', 'Затраты доставка', 'Ссылка на Авито', 'Состояние / описание'
+  ];
+
+  const rows = allData.map(p => [
+    p._cat || '',
+    p['Артикул'] || '',
+    p['Название'] || '',
+    p['Серийный номер'] || '',
+    getStatusText(p['Статус']),
+    p['Цена закупка'] || '',
+    p['Дата закупки'] || '',
+    p['Цена продажа'] || '',
+    p['Дата продажи'] || '',
+    p['Прибыль'] || '',
+    p['Затраты ремонт'] || '',
+    p['Затраты доставка'] || '',
+    p['Ссылка на Авито'] || '',
+    p['Состояние'] || ''
+  ]);
+
+  const csv = [headers, ...rows].map(r => r.map(csvCell).join(';')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = 'laba-tovary-' + stamp + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // ── Гистограмма прибыли по месяцам (CSS-бары, без внешних библиотек) ──
