@@ -21,7 +21,7 @@
   body, .stat-card, .list-row, .status-row, .model-row, .stale-row { transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
 
   /* ── Header ── */
-  .an-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .an-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
   .back-btn {
     background: var(--sf);
     border: 1px solid var(--line);
@@ -35,10 +35,13 @@
     align-items: center;
     gap: 5px;
     flex: none;
+    white-space: nowrap;
   }
   .an-header-title { flex: 1; min-width: 0; }
+  .an-header-title .page-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .an-header-title p { font: 500 11.5px var(--f-mono); color: var(--tx2); margin-top: 2px; }
-  .theme-toggle-an { margin-left: auto; flex: none; }
+  .theme-toggle-an { flex: none; }
+  .an-header-actions { display: flex; gap: 8px; flex: 0 0 100%; }
 
   /* ── Переключатели категории / периода ── */
   .cat-bar { margin-bottom: 10px; }
@@ -201,9 +204,11 @@
   @media (min-width: 1024px) {
     body { max-width: 1180px; padding: 32px 40px 60px; }
 
-    .an-header { margin-bottom: 26px; }
+    .an-header { margin-bottom: 26px; flex-wrap: nowrap; }
     .an-header-title .page-title { font-size: 26px; }
     .back-btn { padding: 10px 16px; }
+    .an-header-actions { flex: none; order: 1; }
+    .theme-toggle-an { order: 2; }
 
     .filters-row { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
     .cat-bar { margin-bottom: 0; flex: none; width: auto; }
@@ -284,9 +289,11 @@
     <div class="page-title" style="font-size:20px;">Аналитика</div>
     <p id="last-update">Загрузка данных...</p>
   </div>
-  <button class="back-btn" id="download-export-btn" onclick="downloadDataExport()" title="Скачать таблицу всех товаров для просмотра (Excel)" style="margin-left:auto;">📋 Таблица</button>
-  <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период">📄 Отчёт</button>
   <button class="theme-toggle theme-toggle-an" id="theme-toggle-an" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
+  <div class="an-header-actions">
+    <button class="back-btn" id="download-export-btn" onclick="downloadDataExport()" title="Скачать таблицу всех товаров для просмотра (Excel)">📋 Таблица</button>
+    <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период">📄 Отчёт</button>
+  </div>
 </div>
 
 <div class="filters-row">
