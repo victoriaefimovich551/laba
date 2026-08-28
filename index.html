@@ -1839,6 +1839,7 @@
         html += '<div style="background:var(--sf); border:1px solid var(--line); border-radius:18px; padding:4px 16px;">';
         html += '<div class="product-detail"><strong>Серийный номер</strong><span>' + escapeHtml(product['Серийный номер'] || '—') + '</span></div>';
         if (product['Дата закупки']) html += '<div class="product-detail"><strong>Дата закупки</strong><span>' + escapeHtml(product['Дата закупки']) + '</span></div>';
+        if (product['Дата продажи']) html += '<div class="product-detail"><strong>Дата продажи</strong><span>' + escapeHtml(product['Дата продажи']) + '</span></div>';
         if (days !== null) html += '<div class="product-detail"><strong>На складе</strong><span>' + days + ' дн</span></div>';
         if (product['Ссылка на Авито']) html += '<div class="product-detail"><strong>Авито</strong><span><a href="' + escapeHtml(product['Ссылка на Авито']) + '" target="_blank" style="color:var(--lime);">Открыть →</a></span></div>';
         html += '</div>';
