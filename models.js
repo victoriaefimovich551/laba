@@ -82,6 +82,15 @@ const MODELS_BY_CATEGORY = {
         'E-TWOW Booster S', 'E-TWOW GT', 'Glion Dolly', 'Unagi Model One', 'Unagi Model One Voyager',
         'Swagtron Swagger', 'Mercane WideWheel', 'Splach Twin', 'Yume X11',
         'RION RE90', 'WEPED FS', 'NAMI Burn-E', 'NAMI Burn-E 2', 'NAMI Burn-E 2 Max',
-        'Syccyba'
+        'Syccyba Atlant', 'Syccyba Flash Mono', 'Syccyba Gepard', 'Syccyba Gepard 6.0',
+        'Syccyba Gepard 7.0', 'Syccyba Goliaf', 'Syccyba Hunter', 'Syccyba M10',
+        'Syccyba M10 Lite', 'Syccyba Mangust', 'Syccyba Mangust 2.0', 'Syccyba Pantera',
+        'Syccyba Pantera 2.0', 'Syccyba Pantera 3.0', 'Syccyba R11 Mini', 'Syccyba R11 Pro',
+        'Syccyba R12', 'Syccyba R12 Pro', 'Syccyba R14', 'Syccyba R14 Pro', 'Syccyba R14 Lux',
+        'Syccyba T100', 'Syccyba T1000', 'Syccyba H1 Dual', 'Syccyba H2', 'Syccyba H2 Dual',
+        'Syccyba Impulse', 'Syccyba Impulse 5.0 Dual', 'Syccyba Impulse 6.0',
+        'Syccyba Impulse X20', 'Syccyba Impulse X20 Lite', 'Syccyba Impulse X20 Dual',
+        'Syccyba Impulse X21', 'Syccyba Impulse X21 Pro', 'Syccyba Impulse X21 Sport',
+        'Syccyba Monster', 'Syccyba X22'
     ]
 };
