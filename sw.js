@@ -1,5 +1,5 @@
 // ========== SERVICE WORKER ДЛЯ ОФЛАЙН-РЕЖИМА ==========
-const CACHE_NAME = 'qr-scanner-v2';
+const CACHE_NAME = 'qr-scanner-v3';
 const urlsToCache = [
   './',
   './index.html',
@@ -52,7 +52,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Статические ресурсы — cache-first, с фоллбэком на сеть
+  // HTML-страницы (сам сайт) — сначала сеть, чтобы обновления файлов сразу
+  // были видны; кэш используется только как резерв при отсутствии сети.
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Остальные статические ресурсы (шрифты, библиотеки и т.п.) — cache-first,
+  // с фоллбэком на сеть, это то, что реально не меняется часто.
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
@@ -69,9 +85,6 @@ self.addEventListener('fetch', event => {
           });
       })
       .catch(() => {
-        if (event.request.destination === 'document') {
-          return caches.match('./index.html');
-        }
         return new Response('Нет соединения', {
           status: 503,
           statusText: 'Service Unavailable'
