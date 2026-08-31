@@ -22,9 +22,35 @@ function apiUrl(params) {
 // Отправляет данные через POST (без Content-Type: application/json —
 // иначе браузер шлёт CORS-preflight, который Apps Script не обрабатывает).
 // Возвращает Promise с распарсенным JSON-ответом.
+//
+// Бесплатный сервер на Render "засыпает" после простоя — первый запрос
+// может занять до минуты, пока он проснётся. Чтобы это не выглядело как
+// зависание, показываем предупреждение, если ответа нет дольше 4 секунд,
+// и жёстко обрываем запрос через 90 секунд с понятной ошибкой вместо
+// бесконечного ожидания.
 function apiPost(payload) {
+    const controller = new AbortController();
+    const abortTimer = setTimeout(function () { controller.abort(); }, 90000);
+    const wakeupTimer = setTimeout(function () {
+        if (typeof showToast === 'function') {
+            showToast('⏳ Сервер просыпается после простоя, это может занять до минуты...', 'info', 8000);
+        }
+    }, 4000);
+
     return fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify(Object.assign({}, payload, { token: APP_TOKEN }))
-    }).then(function (r) { return r.json(); });
+        body: JSON.stringify(Object.assign({}, payload, { token: APP_TOKEN })),
+        signal: controller.signal
+    }).then(function (r) {
+        clearTimeout(wakeupTimer);
+        clearTimeout(abortTimer);
+        return r.json();
+    }).catch(function (err) {
+        clearTimeout(wakeupTimer);
+        clearTimeout(abortTimer);
+        if (err.name === 'AbortError') {
+            throw new Error('Сервер не отвечает больше 90 секунд. Попробуйте ещё раз через минуту.');
+        }
+        throw err;
+    });
 }
