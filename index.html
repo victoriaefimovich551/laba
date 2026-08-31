@@ -2239,7 +2239,7 @@
             if (result.success) {
                 const finalSku = result.sku || data.sku;
                 showToast('✅ Товар обновлён');
-                const updatedProduct = await findProductBySKU(finalSku, true);
+                const updatedProduct = result.product || await findProductBySKU(finalSku, true);
                 currentProduct = updatedProduct;
                 if (allProducts && allProducts.length) {
                     const idx = allProducts.findIndex(p => p['Артикул'] === data.sku);
