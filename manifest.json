@@ -1,10 +1,12 @@
 {
-  "name": "Лаба",
-  "short_name": "Лаба",
+  "name": "QR Сканер",
+  "short_name": "QR Scanner",
+  "description": "Система учета с QR-сканированием",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#101215",
   "theme_color": "#101215",
+  "background_color": "#101215",
   "icons": [
     {
       "src": "icon-192.png",
@@ -15,12 +17,6 @@
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
-    },
-    {
-      "src": "icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }
