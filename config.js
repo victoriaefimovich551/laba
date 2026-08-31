@@ -8,7 +8,7 @@
 // этой страницы, его увидит. Не используйте для по-настоящему секретных
 // данных и не публикуйте этот файл с реальным токеном в открытом виде,
 // если это для вас критично.
-const GOOGLE_SCRIPT_URL = 'https://laba-2wkt.onrender.com';
+const GOOGLE_SCRIPT_URL = 'https://api.mylaba.com';
 const APP_TOKEN = 'kUsqq5tD9pQ5j-wUtlKOlyQiT4snxeKA0kUC8cSQO-c';
 
 // Строит URL для чтения (GET) с автоматически добавленным токеном.
