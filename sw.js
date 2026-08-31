@@ -1,9 +1,9 @@
 // ========== SERVICE WORKER ДЛЯ ОФЛАЙН-РЕЖИМА ==========
 const CACHE_NAME = 'qr-scanner-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  './',
+  './index.html',
+  './manifest.json',
   'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
@@ -70,7 +70,7 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         if (event.request.destination === 'document') {
-          return caches.match('/index.html');
+          return caches.match('./index.html');
         }
         return new Response('Нет соединения', {
           status: 503,
