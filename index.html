@@ -1855,6 +1855,7 @@
         html += '<div style="margin-top:auto; display:flex; flex-direction:column; gap:9px;">'
             + '<button class="btn-dark btn-block" style="margin-top:0;" onclick="printProductLabel(\'' + escapedSku + '\')">🖨 Напечатать наклейку</button>'
             + '<button class="action-btn" style="width:100%; flex:none; height:50px; font-size:14px;" onclick="editProduct(\'' + escapedSku + '\')">Редактировать</button>'
+            + '<button class="action-btn" style="width:100%; flex:none; height:50px; font-size:14px; color:var(--st-danger); border-color:var(--st-danger);" onclick="deleteProduct(\'' + escapedSku + '\')">🗑️ Удалить</button>'
             + '</div>';
 
         panel.innerHTML = html;
@@ -2294,6 +2295,8 @@
                         resultContainer.innerHTML = '<div class="success">✅ Товар удалён</div>';
                     }
                 }
+                const detailPanel = document.getElementById('desktop-detail-panel');
+                if (detailPanel) detailPanel.classList.remove('visible');
                 catalogLoaded = false;
                 loadCatalog();
             } else {
