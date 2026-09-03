@@ -79,8 +79,8 @@
       <input type="text" id="setup-name">
     </div>
     <div class="field-group">
-      <div class="eyebrow field-label">Логин</div>
-      <input type="text" id="setup-username" autocomplete="off">
+      <div class="eyebrow field-label">Email</div>
+      <input type="email" id="setup-email" autocomplete="off">
     </div>
     <div class="field-group">
       <div class="eyebrow field-label">Пароль</div>
@@ -93,8 +93,8 @@
   <!-- Логин -->
   <div id="login-box" class="login-box" style="display:none;">
     <div class="field-group">
-      <div class="eyebrow field-label">Логин</div>
-      <input type="text" id="login-username" autocomplete="username">
+      <div class="eyebrow field-label">Email</div>
+      <input type="email" id="login-email" autocomplete="username">
     </div>
     <div class="field-group">
       <div class="eyebrow field-label">Пароль</div>
@@ -102,6 +102,34 @@
     </div>
     <button class="btn-lime btn-block" id="login-btn" style="width:100%;">Войти</button>
     <div class="auth-error" id="login-error"></div>
+    <p style="text-align:center; margin-top:14px;">
+      <a href="#" id="forgot-link" style="font:600 12px var(--f-head); color:var(--tx2);">Забыли пароль?</a>
+    </p>
+  </div>
+
+  <!-- Восстановление пароля: запрос ссылки на почту -->
+  <div id="forgot-box" class="login-box" style="display:none;">
+    <p style="text-align:center; color:var(--tx2); font:500 12.5px var(--f-head); margin-bottom:18px;">Укажи email — пришлём ссылку для смены пароля.</p>
+    <div class="field-group">
+      <div class="eyebrow field-label">Email</div>
+      <input type="email" id="forgot-email" autocomplete="username">
+    </div>
+    <button class="btn-lime btn-block" id="forgot-btn" style="width:100%;">Отправить ссылку</button>
+    <div class="auth-error" id="forgot-error"></div>
+    <p style="text-align:center; margin-top:14px;">
+      <a href="#" id="back-to-login-link" style="font:600 12px var(--f-head); color:var(--tx2);">← Назад ко входу</a>
+    </p>
+  </div>
+
+  <!-- Переход по ссылке из письма: задать новый пароль -->
+  <div id="reset-box" class="login-box" style="display:none;">
+    <p style="text-align:center; color:var(--tx2); font:500 12.5px var(--f-head); margin-bottom:18px;">Задай новый пароль.</p>
+    <div class="field-group">
+      <div class="eyebrow field-label">Новый пароль</div>
+      <input type="text" id="reset-password" autocomplete="new-password">
+    </div>
+    <button class="btn-lime btn-block" id="reset-btn" style="width:100%;">Сохранить пароль</button>
+    <div class="auth-error" id="reset-error"></div>
   </div>
 
   <!-- Кабинет -->
@@ -132,8 +160,8 @@
         <input type="text" id="new-emp-name">
       </div>
       <div class="field-group">
-        <div class="eyebrow field-label">Логин</div>
-        <input type="text" id="new-emp-username" autocomplete="off">
+        <div class="eyebrow field-label">Email</div>
+        <input type="email" id="new-emp-email" autocomplete="off">
       </div>
       <div class="field-group">
         <div class="eyebrow field-label">Пароль</div>
@@ -195,17 +223,17 @@ function clearSession() {
 }
 
 async function doLogin() {
-  const username = document.getElementById('login-username').value.trim();
+  const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
-  if (!username || !password) { errEl.textContent = 'Заполните логин и пароль'; return; }
+  if (!email || !password) { errEl.textContent = 'Заполните email и пароль'; return; }
 
   const btn = document.getElementById('login-btn');
   btn.disabled = true;
   btn.textContent = 'Входим...';
   try {
-    const result = await apiPost({ action: 'login', username, password });
+    const result = await apiPost({ action: 'login', email, password });
     if (!result.success) throw new Error(result.message || 'Не удалось войти');
     session = { token: result.token, employee: result.employee };
     saveSession();
@@ -215,6 +243,57 @@ async function doLogin() {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Войти';
+  }
+}
+
+function showLoginBox() {
+  document.getElementById('setup-box').style.display = 'none';
+  document.getElementById('forgot-box').style.display = 'none';
+  document.getElementById('reset-box').style.display = 'none';
+  document.getElementById('login-box').style.display = 'block';
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const errEl = document.getElementById('forgot-error');
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'Укажите email'; return; }
+
+  const btn = document.getElementById('forgot-btn');
+  btn.disabled = true;
+  btn.textContent = 'Отправляем...';
+  try {
+    const result = await apiPost({ action: 'requestPasswordReset', email });
+    showToast('✅ ' + (result.message || 'Проверьте почту'));
+    showLoginBox();
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Отправить ссылку';
+  }
+}
+
+async function doResetPassword(resetToken) {
+  const newPassword = document.getElementById('reset-password').value;
+  const errEl = document.getElementById('reset-error');
+  errEl.textContent = '';
+  if (!newPassword) { errEl.textContent = 'Укажите новый пароль'; return; }
+
+  const btn = document.getElementById('reset-btn');
+  btn.disabled = true;
+  btn.textContent = 'Сохраняем...';
+  try {
+    const result = await apiPost({ action: 'resetPasswordWithToken', resetToken, newPassword });
+    if (!result.success) throw new Error(result.message || 'Не удалось сохранить пароль');
+    showToast('✅ Пароль обновлён, теперь можно войти');
+    history.replaceState(null, '', location.pathname);
+    showLoginBox();
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Сохранить пароль';
   }
 }
 
@@ -323,18 +402,30 @@ document.getElementById('login-btn').onclick = doLogin;
 document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('logout-btn').onclick = doLogout;
 
+document.getElementById('forgot-link').onclick = (e) => {
+  e.preventDefault();
+  document.getElementById('login-box').style.display = 'none';
+  document.getElementById('forgot-error').textContent = '';
+  document.getElementById('forgot-box').style.display = 'block';
+};
+document.getElementById('back-to-login-link').onclick = (e) => {
+  e.preventDefault();
+  showLoginBox();
+};
+document.getElementById('forgot-btn').onclick = doForgotPassword;
+
 document.getElementById('add-emp-btn').onclick = async () => {
   const name = document.getElementById('new-emp-name').value.trim();
-  const username = document.getElementById('new-emp-username').value.trim();
+  const email = document.getElementById('new-emp-email').value.trim();
   const password = document.getElementById('new-emp-password').value;
   const role = document.getElementById('new-emp-role').value;
-  if (!name || !username || !password) { showToast('Заполните все поля', 'error'); return; }
+  if (!name || !email || !password) { showToast('Заполните все поля', 'error'); return; }
   try {
-    const result = await apiPost({ action: 'createEmployee', sessionToken: session.token, name, username, password, role });
+    const result = await apiPost({ action: 'createEmployee', sessionToken: session.token, name, email, password, role });
     if (!result.success) throw new Error(result.message || 'Не удалось добавить сотрудника');
     showToast('✅ Сотрудник добавлен');
     document.getElementById('new-emp-name').value = '';
-    document.getElementById('new-emp-username').value = '';
+    document.getElementById('new-emp-email').value = '';
     document.getElementById('new-emp-password').value = '';
     render();
   } catch (e) {
@@ -344,19 +435,19 @@ document.getElementById('add-emp-btn').onclick = async () => {
 
 document.getElementById('setup-btn').onclick = async () => {
   const name = document.getElementById('setup-name').value.trim();
-  const username = document.getElementById('setup-username').value.trim();
+  const email = document.getElementById('setup-email').value.trim();
   const password = document.getElementById('setup-password').value;
   const errEl = document.getElementById('setup-error');
   errEl.textContent = '';
-  if (!name || !username || !password) { errEl.textContent = 'Заполните все поля'; return; }
+  if (!name || !email || !password) { errEl.textContent = 'Заполните все поля'; return; }
   const btn = document.getElementById('setup-btn');
   btn.disabled = true;
   try {
-    const result = await apiPost({ action: 'createEmployee', name, username, password, role: 'director' });
+    const result = await apiPost({ action: 'createEmployee', name, email, password, role: 'director' });
     if (!result.success) throw new Error(result.message || 'Не удалось создать аккаунт');
     document.getElementById('setup-box').style.display = 'none';
     document.getElementById('login-box').style.display = 'block';
-    document.getElementById('login-username').value = username;
+    document.getElementById('login-email').value = email;
     showToast('✅ Аккаунт директора создан, теперь войдите');
   } catch (e) {
     errEl.textContent = e.message;
@@ -365,8 +456,22 @@ document.getElementById('setup-btn').onclick = async () => {
   }
 };
 
+document.getElementById('reset-btn').onclick = () => {
+  const params = new URLSearchParams(location.search);
+  doResetPassword(params.get('reset'));
+};
+
 async function init() {
   initTheme();
+
+  const params = new URLSearchParams(location.search);
+  const resetToken = params.get('reset');
+  if (resetToken) {
+    document.getElementById('cab-subtitle').textContent = 'Новый пароль';
+    document.getElementById('reset-box').style.display = 'block';
+    return;
+  }
+
   loadSession();
   if (session) { showCabinet(); return; }
 
