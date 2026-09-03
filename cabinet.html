@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#101215">
+<link rel="icon" type="image/png" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-180.png">
+<title>Личный кабинет — Инвентарь</title>
+<script src="theme.js"></script>
+<script src="toast.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<style>
+  body { padding: 16px; padding-bottom: 40px; }
+  .container { max-width: min(600px, 100%); margin: 0 auto; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-label { margin-bottom: 7px; display: block; }
+
+  /* ── Header ── */
+  .cab-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+  .back-btn {
+    background: var(--sf); border: 1px solid var(--line); color: var(--tx);
+    border-radius: 12px; padding: 8px 14px; font: 700 12.5px var(--f-head);
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+    gap: 5px; flex: none; white-space: nowrap;
+  }
+  .cab-header-title { flex: 1; min-width: 0; }
+  .cab-header-title p { font: 500 11.5px var(--f-mono); color: var(--tx2); margin-top: 2px; }
+  .theme-toggle-cab { flex: none; }
+
+  /* ── Логин ── */
+  .login-box { max-width: 360px; margin: 60px auto 0; }
+  .login-box .page-title { text-align: center; margin-bottom: 24px; }
+  .auth-error { color: var(--st-danger, #f87171); font: 600 12.5px var(--f-head); margin-top: 10px; text-align: center; min-height: 16px; }
+
+  /* ── Период ── */
+  .period-bar { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
+  .period-btn {
+    flex: 1; text-align: center; background: var(--sf); border: 1px solid var(--line);
+    color: var(--tx2); border-radius: 999px; padding: 8px 4px; font: 700 11.5px var(--f-head);
+    cursor: pointer; white-space: nowrap;
+  }
+  .period-btn.active { background: var(--ink); color: var(--lime); border-color: var(--ink); }
+
+  .kpi-lime {
+    background: var(--lime); color: var(--ink); border-radius: 24px; padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .kpi-lime .eyebrow { color: var(--ink); opacity: .65; }
+  .kpi-lime .kpi-value { font: 800 32px var(--f-mono); margin-top: 4px; }
+
+  .loading, .empty-state { text-align: center; color: var(--tx2); font: 500 13px var(--f-head); padding: 30px 0; }
+
+  #cab-body { display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="cab-header">
+    <a class="back-btn" href="index.html">⬅ Назад</a>
+    <div class="cab-header-title">
+      <div class="page-title" style="font-size:20px;">Личный кабинет</div>
+      <p id="cab-subtitle">Вход</p>
+    </div>
+    <button class="theme-toggle theme-toggle-cab" id="theme-toggle-cab" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
+  </div>
+
+  <!-- Первый запуск: сотрудников ещё нет вообще — создаём первого директора -->
+  <div id="setup-box" class="login-box" style="display:none;">
+    <p style="text-align:center; color:var(--tx2); font:500 12.5px var(--f-head); margin-bottom:18px;">Сотрудников ещё нет — заведи первый аккаунт (директора).</p>
+    <div class="field-group">
+      <div class="eyebrow field-label">Имя</div>
+      <input type="text" id="setup-name">
+    </div>
+    <div class="field-group">
+      <div class="eyebrow field-label">Логин</div>
+      <input type="text" id="setup-username" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <div class="eyebrow field-label">Пароль</div>
+      <input type="text" id="setup-password" autocomplete="off">
+    </div>
+    <button class="btn-lime btn-block" id="setup-btn" style="width:100%;">Создать аккаунт директора</button>
+    <div class="auth-error" id="setup-error"></div>
+  </div>
+
+  <!-- Логин -->
+  <div id="login-box" class="login-box" style="display:none;">
+    <div class="field-group">
+      <div class="eyebrow field-label">Логин</div>
+      <input type="text" id="login-username" autocomplete="username">
+    </div>
+    <div class="field-group">
+      <div class="eyebrow field-label">Пароль</div>
+      <input type="password" id="login-password" autocomplete="current-password">
+    </div>
+    <button class="btn-lime btn-block" id="login-btn" style="width:100%;">Войти</button>
+    <div class="auth-error" id="login-error"></div>
+  </div>
+
+  <!-- Кабинет -->
+  <div id="cab-body">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px;">
+      <div class="eyebrow" id="cab-whoami"></div>
+      <button class="btn-ghost" id="logout-btn" style="width:auto; margin:0; padding:8px 16px; height:auto; font-size:12.5px;">Выйти</button>
+    </div>
+
+    <div class="period-bar">
+      <button class="period-btn active" onclick="setPeriod('month', this)">Этот месяц</button>
+      <button class="period-btn" onclick="setPeriod('quarter', this)">Квартал</button>
+      <button class="period-btn" onclick="setPeriod('year', this)">Год</button>
+      <button class="period-btn" onclick="setPeriod('all', this)">Всё время</button>
+    </div>
+
+    <!-- Сводка сотрудника / выбранного сотрудника у директора -->
+    <div id="salary-summary"></div>
+
+    <!-- Список сотрудников (только директор, когда никто не выбран) -->
+    <div id="employees-list"></div>
+
+    <!-- Добавление сотрудника (только директор) -->
+    <div id="add-employee-block" style="display:none; margin-top:22px;">
+      <div class="eyebrow" style="margin-bottom:10px;">Добавить сотрудника</div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Имя</div>
+        <input type="text" id="new-emp-name">
+      </div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Логин</div>
+        <input type="text" id="new-emp-username" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Пароль</div>
+        <input type="text" id="new-emp-password" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Роль</div>
+        <select id="new-emp-role">
+          <option value="employee">Сотрудник</option>
+          <option value="director">Директор</option>
+        </select>
+      </div>
+      <button class="btn-dark btn-block" id="add-emp-btn">➕ Добавить</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+let session = null; // { token, employee: { id, name, role } }
+let currentPeriod = 'month';
+let viewingEmployeeId = null; // директор смотрит разбивку конкретного сотрудника
+
+function getPeriodRange() {
+  const now = new Date();
+  let start;
+  if (currentPeriod === 'month')   start = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if (currentPeriod === 'quarter') start = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+  else if (currentPeriod === 'year')    start = new Date(now.getFullYear(), 0, 1);
+  else start = new Date(2000, 0, 1);
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const fmt = d => d.toISOString().slice(0, 10);
+  return { dateFrom: fmt(start), dateTo: fmt(end) };
+}
+
+function setPeriod(period, btn) {
+  currentPeriod = period;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function fmtRub(n) {
+  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
+}
+
+function saveSession() {
+  try { localStorage.setItem('cabinetSession', JSON.stringify(session)); } catch (e) {}
+}
+function loadSession() {
+  try {
+    const raw = localStorage.getItem('cabinetSession');
+    if (raw) session = JSON.parse(raw);
+  } catch (e) { session = null; }
+}
+function clearSession() {
+  session = null;
+  try { localStorage.removeItem('cabinetSession'); } catch (e) {}
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Заполните логин и пароль'; return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = 'Входим...';
+  try {
+    const result = await apiPost({ action: 'login', username, password });
+    if (!result.success) throw new Error(result.message || 'Не удалось войти');
+    session = { token: result.token, employee: result.employee };
+    saveSession();
+    showCabinet();
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  }
+}
+
+async function doLogout() {
+  if (session) {
+    try { await apiPost({ action: 'logout', sessionToken: session.token }); } catch (e) {}
+  }
+  clearSession();
+  location.reload();
+}
+
+function showCabinet() {
+  document.getElementById('login-box').style.display = 'none';
+  document.getElementById('cab-body').style.display = 'block';
+  document.getElementById('cab-subtitle').textContent = session.employee.role === 'director' ? 'Кабинет директора' : 'Кабинет сотрудника';
+  document.getElementById('cab-whoami').textContent = session.employee.name + (session.employee.role === 'director' ? ' · директор' : '');
+  document.getElementById('add-employee-block').style.display = session.employee.role === 'director' ? 'block' : 'none';
+  render();
+}
+
+async function fetchSalary(employeeId) {
+  const { dateFrom, dateTo } = getPeriodRange();
+  const params = { action: 'getSalary', sessionToken: session.token, dateFrom, dateTo };
+  if (employeeId) params.employeeId = employeeId;
+  const res = await fetch(apiUrl(params));
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+function renderBreakdown(entry) {
+  const items = entry.items || [];
+  let html = '<div class="kpi-lime"><span class="eyebrow">Заработано за период</span><div class="kpi-value">' + fmtRub(entry.total) + '</div></div>';
+  if (!items.length) {
+    html += '<div class="empty-state">За этот период продаж нет</div>';
+    return html;
+  }
+  items.forEach(it => {
+    const roleColor = it.role === 'Полный цикл' ? 'var(--lime)' : (it.role === 'Закупка' ? 'var(--tx2)' : 'var(--tx)');
+    html += '<div class="list-row" style="margin-bottom:10px;">'
+      + '<div class="list-row-body">'
+      + '<div class="list-row-title">' + escapeHtmlCab(it.name) + '</div>'
+      + '<div class="list-row-sub">' + escapeHtmlCab(it.sku) + ' · ' + it.role + ' (' + (it.rate * 100) + '%) · прибыль ' + fmtRub(it.profit) + '</div>'
+      + '</div>'
+      + '<div class="list-row-side"><div class="list-row-price">' + fmtRub(it.amount) + '</div></div>'
+      + '</div>';
+  });
+  return html;
+}
+
+function escapeHtmlCab(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function render() {
+  const summaryEl = document.getElementById('salary-summary');
+  const listEl = document.getElementById('employees-list');
+  summaryEl.innerHTML = '<div class="loading">Загрузка...</div>';
+  listEl.innerHTML = '';
+
+  try {
+    if (session.employee.role !== 'director') {
+      const data = await fetchSalary(null);
+      summaryEl.innerHTML = renderBreakdown(data.result);
+      return;
+    }
+
+    // Директор
+    if (viewingEmployeeId) {
+      const data = await fetchSalary(viewingEmployeeId);
+      summaryEl.innerHTML = '<button class="btn-ghost" style="width:auto; margin-bottom:14px; padding:8px 16px; height:auto; font-size:12.5px;" onclick="viewingEmployeeId=null; render();">← Ко всем сотрудникам</button>'
+        + renderBreakdown(data.result);
+      return;
+    }
+
+    const data = await fetchSalary(null);
+    const all = data.result || [];
+    summaryEl.innerHTML = '';
+    if (!all.length) {
+      listEl.innerHTML = '<div class="empty-state">За этот период продаж нет</div>';
+      return;
+    }
+    let html = '<div class="eyebrow" style="margin-bottom:10px;">Сотрудники</div>';
+    all.forEach(e => {
+      html += '<div class="list-row" style="margin-bottom:10px; cursor:pointer;" onclick="viewingEmployeeId=' + e.employeeId + '; render();">'
+        + '<div class="list-row-body">'
+        + '<div class="list-row-title">' + escapeHtmlCab(e.name) + '</div>'
+        + '<div class="list-row-sub">' + e.items.length + ' товар(ов)</div>'
+        + '</div>'
+        + '<div class="list-row-side"><div class="list-row-price">' + fmtRub(e.total) + '</div></div>'
+        + '</div>';
+    });
+    listEl.innerHTML = html;
+  } catch (e) {
+    if (e.message && e.message.indexOf('Сессия') !== -1) {
+      clearSession();
+      location.reload();
+      return;
+    }
+    summaryEl.innerHTML = '<div class="empty-state">❌ ' + escapeHtmlCab(e.message) + '</div>';
+  }
+}
+
+document.getElementById('login-btn').onclick = doLogin;
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('logout-btn').onclick = doLogout;
+
+document.getElementById('add-emp-btn').onclick = async () => {
+  const name = document.getElementById('new-emp-name').value.trim();
+  const username = document.getElementById('new-emp-username').value.trim();
+  const password = document.getElementById('new-emp-password').value;
+  const role = document.getElementById('new-emp-role').value;
+  if (!name || !username || !password) { showToast('Заполните все поля', 'error'); return; }
+  try {
+    const result = await apiPost({ action: 'createEmployee', sessionToken: session.token, name, username, password, role });
+    if (!result.success) throw new Error(result.message || 'Не удалось добавить сотрудника');
+    showToast('✅ Сотрудник добавлен');
+    document.getElementById('new-emp-name').value = '';
+    document.getElementById('new-emp-username').value = '';
+    document.getElementById('new-emp-password').value = '';
+    render();
+  } catch (e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+};
+
+document.getElementById('setup-btn').onclick = async () => {
+  const name = document.getElementById('setup-name').value.trim();
+  const username = document.getElementById('setup-username').value.trim();
+  const password = document.getElementById('setup-password').value;
+  const errEl = document.getElementById('setup-error');
+  errEl.textContent = '';
+  if (!name || !username || !password) { errEl.textContent = 'Заполните все поля'; return; }
+  const btn = document.getElementById('setup-btn');
+  btn.disabled = true;
+  try {
+    const result = await apiPost({ action: 'createEmployee', name, username, password, role: 'director' });
+    if (!result.success) throw new Error(result.message || 'Не удалось создать аккаунт');
+    document.getElementById('setup-box').style.display = 'none';
+    document.getElementById('login-box').style.display = 'block';
+    document.getElementById('login-username').value = username;
+    showToast('✅ Аккаунт директора создан, теперь войдите');
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+async function init() {
+  initTheme();
+  loadSession();
+  if (session) { showCabinet(); return; }
+
+  document.getElementById('cab-subtitle').textContent = 'Вход';
+  try {
+    const res = await fetch(apiUrl({ action: 'getEmployees' }));
+    const data = await res.json();
+    if (!data.employees || !data.employees.length) {
+      document.getElementById('setup-box').style.display = 'block';
+      return;
+    }
+  } catch (e) { /* если не удалось проверить — просто покажем обычный вход */ }
+  document.getElementById('login-box').style.display = 'block';
+}
+
+init();
+</script>
+</body>
+</html>
