@@ -430,6 +430,9 @@
             <a class="sidebar-btn" href="analytics.html">
                 <span class="sb-icon">📊</span> Аналитика
             </a>
+            <a class="sidebar-btn" href="cabinet.html">
+                <span class="sb-icon">👤</span> Личный кабинет
+            </a>
         </nav>
     </div>
 
@@ -455,6 +458,7 @@
             <button id="btn-scooters" class="category-btn active" onclick="switchCategory('Самокаты')">🛴 Самокаты</button>
         </div>
         <div class="header-icons">
+            <a href="cabinet.html" class="icon-btn" title="Личный кабинет">👤</a>
             <a href="analytics.html" class="icon-btn" title="Аналитика">📊</a>
             <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
         </div>
@@ -604,6 +608,13 @@
         </div>
 
         <div class="field-group">
+            <div class="eyebrow field-label">Кто закупил *</div>
+            <select id="receive-noqr-purchased-by">
+                <option value="">Выберите сотрудника</option>
+            </select>
+        </div>
+
+        <div class="field-group">
             <div class="eyebrow field-label">Затраты (ремонт)</div>
             <input type="number" id="receive-noqr-repair-cost" placeholder="0">
         </div>
@@ -684,6 +695,27 @@
     let selectedForPrint = new Set();
 
     let noqrSelectedPhotoFiles = [];
+
+    // ========== СОТРУДНИКИ (для «кто закупил»/«кто продал») ==========
+    let EMPLOYEES = [];
+
+    function employeeOptionsHtml(selectedId) {
+        return EMPLOYEES.map(e =>
+            '<option value="' + e.id + '"' + (String(e.id) === String(selectedId) ? ' selected' : '') + '>' + escapeHtml(e.name) + '</option>'
+        ).join('');
+    }
+
+    async function loadEmployees() {
+        try {
+            const res = await fetch(apiUrl({ action: 'getEmployees' }));
+            const data = await res.json();
+            EMPLOYEES = data.employees || [];
+            const purchasedBySelect = document.getElementById('receive-noqr-purchased-by');
+            if (purchasedBySelect) {
+                purchasedBySelect.innerHTML = '<option value="">Выберите сотрудника</option>' + employeeOptionsHtml(null);
+            }
+        } catch (e) { /* попробуем ещё раз при следующей загрузке страницы */ }
+    }
 
     function updateModelsForCategory(category) {
         const models = MODELS_BY_CATEGORY[category] || [];
@@ -1019,6 +1051,7 @@
         const model = getModelValue();
         const serialNumber = document.getElementById('receive-noqr-serial')?.value.trim() || '';
         const purchasePrice = document.getElementById('receive-noqr-price')?.value || '';
+        const purchasedBy = document.getElementById('receive-noqr-purchased-by')?.value || '';
         const repairCost = document.getElementById('receive-noqr-repair-cost')?.value || '';
         const deliveryCost = document.getElementById('receive-noqr-delivery-cost')?.value || '';
         const avitoLink = document.getElementById('receive-noqr-avito')?.value || '';
@@ -1026,6 +1059,10 @@
 
         if (!model) {
             showToast('Выберите модель товара', 'error');
+            return;
+        }
+        if (!purchasedBy) {
+            showToast('Выберите, кто закупил товар', 'error');
             return;
         }
 
@@ -1059,6 +1096,7 @@
                 model:          model,
                 serialNumber:   serialNumber,
                 purchasePrice:  purchasePrice,
+                purchasedBy:    purchasedBy,
                 repairCost:     repairCost,
                 deliveryCost:   deliveryCost,
                 avitoLink:      avitoLink,
@@ -1090,6 +1128,7 @@
                 const receiveNoqrModel = document.getElementById('receive-noqr-model');
                 const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
                 const receiveNoqrPrice = document.getElementById('receive-noqr-price');
+                const receiveNoqrPurchasedBy = document.getElementById('receive-noqr-purchased-by');
                 const receiveNoqrRepairCost = document.getElementById('receive-noqr-repair-cost');
                 const receiveNoqrDeliveryCost = document.getElementById('receive-noqr-delivery-cost');
                 const receiveNoqrAvito = document.getElementById('receive-noqr-avito');
@@ -1097,6 +1136,7 @@
                 if (receiveNoqrModel) receiveNoqrModel.value = '';
                 if (receiveNoqrSerial) receiveNoqrSerial.value = '';
                 if (receiveNoqrPrice) receiveNoqrPrice.value = '';
+                if (receiveNoqrPurchasedBy) receiveNoqrPurchasedBy.value = '';
                 if (receiveNoqrRepairCost) receiveNoqrRepairCost.value = '';
                 if (receiveNoqrDeliveryCost) receiveNoqrDeliveryCost.value = '';
                 if (receiveNoqrAvito) receiveNoqrAvito.value = '';
@@ -1125,6 +1165,7 @@
         const receiveNoqrModel = document.getElementById('receive-noqr-model');
         const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
         const receiveNoqrPrice = document.getElementById('receive-noqr-price');
+        const receiveNoqrPurchasedBy = document.getElementById('receive-noqr-purchased-by');
         const receiveNoqrRepairCost = document.getElementById('receive-noqr-repair-cost');
         const receiveNoqrDeliveryCost = document.getElementById('receive-noqr-delivery-cost');
         const receiveNoqrAvito = document.getElementById('receive-noqr-avito');
@@ -1133,6 +1174,7 @@
         if (receiveNoqrModel) receiveNoqrModel.value = '';
         if (receiveNoqrSerial) receiveNoqrSerial.value = '';
         if (receiveNoqrPrice) receiveNoqrPrice.value = '';
+        if (receiveNoqrPurchasedBy) receiveNoqrPurchasedBy.value = '';
         if (receiveNoqrRepairCost) receiveNoqrRepairCost.value = '';
         if (receiveNoqrDeliveryCost) receiveNoqrDeliveryCost.value = '';
         if (receiveNoqrAvito) receiveNoqrAvito.value = '';
@@ -2107,6 +2149,9 @@
             + '<div class="field-group"><div class="eyebrow field-label">Дата закупки</div><input type="date" id="edit-purchase-date" value="' + ruDateToIso(currentProduct['Дата закупки']) + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Цена продажи</div><input type="number" id="edit-sale-price" value="' + (currentProduct['Цена продажа'] || '') + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Дата продажи</div><input type="date" id="edit-sale-date" value="' + ruDateToIso(currentProduct['Дата продажи']) + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Кто продал' + (currentProduct['ПродалId'] ? '' : ' *') + '</div>'
+            +     '<select id="edit-sold-by"><option value="">Выберите сотрудника</option>' + employeeOptionsHtml(currentProduct['ПродалId']) + '</select>'
+            + '</div>'
             + '<div class="field-group"><div class="eyebrow field-label">Статус</div>'
             +     '<select id="edit-status">'
             +         '<option value="Не продан"' + (currentProduct['Статус'] === 'Не продан' ? ' selected' : '') + '>Не продан</option>'
@@ -2188,6 +2233,12 @@
         };
 
         document.getElementById('save-edit-btn').onclick = async () => {
+            const status = document.getElementById('edit-status').value;
+            const soldBy = document.getElementById('edit-sold-by')?.value || '';
+            if (status === 'Продан' && !currentProduct['ПродалId'] && !soldBy) {
+                showToast('Выберите, кто продал товар', 'error');
+                return;
+            }
             const updatedData = {
                 sku: currentProduct['Артикул'],
                 newSku: document.getElementById('edit-sku').value.trim(),
@@ -2198,7 +2249,8 @@
                 purchaseDate: isoDateToRu(document.getElementById('edit-purchase-date').value),
                 salePrice: document.getElementById('edit-sale-price').value,
                 saleDate: isoDateToRu(document.getElementById('edit-sale-date').value),
-                status: document.getElementById('edit-status').value,
+                status: status,
+                soldBy: soldBy,
                 avitoLink: document.getElementById('edit-avito').value,
                 repairCost: document.getElementById('edit-repair-cost').value,
                 deliveryCost: document.getElementById('edit-delivery-cost').value
@@ -2233,6 +2285,7 @@
                 salePrice:      data.salePrice,
                 saleDate:       data.saleDate,
                 status:         data.status,
+                soldBy:         data.soldBy || '',
                 avitoLink:      data.avitoLink || '',
                 repairCost:     data.repairCost || '',
                 deliveryCost:   data.deliveryCost || '',
@@ -2377,6 +2430,7 @@
     window.onload = function() {
         handleUrlParams();
         updateModelsForCategory(currentCategory);
+        loadEmployees();
         loadCatalog();
         initTheme();
         initPullToRefresh();
