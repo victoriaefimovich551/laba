@@ -23,10 +23,13 @@
   /* ── Header ── */
   .an-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
   .back-btn {
-    background: var(--sf);
-    border: 1px solid var(--line);
+    background: var(--gs1);
+    backdrop-filter: var(--g-blur-sm);
+    -webkit-backdrop-filter: var(--g-blur-sm);
+    border: 1px solid var(--gbd);
+    box-shadow: var(--gin);
     color: var(--tx);
-    border-radius: 12px;
+    border-radius: 999px;
     padding: 8px 14px;
     font: 700 12.5px var(--f-head);
     cursor: pointer;
@@ -36,7 +39,9 @@
     gap: 5px;
     flex: none;
     white-space: nowrap;
+    transition: border-color .3s, color .3s;
   }
+  .back-btn:hover { border-color: var(--g-sel); color: var(--g-acc); }
   .an-header-title { flex: 1; min-width: 0; }
   .an-header-title .page-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .an-header-title p { font: 500 11.5px var(--f-mono); color: var(--tx2); margin-top: 2px; }
@@ -49,47 +54,64 @@
   .period-btn {
     flex: 1;
     text-align: center;
-    background: var(--sf);
-    border: 1px solid var(--line);
+    background: var(--gs1);
+    backdrop-filter: var(--g-blur-sm);
+    -webkit-backdrop-filter: var(--g-blur-sm);
+    border: 1px solid var(--gbd);
+    box-shadow: var(--gin);
     color: var(--tx2);
     border-radius: 999px;
     padding: 8px 4px;
     font: 700 11.5px var(--f-head);
     cursor: pointer;
     white-space: nowrap;
+    transition: background .35s, color .35s;
   }
-  .period-btn.active { background: var(--ink); color: var(--lime); border-color: var(--ink); }
+  .period-btn.active { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
 
   /* ── KPI ── */
   .kpi-lime {
-    background: var(--lime);
-    color: var(--ink);
-    border-radius: 24px;
+    position: relative;
+    overflow: hidden;
+    background: var(--g-pri-hero);
+    color: var(--g-pri-tx);
+    box-shadow: var(--g-pri-sh);
+    border-radius: 26px;
     padding: 18px 20px;
     margin-bottom: 12px;
   }
-  .kpi-lime .eyebrow { color: var(--ink); opacity: .6; }
-  .kpi-lime .kpi-value { font: 800 34px var(--f-mono); margin-top: 6px; letter-spacing: -.02em; }
-  .kpi-lime .kpi-sub { font: 600 12px var(--f-head); opacity: .65; margin-top: 4px; }
+  .kpi-lime::before {
+    content: '';
+    position: absolute; right: -76px; top: -104px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.44), rgba(255,255,255,.15) 44%, rgba(255,255,255,0) 78%);
+  }
+  .kpi-lime > * { position: relative; }
+  .kpi-lime .eyebrow { color: var(--g-pri-tx); opacity: .55; }
+  .kpi-lime .kpi-value { font: 500 34px var(--f-mono); margin-top: 6px; letter-spacing: -.045em; }
+  .kpi-lime .kpi-sub { font: 600 12px var(--f-head); opacity: .62; margin-top: 4px; }
 
   .kpi-row { display: flex; gap: 10px; margin-bottom: 16px; }
   .kpi-row .stat-card .stat-sub { font: 500 11px var(--f-head); color: var(--tx2); margin-top: 2px; }
 
   /* ── Секции ── */
   .section {
-    background: var(--sf);
-    border: 1px solid var(--line);
-    border-radius: 20px;
+    background: var(--gs2);
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+    border: 1px solid var(--gbd);
+    box-shadow: var(--gin), var(--gsh2);
+    border-radius: 22px;
     padding: 16px;
     margin-bottom: 14px;
   }
-  .section-title { font: 700 12.5px var(--f-head); color: var(--tx); margin-bottom: 14px; }
+  .section-title { font: 700 9.5px var(--f-head); letter-spacing: .11em; text-transform: uppercase; color: rgba(var(--g-tx),.45); margin-bottom: 14px; }
 
   /* ── Статусы (прогресс-бары) ── */
   .status-row { display: flex; align-items: center; gap: 10px; }
   .status-row + .status-row { margin-top: 9px; }
   .status-label { font: 600 12px var(--f-head); width: 120px; flex: none; color: var(--tx2); }
-  .status-track { flex: 1; height: 8px; border-radius: 999px; background: var(--sf2); overflow: hidden; }
+  .status-track { flex: 1; height: 6px; border-radius: 999px; background: var(--gtrack); overflow: hidden; }
   .status-fill { height: 100%; border-radius: 999px; }
   .status-count { font: 700 12px var(--f-mono); width: 28px; text-align: right; flex: none; color: var(--tx); }
 
@@ -122,15 +144,16 @@
   .model-rank {
     width: 24px; height: 24px;
     border-radius: 8px;
-    background: var(--sf2);
+    background: var(--gs4);
+    border: 1px solid var(--gbd2);
     font: 700 11px var(--f-mono);
     color: var(--tx);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .model-rank.gold   { background: color-mix(in srgb, #eab308 22%, var(--sf2)); color: #eab308; }
-  .model-rank.silver { background: color-mix(in srgb, #94a3b8 22%, var(--sf2)); color: #94a3b8; }
-  .model-rank.bronze { background: color-mix(in srgb, #cd7f32 22%, var(--sf2)); color: #cd7f32; }
+  .model-rank.gold   { background: color-mix(in srgb, #eab308 22%, var(--bg)); color: #eab308; }
+  .model-rank.silver { background: color-mix(in srgb, #94a3b8 22%, var(--bg)); color: #94a3b8; }
+  .model-rank.bronze { background: color-mix(in srgb, #cd7f32 22%, var(--bg)); color: #cd7f32; }
   .model-body { flex: 1; min-width: 0; }
   .model-name { font: 700 12.5px var(--f-head); color: var(--tx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .model-sold { font: 500 10.5px var(--f-head); color: var(--tx2); }
@@ -161,40 +184,51 @@
   /* ── PIN-доступ к аналитике ── */
   .auth-overlay {
     position: fixed; inset: 0;
-    background: var(--bg);
+    background: var(--g-layer-mobile);
     display: flex; align-items: center; justify-content: center;
     z-index: 5000;
     padding: 20px;
   }
+  @media (min-width: 1024px) {
+    .auth-overlay { background: var(--g-layer-desktop); }
+  }
   .auth-card { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; max-width: 320px; width: 100%; }
   .auth-icon {
     width: 52px; height: 52px;
-    border-radius: 16px;
-    background: var(--sf);
-    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--gs1);
+    backdrop-filter: var(--g-blur-sm);
+    -webkit-backdrop-filter: var(--g-blur-sm);
+    border: 1px solid var(--gbd);
+    box-shadow: var(--gin);
     display: flex; align-items: center; justify-content: center;
     font-size: 22px;
     margin: 0 auto;
   }
-  .auth-card h2 { font: 800 22px/1.15 var(--f-head); letter-spacing: -.01em; color: var(--tx); text-align: center; margin-top: 8px; }
+  .auth-card h2 { font: 600 22px/1.15 var(--f-head); letter-spacing: -.01em; color: var(--tx); text-align: center; margin-top: 8px; }
   .auth-card .auth-sub { font: 500 12.5px/1.5 var(--f-head); color: var(--tx2); text-align: center; max-width: 250px; margin: 0 auto; }
   .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 6px 0; }
-  .pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--line); background: transparent; transition: background .15s, border-color .15s; }
-  .pin-dot.filled { background: var(--lime); border-color: var(--lime); }
+  .pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--gbd2); background: transparent; transition: background .15s, border-color .15s; }
+  .pin-dot.filled { background: var(--g-acc); border-color: var(--g-acc); }
   .auth-error { text-align: center; font: 700 12px var(--f-head); color: var(--tx2); min-height: 16px; }
   .auth-error.show { color: var(--st-danger); }
   .pin-keypad { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; max-width: 270px; margin: 0 auto; width: 100%; }
   .pin-key {
     height: 58px;
     border-radius: 20px;
-    background: var(--sf);
-    border: 1px solid var(--line);
+    background: var(--gs2);
+    backdrop-filter: var(--g-blur-sm);
+    -webkit-backdrop-filter: var(--g-blur-sm);
+    border: 1px solid var(--gbd);
+    box-shadow: var(--gin);
     display: flex; align-items: center; justify-content: center;
     font: 600 22px var(--f-mono);
     color: var(--tx);
     cursor: pointer;
+    transition: border-color .3s;
   }
-  .pin-key.empty { background: transparent; border: none; cursor: default; }
+  .pin-key:hover { border-color: var(--g-sel); }
+  .pin-key.empty { background: transparent; border: none; box-shadow: none; cursor: default; }
   .pin-key.backspace { font: 700 18px var(--f-head); }
 
   .dashboard-grid { display: block; }
