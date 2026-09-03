@@ -48,17 +48,20 @@
         .mobile-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
         .header-icons { display: flex; gap: 8px; flex: none; }
         .category-btn {
-            background: var(--sf);
+            background: var(--gs1);
+            backdrop-filter: var(--g-blur-sm);
+            -webkit-backdrop-filter: var(--g-blur-sm);
             color: var(--tx2);
-            border: 1px solid var(--line);
-            padding: 9px 16px;
+            border: 1px solid var(--gbd);
+            padding: 7px 12px;
             border-radius: 999px;
-            font: 700 12.5px var(--f-head);
+            font: 700 12px var(--f-head);
             cursor: pointer;
+            transition: background .35s, color .35s;
         }
-        .category-btn.active { background: var(--lime); color: var(--ink); border-color: var(--lime); }
+        .category-btn.active { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
 
-        .install-banner { background: var(--sf); border: 1px solid var(--line); color: var(--tx); padding: 12px; border-radius: 16px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
+        .install-banner { background: var(--gs2); backdrop-filter: var(--g-blur-sm); -webkit-backdrop-filter: var(--g-blur-sm); border: 1px solid var(--gbd); box-shadow: var(--gin); color: var(--tx); padding: 12px; border-radius: 16px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
 
         .panel { display: none; }
         .panel.active { display: block; }
@@ -71,8 +74,9 @@
             margin: 16px auto 0;
             border-radius: 26px;
             overflow: hidden;
-            border: 1px solid var(--line);
-            background: var(--sf2);
+            border: 1px solid var(--gbd);
+            box-shadow: var(--gin), var(--gsh);
+            background: var(--gs3);
         }
         #reader { position: absolute; inset: 0; width: 100%; height: 100%; }
         #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
@@ -122,7 +126,7 @@
         .search-box button { width: auto; margin: 0; padding: 13px 22px; }
 
         .catalog-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-        .stats-box { background: var(--sf); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; margin: 16px 0; }
+        .stats-box { background: var(--gs2); backdrop-filter: var(--g-blur); -webkit-backdrop-filter: var(--g-blur); border: 1px solid var(--gbd); box-shadow: var(--gin), var(--gsh2); border-radius: 22px; padding: 14px 16px; margin: 16px 0; }
         #stats-content { margin-top: 14px; }
         .filter-group { margin-bottom: 14px; }
         .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -135,8 +139,10 @@
             position: fixed;
             left: 16px; right: 16px;
             bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-            background: var(--sf2);
-            border: 1px solid var(--line);
+            background: var(--gs1);
+            backdrop-filter: var(--g-blur);
+            -webkit-backdrop-filter: var(--g-blur);
+            border: 1px solid var(--gbd);
             color: var(--tx);
             border-radius: 999px;
             padding: 10px 12px 10px 20px;
@@ -144,48 +150,63 @@
             justify-content: space-between;
             gap: 10px;
             z-index: 2500;
-            box-shadow: var(--sh);
+            box-shadow: var(--gin), var(--gsh);
         }
         #print-select-bar.visible { display: flex; }
         #print-select-bar strong { font-family: var(--f-mono); }
         .print-select-check { position: absolute; top: 10px; right: 10px; font-size: 16px; line-height: 1; }
-        .list-row.is-print-selected { border-color: var(--lime) !important; background: color-mix(in srgb, var(--lime) 12%, var(--sf)); }
+        .list-row.is-print-selected { border-color: var(--lime) !important; background: color-mix(in srgb, var(--lime) 12%, var(--bg)); }
 
         .field-group { margin-bottom: 16px; }
         .field-label { margin-bottom: 7px; display: block; }
 
         /* ── Главная ── */
         .home-cta {
-            background: var(--lime);
-            color: var(--ink);
-            border-radius: 26px;
-            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            background: var(--g-pri-hero);
+            color: var(--g-pri-tx);
+            box-shadow: var(--g-pri-sh);
+            border-radius: 28px;
+            padding: 20px 22px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 14px;
             cursor: pointer;
             margin-top: 14px;
+            transition: transform .38s cubic-bezier(.2,.8,.2,1);
         }
-        .home-cta-title { font: 800 22px/1.1 var(--f-head); }
-        .home-cta-sub { font: 600 12.5px var(--f-head); opacity: .65; margin-top: 5px; }
+        .home-cta::before {
+            content: '';
+            position: absolute; right: -70px; top: -96px;
+            width: 260px; height: 260px; border-radius: 50%;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.5), rgba(255,255,255,.18) 44%, rgba(255,255,255,0) 78%);
+        }
+        .home-cta:hover { transform: translateY(-3px); }
+        .home-cta-title { position: relative; font: 600 23px/1.05 var(--f-head); letter-spacing: -.012em; }
+        .home-cta-sub { position: relative; font: 600 12px var(--f-head); opacity: .58; margin-top: 6px; }
         .home-cta-icon {
-            width: 56px; height: 56px;
-            border-radius: 18px;
-            background: var(--ink);
-            color: var(--lime);
+            position: relative;
+            width: 58px; height: 58px;
+            border-radius: 20px;
+            background: linear-gradient(160deg,#1d2217,#0f1210);
+            color: var(--g-acc);
             display: flex; align-items: center; justify-content: center;
             font-size: 22px;
             flex: none;
+            box-shadow: 0 10px 22px rgba(0,0,0,.3);
         }
-        .stat-row { display: flex; gap: 10px; margin-top: 14px; }
-        .quick-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; }
+        .stat-row { display: flex; gap: 9px; margin-top: 14px; }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-top: 14px; }
         .quick-action {
             position: relative;
-            background: var(--sf);
-            border: 1px solid var(--line);
+            background: var(--gs2);
+            backdrop-filter: var(--g-blur-sm);
+            -webkit-backdrop-filter: var(--g-blur-sm);
+            border: 1px solid var(--gbd);
             border-radius: 18px;
-            padding: 14px 12px;
+            padding: 13px 8px;
             cursor: pointer;
             text-align: left;
             color: var(--tx);
@@ -193,20 +214,24 @@
             display: block;
         }
         .quick-action-icon { font-size: 18px; }
-        .quick-action-label { font: 700 12px var(--f-head); margin-top: 8px; }
+        .quick-action-label { font: 700 10.5px var(--f-head); margin-top: 8px; }
         .quick-action-arrow { position: absolute; top: 14px; right: 12px; font-size: 13px; color: var(--tx2); }
 
         /* ── НИЖНЯЯ НАВИГАЦИЯ ── */
         .bottom-nav {
             position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: calc(76px + env(safe-area-inset-bottom, 0px));
-            padding: 8px 10px calc(14px + env(safe-area-inset-bottom, 0px));
-            background: var(--sf);
-            border-top: 1px solid var(--line);
+            bottom: 12px; left: 12px; right: 12px;
+            height: calc(64px + env(safe-area-inset-bottom, 0px));
+            padding: 8px 7px calc(8px + env(safe-area-inset-bottom, 0px));
+            background: var(--gs1);
+            backdrop-filter: var(--g-blur);
+            -webkit-backdrop-filter: var(--g-blur);
+            border: 1px solid var(--gbd);
+            border-radius: 28px;
             display: flex;
             align-items: stretch;
-            gap: 4px;
+            gap: 2px;
+            box-shadow: var(--gin), 0 -8px 30px rgba(0,0,0,.35);
             z-index: 9999;
         }
         .nav-item {
@@ -222,92 +247,109 @@
             border-radius: 14px;
             padding: 8px 2px;
             -webkit-tap-highlight-color: transparent;
-            transition: background 0.15s, transform 0.15s;
+            transition: background 0.35s, color .35s, transform 0.15s;
         }
         .nav-item .nav-icon { font-size: 17px; line-height: 1; }
-        .nav-item .nav-label { font: 700 9.5px var(--f-head); color: var(--tx2); letter-spacing: .01em; }
-        .nav-item.active { background: var(--sf2); }
-        .nav-item.active .nav-label { color: var(--tx); }
+        .nav-item .nav-label { font: 700 9px var(--f-head); color: var(--tx2); letter-spacing: .03em; }
+        .nav-item.active { background: var(--g-pri); }
+        .nav-item.active .nav-icon,
+        .nav-item.active .nav-label { color: var(--g-pri-tx); }
         @media (hover: hover) and (pointer: fine) {
             .nav-item:hover { transform: scale(1.03); }
         }
 
         /* ── ДЕСКТОП ── */
         @media (min-width: 1024px) {
-            body { padding: 0; display: flex; min-height: 100vh; }
+            body { padding: 16px; display: flex; gap: 16px; min-height: 100vh; }
+            body::before, body::after { display: none; } /* атмосфера уже задаётся --g-layer-desktop на body */
 
             .desktop-sidebar {
                 display: flex !important;
                 flex-direction: column;
-                width: 248px;
-                min-height: 100vh;
-                background: #101215;
+                width: 224px;
+                background: var(--gs1);
+                backdrop-filter: var(--g-blur);
+                -webkit-backdrop-filter: var(--g-blur);
+                border: 1px solid var(--gbd);
+                box-shadow: var(--gin);
+                border-radius: 30px;
                 color: #f4f6f2;
-                padding: 24px 18px;
-                gap: 22px;
+                padding: 16px 12px;
+                gap: 7px;
                 flex-shrink: 0;
                 position: sticky;
-                top: 0;
-                height: 100vh;
+                top: 16px;
+                height: calc(100vh - 32px);
                 overflow-y: auto;
             }
-            .desktop-sidebar .sidebar-logo-row { display: flex; align-items: center; gap: 11px; }
-            .desktop-sidebar .sidebar-mark { width: 38px; height: 38px; border-radius: 12px; background: var(--lime); color: var(--ink); display: flex; align-items: center; justify-content: center; font: 800 17px var(--f-head); flex-shrink: 0; }
-            .desktop-sidebar .sidebar-title { font: 800 15px var(--f-head); }
-            .desktop-sidebar .sidebar-sub { font: 500 11px var(--f-mono); color: #969c95; margin-top: 1px; }
-            .desktop-sidebar .sidebar-section-label { font: 700 10px var(--f-head); color: #969c95; text-transform: uppercase; letter-spacing: .09em; }
+            .desktop-sidebar .sidebar-logo-row { display: flex; align-items: center; gap: 11px; padding: 2px 4px 10px; }
+            .desktop-sidebar .sidebar-mark { width: 40px; height: 40px; border-radius: 14px; background: var(--g-pri); color: var(--g-pri-tx); box-shadow: var(--g-pri-sh-sm); display: flex; align-items: center; justify-content: center; font: 700 17px var(--f-head); flex-shrink: 0; }
+            .desktop-sidebar .sidebar-title { font: 700 14px var(--f-head); letter-spacing: -.01em; }
+            .desktop-sidebar .sidebar-sub { font: 400 9.5px var(--f-mono); color: rgba(244,246,242,.38); margin-top: 2px; }
+            .desktop-sidebar .sidebar-section-label { display: none; }
 
-            .desktop-sidebar .sidebar-cat { display: flex; flex-direction: column; gap: 7px; }
+            .desktop-sidebar .sidebar-cat { display: flex; flex-direction: column; gap: 5px; margin-bottom: 5px; }
             .desktop-sidebar .cat-item {
-                display: flex; align-items: center; gap: 9px;
+                display: flex; align-items: center; gap: 11px;
                 background: transparent;
-                border: none;
+                border: 1px solid transparent;
                 color: #c6cbc4;
-                border-radius: 13px;
-                padding: 10px 13px;
-                font: 700 13px var(--f-head);
+                border-radius: 999px;
+                padding: 8px 16px 8px 8px;
+                font: 600 13px var(--f-head);
                 cursor: pointer;
                 text-align: left;
-                transition: background 0.15s, color 0.15s;
+                transition: background 0.4s, color 0.4s, border-color .4s;
             }
-            .desktop-sidebar .cat-item.active { background: var(--lime); color: var(--ink); }
+            .desktop-sidebar .cat-item span { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); font-size: 15px; flex: none; }
+            .desktop-sidebar .cat-item.active { background: var(--g-pri); color: var(--g-pri-tx); box-shadow: var(--g-pri-sh-sm); }
+            .desktop-sidebar .cat-item.active span { background: rgba(20,23,18,.13); border-color: rgba(20,23,18,.18); }
 
             .desktop-sidebar .sidebar-nav { display: flex; flex-direction: column; gap: 5px; }
             .desktop-sidebar .sidebar-btn {
                 display: flex; align-items: center; gap: 11px;
                 background: transparent;
-                border: none;
+                border: 1px solid transparent;
                 color: #c6cbc4;
-                padding: 11px 13px;
-                border-radius: 13px;
-                font: 600 13.5px var(--f-head);
+                padding: 8px 16px 8px 8px;
+                border-radius: 999px;
+                font: 600 13px var(--f-head);
                 cursor: pointer;
                 text-align: left;
                 text-decoration: none;
-                transition: background 0.15s, color 0.15s;
+                transition: background 0.4s, color 0.4s;
             }
+            .desktop-sidebar .sidebar-btn .sb-icon { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); font-size: 15px; flex: none; }
             .desktop-sidebar .sidebar-btn:hover { background: rgba(255,255,255,0.06); color: #f4f6f2; }
-            .desktop-sidebar .sidebar-btn.active { background: rgba(255,255,255,0.08); color: #f4f6f2; font-weight: 700; }
-            .desktop-sidebar .sidebar-btn .sb-icon { font-size: 16px; }
+            .desktop-sidebar .sidebar-btn.active { background: var(--g-pri); color: var(--g-pri-tx); box-shadow: var(--g-pri-sh-sm); font-weight: 600; }
+            .desktop-sidebar .sidebar-btn.active .sb-icon { background: rgba(20,23,18,.13); border-color: rgba(20,23,18,.18); }
 
-            .desktop-sidebar .sidebar-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
-            .desktop-sidebar .sidebar-cta { background: var(--lime); color: var(--ink); border-radius: 18px; padding: 16px; cursor: pointer; }
-            .desktop-sidebar .sidebar-cta-title { font: 800 15px var(--f-head); }
-            .desktop-sidebar .sidebar-cta-sub { font: 600 11.5px var(--f-head); opacity: .65; margin-top: 4px; }
+            .desktop-sidebar .sidebar-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 5px; }
+            .desktop-sidebar .sidebar-cta {
+                position: relative; overflow: hidden;
+                background: var(--g-pri-hero); color: var(--g-pri-tx);
+                box-shadow: var(--g-pri-sh-sm);
+                border-radius: 18px; padding: 14px 16px; cursor: pointer;
+            }
+            .desktop-sidebar .sidebar-cta-title { font: 600 14px var(--f-head); }
+            .desktop-sidebar .sidebar-cta-sub { font: 600 11px var(--f-head); opacity: .6; margin-top: 4px; }
             .desktop-sidebar .sidebar-theme-btn {
-                background: transparent;
-                border: 1px solid rgba(255,255,255,0.14);
+                display: flex; align-items: center; gap: 11px;
+                background: rgba(255,255,255,.06);
+                border: 1px solid rgba(255,255,255,.09);
                 color: #c6cbc4;
-                border-radius: 13px;
-                padding: 10px 13px;
+                border-radius: 999px;
+                padding: 8px 14px 8px 8px;
                 font: 600 12.5px var(--f-head);
                 cursor: pointer;
                 text-align: left;
                 margin: 0;
                 width: 100%;
+                transition: border-color .35s, transform .35s;
             }
+            .desktop-sidebar .sidebar-theme-btn:hover { border-color: var(--g-sel); transform: translateY(-1px); }
 
-            .container { flex: 1; min-width: 0; max-width: none; padding: 24px 32px; padding-bottom: 24px; overflow-y: auto; }
+            .container { flex: 1; min-width: 0; max-width: none; padding: 8px 16px 24px; overflow-y: auto; }
 
             .mobile-header { display: none !important; }
             .bottom-nav { display: none !important; }
@@ -321,7 +363,8 @@
             .catalog-head-desktop-tools { display: flex !important; align-items: center; gap: 12px; }
             .desktop-search-box {
                 display: flex; align-items: center; gap: 10px;
-                background: var(--sf); border: 1px solid var(--line);
+                background: var(--gs3); backdrop-filter: var(--g-blur-sm); -webkit-backdrop-filter: var(--g-blur-sm);
+                border: 1px solid var(--gbd);
                 border-radius: 999px; padding: 11px 18px; width: 320px;
             }
             .desktop-search-box .search-dot { width: 13px; height: 13px; border: 2px solid var(--tx2); border-radius: 50%; flex: none; }
@@ -335,21 +378,26 @@
                 flex-direction: column;
                 width: 372px;
                 flex: none;
-                border-left: 1px solid var(--line);
-                background: var(--sf2);
+                background: var(--gs1);
+                backdrop-filter: var(--g-blur);
+                -webkit-backdrop-filter: var(--g-blur);
+                border: 1px solid var(--gbd);
+                box-shadow: var(--gin), var(--gsh);
+                border-radius: 28px;
                 padding: 20px 22px;
                 gap: 14px;
                 overflow-y: auto;
-                height: 100vh;
+                height: calc(100vh - 32px);
                 position: sticky;
-                top: 0;
+                top: 16px;
             }
             .detail-qr-box {
                 width: 76px; height: 76px; flex: none;
-                border-radius: 14px;
-                background: var(--sf); border: 1px solid var(--line);
+                border-radius: 16px;
+                background: #fffdf8; border: none;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
+                box-shadow: var(--gsh2);
             }
             .detail-qr-box img { width: 100%; height: 100%; object-fit: contain; }
         }
@@ -1436,7 +1484,7 @@
 
         html += '<div style="display:flex; gap:10px; margin-top:14px;">'
             + '<div class="stat-card"><span class="eyebrow">Закупка</span><div class="stat-value">' + (priceZakupka || '—') + '</div></div>'
-            + '<div class="stat-card" style="background:var(--lime); color:var(--ink); border:none;"><span class="eyebrow" style="color:var(--ink); opacity:.6;">' + (profit ? 'Прибыль' : 'Цена продажи') + '</span><div class="stat-value" style="color:var(--ink);">' + (profit || priceProdazha || '—') + '</div></div>'
+            + '<div class="stat-card" style="background:var(--g-pri-soft); color:var(--g-pri-tx); border:none; box-shadow:var(--gsh2);"><span class="eyebrow" style="color:var(--g-pri-tx); opacity:.62;">' + (profit ? 'Прибыль' : 'Цена продажи') + '</span><div class="stat-value" style="color:var(--g-pri-tx);">' + (profit || priceProdazha || '—') + '</div></div>'
             + '</div>';
 
         html += '<div style="margin-top:14px;">';
@@ -1455,14 +1503,14 @@
         }
 
         html += '<div class="action-buttons">'
-            + '<button class="btn-lime btn-block" onclick="printProductLabel(\'' + escapedSku + '\')" style="margin-top:0;">🖨 Напечатать наклейку</button>'
+            + '<button class="btn-lime btn-block" onclick="editProduct(\'' + escapedSku + '\')" style="margin-top:0;">Редактировать</button>'
             + '<div class="action-buttons-row">'
-            + '<button class="action-btn" onclick="editProduct(\'' + escapedSku + '\')">✏️ Редактировать</button>'
+            + '<button class="action-btn" onclick="printProductLabel(\'' + escapedSku + '\')">🖨 Наклейка</button>'
             + '<button class="action-btn" onclick="shareProduct(\'' + escapedSku + '\')">📤 Поделиться</button>'
             + '</div>'
             + '<div class="action-buttons-row">'
             + '<button class="action-btn" onclick="goBack()">⬅️ Назад</button>'
-            + '<button class="action-btn" style="color:var(--st-danger); border-color:var(--st-danger);" onclick="deleteProduct(\'' + escapedSku + '\')">🗑️ Удалить</button>'
+            + '<button class="action-btn" style="color:var(--g-red); border-color:color-mix(in srgb, var(--g-red) 30%, transparent);" onclick="deleteProduct(\'' + escapedSku + '\')">🗑️ Удалить</button>'
             + '</div>'
             + '</div>';
 
@@ -1876,28 +1924,30 @@
 
         html += '<div style="display:flex; gap:10px;">'
             + '<div class="stat-card"><span class="eyebrow">Закупка</span><div class="stat-value">' + priceZakupka + '</div></div>'
-            + '<div class="stat-card" style="background:var(--lime); color:var(--ink); border:none;"><span class="eyebrow" style="color:var(--ink); opacity:.6;">Прибыль</span><div class="stat-value" style="color:var(--ink);">' + profit + '</div></div>'
+            + '<div class="stat-card" style="background:var(--g-pri-soft); color:var(--g-pri-tx); border:none; box-shadow:var(--gsh2);"><span class="eyebrow" style="color:var(--g-pri-tx); opacity:.62;">Прибыль</span><div class="stat-value" style="color:var(--g-pri-tx);">' + profit + '</div></div>'
             + '</div>';
 
-        html += '<div style="background:var(--sf); border:1px solid var(--line); border-radius:18px; padding:4px 16px;">';
+        html += '<div style="background:var(--gs4); backdrop-filter:var(--g-blur-sm); -webkit-backdrop-filter:var(--g-blur-sm); border:1px solid var(--gbd2); border-radius:18px; padding:4px 16px;">';
         html += '<div class="product-detail"><strong>Серийный номер</strong><span>' + escapeHtml(product['Серийный номер'] || '—') + '</span></div>';
         if (product['Дата закупки']) html += '<div class="product-detail"><strong>Дата закупки</strong><span>' + escapeHtml(product['Дата закупки']) + '</span></div>';
         if (product['Дата продажи']) html += '<div class="product-detail"><strong>Дата продажи</strong><span>' + escapeHtml(product['Дата продажи']) + '</span></div>';
         if (days !== null) html += '<div class="product-detail"><strong>На складе</strong><span>' + days + ' дн</span></div>';
-        if (product['Ссылка на Авито']) html += '<div class="product-detail"><strong>Авито</strong><span><a href="' + escapeHtml(product['Ссылка на Авито']) + '" target="_blank" style="color:var(--lime);">Открыть →</a></span></div>';
+        if (product['Ссылка на Авито']) html += '<div class="product-detail"><strong>Авито</strong><span><a href="' + escapeHtml(product['Ссылка на Авито']) + '" target="_blank" style="color:var(--g-acc);">Открыть →</a></span></div>';
         html += '</div>';
 
         html += renderPhotoGallery(product['Фото'], 220, 0);
 
         if (product['Состояние'] && product['Состояние'] !== '—') {
-            html += '<div style="background:var(--sf); border:1px solid var(--line); border-radius:18px; padding:15px 16px;">'
+            html += '<div style="background:var(--gs2); backdrop-filter:var(--g-blur-sm); -webkit-backdrop-filter:var(--g-blur-sm); border:1px solid var(--gbd2); border-radius:18px; padding:15px 16px;">'
                 + '<span class="eyebrow">Состояние</span><div class="state-list">' + formatStateText(product['Состояние']) + '</div></div>';
         }
 
-        html += '<div style="margin-top:auto; display:flex; flex-direction:column; gap:9px;">'
-            + '<button class="btn-dark btn-block" style="margin-top:0;" onclick="printProductLabel(\'' + escapedSku + '\')">🖨 Напечатать наклейку</button>'
-            + '<button class="action-btn" style="width:100%; flex:none; height:50px; font-size:14px;" onclick="editProduct(\'' + escapedSku + '\')">Редактировать</button>'
-            + '<button class="action-btn" style="width:100%; flex:none; height:50px; font-size:14px; color:var(--st-danger); border-color:var(--st-danger);" onclick="deleteProduct(\'' + escapedSku + '\')">🗑️ Удалить</button>'
+        html += '<div style="margin-top:auto; display:flex; flex-direction:column; gap:9px; padding-top:14px; border-top:1px solid var(--gbd3);">'
+            + '<button class="btn-lime btn-block" style="margin-top:0;" onclick="editProduct(\'' + escapedSku + '\')">Редактировать</button>'
+            + '<div style="display:flex; gap:9px;">'
+            + '<button class="action-btn" style="flex:1; height:50px; font-size:13px;" onclick="printProductLabel(\'' + escapedSku + '\')">🖨 Напечатать наклейку</button>'
+            + '<button class="action-btn" title="Удалить" style="width:54px; flex:none; height:50px; color:var(--g-red); background:linear-gradient(150deg, color-mix(in srgb, var(--g-red) 15%, transparent), transparent); border-color:color-mix(in srgb, var(--g-red) 30%, transparent);" onclick="deleteProduct(\'' + escapedSku + '\')">🗑️</button>'
+            + '</div>'
             + '</div>';
 
         panel.innerHTML = html;
