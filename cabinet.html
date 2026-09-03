@@ -23,35 +23,61 @@
   /* ── Header ── */
   .cab-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
   .back-btn {
-    background: var(--sf); border: 1px solid var(--line); color: var(--tx);
-    border-radius: 12px; padding: 8px 14px; font: 700 12.5px var(--f-head);
+    background: var(--gs1);
+    backdrop-filter: var(--g-blur-sm);
+    -webkit-backdrop-filter: var(--g-blur-sm);
+    border: 1px solid var(--gbd); color: var(--tx);
+    box-shadow: var(--gin);
+    border-radius: 999px; padding: 8px 14px; font: 700 12.5px var(--f-head);
     cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
     gap: 5px; flex: none; white-space: nowrap;
+    transition: border-color .3s, color .3s;
   }
+  .back-btn:hover { border-color: var(--g-sel); color: var(--g-acc); }
   .cab-header-title { flex: 1; min-width: 0; }
   .cab-header-title p { font: 500 11.5px var(--f-mono); color: var(--tx2); margin-top: 2px; }
   .theme-toggle-cab { flex: none; }
 
   /* ── Логин ── */
-  .login-box { max-width: 360px; margin: 60px auto 0; }
-  .login-box .page-title { text-align: center; margin-bottom: 24px; }
+  .login-box {
+    max-width: 400px; margin: 60px auto 0;
+    background: var(--gs2);
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+    border: 1px solid var(--gbd);
+    box-shadow: var(--gin), var(--gsh2);
+    border-radius: 30px;
+    padding: 32px;
+  }
+  .login-box .login-title { font: 600 26px/1.15 var(--f-head); letter-spacing: -.02em; text-align: center; margin-bottom: 6px; }
+  .login-box .login-sub { font: 500 12.5px/1.5 var(--f-head); color: var(--tx2); text-align: center; margin-bottom: 24px; }
   .auth-error { color: var(--st-danger, #f87171); font: 600 12.5px var(--f-head); margin-top: 10px; text-align: center; min-height: 16px; }
 
   /* ── Период ── */
-  .period-bar { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
+  .period-bar { display: flex; gap: 4px; margin-bottom: 18px; flex-wrap: wrap; background: var(--gs1); backdrop-filter: var(--g-blur-sm); -webkit-backdrop-filter: var(--g-blur-sm); border: 1px solid var(--gbd); box-shadow: var(--gin); border-radius: 999px; padding: 4px; }
   .period-btn {
-    flex: 1; text-align: center; background: var(--sf); border: 1px solid var(--line);
+    flex: 1; text-align: center; background: transparent; border: none;
     color: var(--tx2); border-radius: 999px; padding: 8px 4px; font: 700 11.5px var(--f-head);
-    cursor: pointer; white-space: nowrap;
+    cursor: pointer; white-space: nowrap; transition: background .35s, color .35s;
   }
-  .period-btn.active { background: var(--ink); color: var(--lime); border-color: var(--ink); }
+  .period-btn.active { background: var(--g-pri); color: var(--g-pri-tx); }
 
   .kpi-lime {
-    background: var(--lime); color: var(--ink); border-radius: 24px; padding: 18px 20px;
+    position: relative; overflow: hidden;
+    background: var(--g-pri-hero); color: var(--g-pri-tx);
+    box-shadow: var(--g-pri-sh);
+    border-radius: 26px; padding: 18px 20px;
     margin-bottom: 18px;
   }
-  .kpi-lime .eyebrow { color: var(--ink); opacity: .65; }
-  .kpi-lime .kpi-value { font: 800 32px var(--f-mono); margin-top: 4px; }
+  .kpi-lime::before {
+    content: '';
+    position: absolute; right: -76px; top: -104px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.44), rgba(255,255,255,.15) 44%, rgba(255,255,255,0) 78%);
+  }
+  .kpi-lime > * { position: relative; }
+  .kpi-lime .eyebrow { color: var(--g-pri-tx); opacity: .55; }
+  .kpi-lime .kpi-value { font: 500 32px var(--f-mono); letter-spacing: -.045em; margin-top: 4px; }
 
   .loading, .empty-state { text-align: center; color: var(--tx2); font: 500 13px var(--f-head); padding: 30px 0; }
 
@@ -73,7 +99,8 @@
 
   <!-- Первый запуск: сотрудников ещё нет вообще — создаём первого директора -->
   <div id="setup-box" class="login-box" style="display:none;">
-    <p style="text-align:center; color:var(--tx2); font:500 12.5px var(--f-head); margin-bottom:18px;">Сотрудников ещё нет — заведи первый аккаунт (директора).</p>
+    <div class="login-title">Первый аккаунт</div>
+    <div class="login-sub">Сотрудников ещё нет — заведи первый аккаунт (директора).</div>
     <div class="field-group">
       <div class="eyebrow field-label">Имя</div>
       <input type="text" id="setup-name">
@@ -92,6 +119,8 @@
 
   <!-- Логин -->
   <div id="login-box" class="login-box" style="display:none;">
+    <div class="login-title">Вход в личный<br>кабинет</div>
+    <div class="login-sub">Доступ к зарплате и добавлению сотрудников</div>
     <div class="field-group">
       <div class="eyebrow field-label">Email</div>
       <input type="email" id="login-email" autocomplete="username">
@@ -103,13 +132,14 @@
     <button class="btn-lime btn-block" id="login-btn" style="width:100%;">Войти</button>
     <div class="auth-error" id="login-error"></div>
     <p style="text-align:center; margin-top:14px;">
-      <a href="#" id="forgot-link" style="font:600 12px var(--f-head); color:var(--tx2);">Забыли пароль?</a>
+      <a href="#" id="forgot-link" style="font:600 12px var(--f-head); color:var(--tx2); text-decoration:none;">Забыли пароль?</a>
     </p>
   </div>
 
   <!-- Восстановление пароля: запрос ссылки на почту -->
   <div id="forgot-box" class="login-box" style="display:none;">
-    <p style="text-align:center; color:var(--tx2); font:500 12.5px var(--f-head); margin-bottom:18px;">Укажи email — пришлём ссылку для смены пароля.</p>
+    <div class="login-title">Восстановление пароля</div>
+    <div class="login-sub">Укажи email — пришлём ссылку для смены пароля.</div>
     <div class="field-group">
       <div class="eyebrow field-label">Email</div>
       <input type="email" id="forgot-email" autocomplete="username">
@@ -117,13 +147,14 @@
     <button class="btn-lime btn-block" id="forgot-btn" style="width:100%;">Отправить ссылку</button>
     <div class="auth-error" id="forgot-error"></div>
     <p style="text-align:center; margin-top:14px;">
-      <a href="#" id="back-to-login-link" style="font:600 12px var(--f-head); color:var(--tx2);">← Назад ко входу</a>
+      <a href="#" id="back-to-login-link" style="font:600 12px var(--f-head); color:var(--tx2); text-decoration:none;">← Назад ко входу</a>
     </p>
   </div>
 
   <!-- Переход по ссылке из письма: задать новый пароль -->
   <div id="reset-box" class="login-box" style="display:none;">
-    <p style="text-align:center; color:var(--tx2); font:500 12.5px var(--f-head); margin-bottom:18px;">Задай новый пароль.</p>
+    <div class="login-title">Новый пароль</div>
+    <div class="login-sub">Задай новый пароль для входа.</div>
     <div class="field-group">
       <div class="eyebrow field-label">Новый пароль</div>
       <input type="text" id="reset-password" autocomplete="new-password">
