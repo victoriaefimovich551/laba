@@ -28,8 +28,19 @@
 function forceGlassRepaint() {
     var html = document.documentElement;
     html.classList.add('theme-repaint');
-    void document.body.offsetHeight; // форсируем reflow, чтобы кадр без блюра реально отрисовался
+
+    // Тот же трюк не спасает "голый" фон body там, где сверху нет ни одной
+    // карточки (например, пустое место под коротким контентом до нижней
+    // панели) — Safari считает, что там нечего перерисовывать, раз ни один
+    // элемент не поменял форму, и оставляет старый цвет градиента. Явно
+    // подменяем фон инлайн-стилем на пару кадров — это гарантированно
+    // заставляет пересчитать именно background у body, а не только у
+    // элементов с backdrop-filter.
+    document.body.style.backgroundImage = 'none';
+
+    void document.body.offsetHeight; // форсируем reflow, чтобы кадр без блюра/фона реально отрисовался
     requestAnimationFrame(function () {
+        document.body.style.backgroundImage = '';
         requestAnimationFrame(function () {
             html.classList.remove('theme-repaint');
         });
