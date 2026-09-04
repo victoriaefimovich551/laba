@@ -251,6 +251,11 @@
             cursor: pointer;
             border: none;
             background: transparent;
+            /* Цвет задаём явно: иконки внутри рисуются stroke="currentColor",
+               а <button> без своего color берёт цвет из UA-стилей браузера —
+               в Safari на iOS это системный СИНИЙ, из-за чего иконки нижней
+               панели были синими вместо чёрных/белых по теме. */
+            color: var(--tx);
             border-radius: 14px;
             padding: 8px 2px;
             -webkit-tap-highlight-color: transparent;
