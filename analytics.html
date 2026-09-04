@@ -19,7 +19,9 @@
 <style>
   body { padding: 16px 16px 40px; max-width: 600px; margin: 0 auto; }
 
-  body, .stat-card, .list-row, .status-row, .model-row, .stale-row { transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+  /* background не анимируем у стеклянных карточек (backdrop-filter) — иначе
+     смена темы пересчитывает блюр на каждом кадре у всех разом и подвисает. */
+  body, .stat-card, .list-row, .status-row, .model-row, .stale-row { transition: color 0.3s ease, border-color 0.3s ease; }
 
   /* ── Header ── */
   .an-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -66,7 +68,7 @@
     font: 700 11.5px var(--f-head);
     cursor: pointer;
     white-space: nowrap;
-    transition: background .35s, color .35s;
+    transition: color .35s;
   }
   .period-btn.active { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
 
