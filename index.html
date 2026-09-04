@@ -677,6 +677,14 @@
         </div>
 
         <div class="field-group">
+            <div class="eyebrow field-label">Кто продал</div>
+            <select id="receive-noqr-sold-by">
+                <option value="">Выберите сотрудника</option>
+            </select>
+            <div style="font-size:12px; color:var(--tx2); margin-top:4px;">Заполняйте, только если заносите уже проданный товар. Обычно продавец указывается позже, при отметке «Продан».</div>
+        </div>
+
+        <div class="field-group">
             <div class="eyebrow field-label">Затраты (ремонт)</div>
             <input type="number" id="receive-noqr-repair-cost" placeholder="0">
         </div>
@@ -771,10 +779,12 @@
         try {
             const data = await apiGet({ action: 'getEmployees' });
             EMPLOYEES = data.employees || [];
-            const purchasedBySelect = document.getElementById('receive-noqr-purchased-by');
-            if (purchasedBySelect) {
-                purchasedBySelect.innerHTML = '<option value="">Выберите сотрудника</option>' + employeeOptionsHtml(null);
-            }
+            ['receive-noqr-purchased-by', 'receive-noqr-sold-by'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = '<option value="">Выберите сотрудника</option>' + employeeOptionsHtml(null);
+                }
+            });
         } catch (e) { /* попробуем ещё раз при следующей загрузке страницы */ }
     }
 
@@ -1113,6 +1123,7 @@
         const serialNumber = document.getElementById('receive-noqr-serial')?.value.trim() || '';
         const purchasePrice = document.getElementById('receive-noqr-price')?.value || '';
         const purchasedBy = document.getElementById('receive-noqr-purchased-by')?.value || '';
+        const soldBy = document.getElementById('receive-noqr-sold-by')?.value || '';
         const repairCost = document.getElementById('receive-noqr-repair-cost')?.value || '';
         const deliveryCost = document.getElementById('receive-noqr-delivery-cost')?.value || '';
         const avitoLink = document.getElementById('receive-noqr-avito')?.value || '';
@@ -1158,6 +1169,7 @@
                 serialNumber:   serialNumber,
                 purchasePrice:  purchasePrice,
                 purchasedBy:    purchasedBy,
+                soldBy:         soldBy,
                 repairCost:     repairCost,
                 deliveryCost:   deliveryCost,
                 avitoLink:      avitoLink,
@@ -1190,6 +1202,7 @@
                 const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
                 const receiveNoqrPrice = document.getElementById('receive-noqr-price');
                 const receiveNoqrPurchasedBy = document.getElementById('receive-noqr-purchased-by');
+                const receiveNoqrSoldBy = document.getElementById('receive-noqr-sold-by');
                 const receiveNoqrRepairCost = document.getElementById('receive-noqr-repair-cost');
                 const receiveNoqrDeliveryCost = document.getElementById('receive-noqr-delivery-cost');
                 const receiveNoqrAvito = document.getElementById('receive-noqr-avito');
@@ -1198,6 +1211,7 @@
                 if (receiveNoqrSerial) receiveNoqrSerial.value = '';
                 if (receiveNoqrPrice) receiveNoqrPrice.value = '';
                 if (receiveNoqrPurchasedBy) receiveNoqrPurchasedBy.value = '';
+                if (receiveNoqrSoldBy) receiveNoqrSoldBy.value = '';
                 if (receiveNoqrRepairCost) receiveNoqrRepairCost.value = '';
                 if (receiveNoqrDeliveryCost) receiveNoqrDeliveryCost.value = '';
                 if (receiveNoqrAvito) receiveNoqrAvito.value = '';
@@ -1227,6 +1241,7 @@
         const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
         const receiveNoqrPrice = document.getElementById('receive-noqr-price');
         const receiveNoqrPurchasedBy = document.getElementById('receive-noqr-purchased-by');
+        const receiveNoqrSoldBy = document.getElementById('receive-noqr-sold-by');
         const receiveNoqrRepairCost = document.getElementById('receive-noqr-repair-cost');
         const receiveNoqrDeliveryCost = document.getElementById('receive-noqr-delivery-cost');
         const receiveNoqrAvito = document.getElementById('receive-noqr-avito');
@@ -1236,6 +1251,7 @@
         if (receiveNoqrSerial) receiveNoqrSerial.value = '';
         if (receiveNoqrPrice) receiveNoqrPrice.value = '';
         if (receiveNoqrPurchasedBy) receiveNoqrPurchasedBy.value = '';
+        if (receiveNoqrSoldBy) receiveNoqrSoldBy.value = '';
         if (receiveNoqrRepairCost) receiveNoqrRepairCost.value = '';
         if (receiveNoqrDeliveryCost) receiveNoqrDeliveryCost.value = '';
         if (receiveNoqrAvito) receiveNoqrAvito.value = '';
@@ -2229,6 +2245,9 @@
             + '<div class="field-group"><div class="eyebrow field-label">Дата закупки</div><input type="date" id="edit-purchase-date" value="' + ruDateToIso(currentProduct['Дата закупки']) + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Цена продажи</div><input type="number" id="edit-sale-price" value="' + (currentProduct['Цена продажа'] || '') + '"></div>'
             + '<div class="field-group"><div class="eyebrow field-label">Дата продажи</div><input type="date" id="edit-sale-date" value="' + ruDateToIso(currentProduct['Дата продажи']) + '"></div>'
+            + '<div class="field-group"><div class="eyebrow field-label">Кто закупил</div>'
+            +     '<select id="edit-purchased-by"><option value="">Выберите сотрудника</option>' + employeeOptionsHtml(currentProduct['ЗакупилId']) + '</select>'
+            + '</div>'
             + '<div class="field-group"><div class="eyebrow field-label">Кто продал' + (currentProduct['ПродалId'] ? '' : ' *') + '</div>'
             +     '<select id="edit-sold-by"><option value="">Выберите сотрудника</option>' + employeeOptionsHtml(currentProduct['ПродалId']) + '</select>'
             + '</div>'
@@ -2331,6 +2350,7 @@
                 saleDate: isoDateToRu(document.getElementById('edit-sale-date').value),
                 status: status,
                 soldBy: soldBy,
+                purchasedBy: document.getElementById('edit-purchased-by')?.value || '',
                 avitoLink: document.getElementById('edit-avito').value,
                 repairCost: document.getElementById('edit-repair-cost').value,
                 deliveryCost: document.getElementById('edit-delivery-cost').value
@@ -2366,6 +2386,7 @@
                 saleDate:       data.saleDate,
                 status:         data.status,
                 soldBy:         data.soldBy || '',
+                purchasedBy:    data.purchasedBy || '',
                 avitoLink:      data.avitoLink || '',
                 repairCost:     data.repairCost || '',
                 deliveryCost:   data.deliveryCost || '',
