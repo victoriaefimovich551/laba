@@ -13,7 +13,14 @@
     <script src="icons.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Шрифты грузим НЕблокирующе (media=print + onload): обычный
+         rel="stylesheet" задерживает первую отрисовку страницы до ответа
+         fonts.googleapis.com, и при медленном мобильном интернете экран
+         оставался белым именно из-за этого. Текст сразу рисуется системным
+         шрифтом из запасного списка в --f-head, а фирменный подставляется,
+         как только придёт. -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
     <link rel="stylesheet" href="common.css">
     <style>
         /* background НЕ анимируем у стеклянных поверхностей (list-row,
@@ -744,7 +751,6 @@
     </button>
 </nav>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="config.js"></script>
 <script src="models.js"></script>
 <script src="status.js"></script>
@@ -979,10 +985,39 @@
     }
 
     // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
+
+    // Библиотека сканера (~350 КБ с unpkg) нужна ТОЛЬКО когда реально
+    // открывают камеру. Раньше она стояла обычным <script> в конце body и
+    // грузилась при каждом заходе на сайт, блокируя весь остальной код
+    // страницы до своего скачивания. Теперь подгружаем её по требованию.
+    let qrLibPromise = null;
+    function loadQrScannerLib() {
+        if (window.Html5Qrcode) return Promise.resolve();
+        if (!qrLibPromise) {
+            qrLibPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                script.onload = resolve;
+                script.onerror = () => {
+                    qrLibPromise = null; // дать шанс повторной попытке
+                    reject(new Error('Не удалось загрузить библиотеку сканера. Проверьте интернет.'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+        return qrLibPromise;
+    }
+
     async function startScanner() {
         const resultDiv = document.getElementById('scan-result');
         if (!resultDiv) return;
         resultDiv.innerHTML = '<div class="loading">📷 Запуск камеры...</div>';
+        try {
+            await loadQrScannerLib();
+        } catch (err) {
+            resultDiv.innerHTML = '<div class="error">❌ ' + escapeHtml(err.message) + '</div>';
+            return;
+        }
         if (html5QrCode && isScanning) await html5QrCode.stop();
         html5QrCode = new Html5Qrcode("reader");
         try {
@@ -2542,7 +2577,14 @@
         }
     }
 
-    window.onload = function() {
+    // Раньше это висело на window.onload, который срабатывает только после
+    // загрузки ВСЕХ ресурсов страницы (шрифты Google, картинки и т.п.).
+    // Из-за этого запрос за товарами уходил в самом конце — и ожидание
+    // «просыпающегося» бесплатного сервера на Render начиналось не сразу,
+    // а уже после всех внешних загрузок. Ничего из перечисленного ниже
+    // шрифтов и картинок не требует, поэтому стартуем, как только готов
+    // DOM: данные грузятся параллельно с остальным оформлением.
+    function initApp() {
         applyRoleVisibility();
         handleUrlParams();
         updateModelsForCategory(currentCategory);
@@ -2554,7 +2596,13 @@
         if (homeDateEl) homeDateEl.textContent = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
         renderRecentScans('home-recent-scans');
         renderRecentScans('scan-recent-scans');
-    };
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+        initApp();
+    }
 
     function setSbNav(btn) {
         document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
