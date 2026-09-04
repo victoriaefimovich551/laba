@@ -350,8 +350,7 @@ async function fetchSalary(employeeId) {
   const { dateFrom, dateTo } = getPeriodRange();
   const params = { action: 'getSalary', sessionToken: session.token, dateFrom, dateTo };
   if (employeeId) params.employeeId = employeeId;
-  const res = await fetch(apiUrl(params));
-  const data = await res.json();
+  const data = await apiGet(params);
   if (data.error) throw new Error(data.error);
   return data;
 }
@@ -509,8 +508,7 @@ async function init() {
 
   document.getElementById('cab-subtitle').textContent = 'Вход';
   try {
-    const res = await fetch(apiUrl({ action: 'getEmployees' }));
-    const data = await res.json();
+    const data = await apiGet({ action: 'getEmployees' });
     if (!data.employees || !data.employees.length) {
       document.getElementById('setup-box').style.display = 'block';
       return;
