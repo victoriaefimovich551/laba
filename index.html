@@ -16,10 +16,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="common.css">
     <style>
+        /* background НЕ анимируем у стеклянных поверхностей (list-row,
+           bottom-nav, sidebar, карточки и т.п.) — под ними backdrop-filter,
+           и плавная смена градиента фона заставляла бы браузер каждый кадр
+           заново пересчитывать блюр у всех них разом, из-за чего смена
+           темы ощущалась как зависание (особенно на мобильных). Мгновенная
+           смена фона — один пересчёт вместо ~20 кадров подряд. */
         body, .list-row, .bottom-nav, .desktop-sidebar,
         .stat-card, .panel, input, select, textarea, .product-card,
         .filter-pill, .category-btn, .confirm-dialog {
-            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            transition: color 0.3s ease, border-color 0.3s ease;
         }
 
         /* ── PULL-TO-REFRESH ── */
@@ -58,7 +64,7 @@
             border-radius: 999px;
             font: 700 12px var(--f-head);
             cursor: pointer;
-            transition: background .35s, color .35s;
+            transition: color .35s;
         }
         .category-btn.active { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
 
@@ -156,7 +162,7 @@
         #print-select-bar.visible { display: flex; }
         #print-select-bar strong { font-family: var(--f-mono); }
         .print-select-check { position: absolute; top: 10px; right: 10px; font-size: 16px; line-height: 1; }
-        .list-row.is-print-selected { border-color: var(--lime) !important; background: color-mix(in srgb, var(--lime) 12%, var(--bg)); }
+        .list-row.is-print-selected, .catalog-card.is-print-selected { border-color: var(--lime) !important; background: color-mix(in srgb, var(--lime) 12%, var(--bg)); }
 
         .field-group { margin-bottom: 16px; }
         .field-label { margin-bottom: 7px; display: block; }
@@ -357,7 +363,7 @@
             .toast { bottom: 30px; }
 
             .products-grid { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
-            .products-grid .list-row.product-item { min-width: 0; }
+            .products-grid .catalog-card.product-item { min-width: 0; }
 
             .catalog-head { align-items: flex-start; gap: 18px; }
             .catalog-subtitle { display: block !important; font: 500 12.5px var(--f-head); color: var(--tx2); margin-top: 4px; }
@@ -1473,19 +1479,23 @@
         const si = getStatusIcon(p['Статус']);
         const statusText = getStatusText(p['Статус']);
         const escapedSku = escapeHtml(p['Артикул']);
-        const catIcon = svgIcon(currentCategory === 'Дроны' ? 'drone' : 'scooter', 19);
+        const catIcon = svgIcon(currentCategory === 'Дроны' ? 'drone' : 'scooter', 28);
+        const tileBg = 'color-mix(in srgb, ' + si.color + ' 18%, transparent)';
 
         let html = '<div class="product-card" id="product-card-' + escapedSku + '">'
-            + '<div class="product-card-head">'
-            + '<div><h3 style="display:flex; align-items:center; gap:8px;">' + catIcon + ' ' + escapeHtml(p['Название'] || 'Без названия') + '</h3>'
-            + '<div class="list-row-sub" style="margin-top:6px;">' + escapeHtml(p['Артикул'] || '—') + '</div></div>';
-        if (p['QR_Code']) html += '<div class="qr-code"><img src="' + escapeHtml(p['QR_Code']) + '"></div>';
-        html += '</div>'
-            + '<div class="status-badge" style="margin-top:12px; background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + statusText + '</div>';
+            + '<div style="display:flex; align-items:center; gap:12px;">'
+            + '<div style="width:62px; height:62px; flex:none; border-radius:21px; display:flex; align-items:center; justify-content:center; background:' + tileBg + '; color:' + si.color + '; border:1px solid var(--gbd);">' + catIcon + '</div>'
+            + '<div style="flex:1; min-width:0;">'
+            + '<div class="status-badge" style="background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + statusText + '</div>'
+            + '<div class="list-row-sub" style="margin-top:7px;">' + escapeHtml(p['Артикул'] || '—') + '</div>'
+            + '</div>'
+            + (p['QR_Code'] ? '<div class="qr-code" style="flex:none;"><img src="' + escapeHtml(p['QR_Code']) + '"></div>' : '')
+            + '</div>'
+            + '<h3 style="margin-top:15px;">' + escapeHtml(p['Название'] || 'Без названия') + '</h3>';
 
-        html += '<div style="display:flex; gap:10px; margin-top:14px;">'
-            + '<div class="stat-card"><span class="eyebrow">Закупка</span><div class="stat-value">' + (priceZakupka || '—') + '</div></div>'
-            + '<div class="stat-card" style="background:var(--g-pri-soft); color:var(--g-pri-tx); border:none; box-shadow:var(--gsh2);"><span class="eyebrow" style="color:var(--g-pri-tx); opacity:.62;">' + (profit ? 'Прибыль' : 'Цена продажи') + '</span><div class="stat-value" style="color:var(--g-pri-tx);">' + (profit || priceProdazha || '—') + '</div></div>'
+        html += '<div style="display:flex; align-items:flex-end; gap:14px; margin-top:16px;">'
+            + '<div><div class="eyebrow">Закупка</div><div class="stat-value" style="margin-top:4px;">' + (priceZakupka || '—') + '</div></div>'
+            + '<div style="margin-left:auto; text-align:right;"><div class="eyebrow">' + (profit ? 'Прибыль' : 'Цена продажи') + '</div><div class="stat-value" style="margin-top:4px; color:var(--g-acc);">' + (profit || priceProdazha || '—') + '</div></div>'
             + '</div>';
 
         html += '<div style="margin-top:14px;">';
@@ -1776,26 +1786,33 @@
             const si = getStatusIcon(status);
             const sku = product['Артикул'] || '';
             const isSelected = selectedForPrint.has(sku);
-            let itemClass = 'list-row product-item';
-            if (status === 'Продан') itemClass += ' is-dim';
-            if (printSelectMode && isSelected) itemClass += ' is-print-selected';
-            const catIcon = svgIcon(currentCategory === 'Дроны' ? 'drone' : 'scooter', 19);
+            let cardClass = 'catalog-card product-item';
+            if (status === 'Продан') cardClass += ' is-dim';
+            if (printSelectMode && isSelected) cardClass += ' is-print-selected';
+            const catIcon = svgIcon(currentCategory === 'Дроны' ? 'drone' : 'scooter', 23);
             const clickHandler = printSelectMode
                 ? "togglePrintSelection('" + escapeHtml(sku) + "')"
                 : "viewProductDetail('" + escapeHtml(sku) + "')";
             let price = product['Цена закупка'];
-            price = (price && !isNaN(parseFloat(price))) ? parseFloat(price).toLocaleString('ru-RU') + ' ₽' : '';
-            html += '<div class="' + itemClass + '" style="border-left:3px solid ' + si.color + ';" onclick="' + clickHandler + '">'
+            price = (price && !isNaN(parseFloat(price))) ? parseFloat(price).toLocaleString('ru-RU') + ' ₽' : '—';
+            const days = daysSincePurchase(product['Дата закупки']);
+            const daysLabel = days !== null ? days + ' дн на складе' : '';
+            const tileBg = 'color-mix(in srgb, ' + si.color + ' 18%, transparent)';
+            html += '<div class="' + cardClass + '" onclick="' + clickHandler + '">'
                 + (printSelectMode ? '<span class="print-select-check">' + (isSelected ? '✅' : '⬜') + '</span>' : '')
-                + '<span class="list-row-icon">' + catIcon + '</span>'
-                + '<div class="list-row-body">'
-                + '<div class="list-row-title">' + escapeHtml(product['Название'] || 'Без названия') + '</div>'
-                + '<div class="list-row-sub">' + escapeHtml(sku || '—') + '</div>'
+                + '<div class="catalog-card-glow" style="background:' + tileBg + ';"></div>'
+                + '<div class="catalog-card-head">'
+                + '<div class="catalog-card-tile" style="background:' + tileBg + '; color:' + si.color + ';">' + catIcon + '</div>'
+                + '<div class="catalog-card-body">'
+                + '<div class="catalog-card-name">' + escapeHtml(product['Название'] || 'Без названия') + '</div>'
+                + '<div class="catalog-card-serial">' + escapeHtml(sku || '—') + '</div>'
                 + '</div>'
-                + (printSelectMode ? '' : '<div class="list-row-side">'
-                    + (price ? '<div class="list-row-price">' + price + '</div>' : '')
-                    + '<div class="list-row-status" style="color:' + si.color + ';">' + getStatusText(status) + '</div>'
-                    + '</div>')
+                + '<div class="catalog-card-badge" style="background:color-mix(in srgb, ' + si.color + ' 16%, transparent); color:' + si.color + ';">' + getStatusText(status) + '</div>'
+                + '</div>'
+                + '<div class="catalog-card-foot">'
+                + '<div class="catalog-card-days">' + daysLabel + '</div>'
+                + '<div class="catalog-card-price">' + price + '</div>'
+                + '</div>'
                 + '</div>';
         });
         html += '</div>';
