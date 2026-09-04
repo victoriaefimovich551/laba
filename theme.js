@@ -20,6 +20,22 @@
     }
 })();
 
+// Safari/iOS: backdrop-filter не пересчитывает фон позади себя при мгновенной
+// смене цветов (без скролла/ресайза), из-за чего стеклянные карточки после
+// переключения темы какое-то время показывают блюр СТАРОГО фона. Снимаем
+// backdrop-filter на пару кадров — это заставляет браузер перерисовать
+// элементы плоским фоном — и возвращаем обратно, уже с актуальным блюром.
+function forceGlassRepaint() {
+    var html = document.documentElement;
+    html.classList.add('theme-repaint');
+    void document.body.offsetHeight; // форсируем reflow, чтобы кадр без блюра реально отрисовался
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            html.classList.remove('theme-repaint');
+        });
+    });
+}
+
 function applyDark() {
     document.body.classList.remove('light-mode');
     document.querySelectorAll('[data-theme-icon]').forEach(function (el) { el.textContent = '☀️'; });
@@ -53,6 +69,7 @@ function initTheme() {
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
             if (localStorage.getItem('theme')) return; // есть явный выбор — не оверрайдим
             e.matches ? applyDark() : applyLight();
+            forceGlassRepaint();
         });
     }
     // Убираем preload-light — теперь transitions работают
@@ -69,4 +86,5 @@ function toggleTheme() {
         applyLight();
         localStorage.setItem('theme', 'light');
     }
+    forceGlassRepaint();
 }
