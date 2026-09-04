@@ -156,6 +156,19 @@ html.preload-light body { background: #e4e6df !important; color: #1a1e1a !import
     body { background: var(--g-layer-desktop); }
 }
 
+/* На iOS/Safari стекло (backdrop-filter) не пересчитывает то, что "видит"
+   позади себя, если фон меняется мгновенно (без скролла/ресайза) — из-за
+   этого после переключения темы карточки какое-то время показывают блюр
+   ещё СТАРОГО фона поверх уже новых цветов текста, и выглядит это как
+   выцветшая/полупрозрачная каша. Помогает только принудительная перерисовка:
+   на пару кадров убираем backdrop-filter у всех элементов (theme.js
+   добавляет/убирает этот класс), браузер перерисовывает их плоским фоном,
+   а затем блюр возвращается уже с актуальным содержимым позади. */
+html.theme-repaint, html.theme-repaint * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
 ::-webkit-scrollbar { width: 0; height: 0; }
 
 /* ── Кнопка переключения темы (круглая, с иконкой) ── */
@@ -361,7 +374,7 @@ body:not(.light-mode) input[type="date"]::-webkit-calendar-picker-indicator { fi
     font: 700 12.5px var(--f-head);
     cursor: pointer;
     white-space: nowrap;
-    transition: background .35s, color .35s;
+    transition: color .35s;
 }
 .pill-switch-btn.active { background: var(--g-pri); color: var(--g-pri-tx); }
 
