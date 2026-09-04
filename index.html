@@ -1683,21 +1683,24 @@
         if (dkReserved) dkReserved.textContent = reserved;
         if (dkSoldMonth) dkSoldMonth.textContent = soldThisMonth;
 
-        // Пилюли фильтрации по статусу
-        const mkBtn = (label, value, color, count) => {
+        // Пилюли фильтрации по статусу. Иконка всегда нейтрального цвета
+        // (var(--tx2), не цвет статуса) — цветом статуса остаются только
+        // текст и счётчик, как и раньше.
+        const mkBtn = (icon, text, value, color, count) => {
             const isActive = activeStatusFilter === value;
+            const iconSpan = '<span' + (isActive ? '' : ' style="color:var(--tx2);"') + '>' + icon + '</span>';
             return '<button class="filter-pill' + (isActive ? ' active' : '') + '" '
                 + (isActive ? '' : 'style="color:' + color + ';"')
                 + ' onclick="filterByStatus(\'' + value + '\')">'
-                + label + ' <strong>' + count + '</strong></button>';
+                + iconSpan + ' ' + text + ' <strong>' + count + '</strong></button>';
         };
 
         let statsHtml = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:12px;">'
-            + mkBtn('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="5.6" rx="1.8"></rect><rect x="4" y="13.4" width="16" height="5.6" rx="1.8"></rect><path d="M7.4 7.8h.01M7.4 16.2h.01"></path></svg> Все', '', 'var(--tx2)', total)
-            + mkBtn('🟢 В наличии', 'Не продан', 'var(--st-ok)', unsold)
-            + mkBtn('🚚 В доставке', 'В доставке', 'var(--st-info)', delivery)
-            + mkBtn('🔒 Резерв', 'Зарезервирован', 'var(--st-warn)', reserved)
-            + mkBtn('✅ Продан', 'Продан', 'var(--st-off)', sold)
+            + mkBtn(svgIcon('catalog', 12), 'Все', '', 'var(--tx2)', total)
+            + mkBtn(svgIcon('dot', 12), 'В наличии', 'Не продан', 'var(--st-ok)', unsold)
+            + mkBtn(svgIcon('truck', 12), 'В доставке', 'В доставке', 'var(--st-info)', delivery)
+            + mkBtn(svgIcon('lock', 12), 'Резерв', 'Зарезервирован', 'var(--st-warn)', reserved)
+            + mkBtn(svgIcon('checkCircle', 12), 'Продан', 'Продан', 'var(--st-off)', sold)
             + '</div>';
 
         // Пилюли моделей
@@ -1775,6 +1778,13 @@
     function renderCatalog(products) {
         const container = document.getElementById('catalog-content');
         if (!container) return;
+        // #catalog-content стартует в разметке с class="loading" (текст-заглушка
+        // "Загрузка..."), и этот класс со временем никогда не снимался — а у
+        // .loading задан text-align:center, который так и продолжал каскадом
+        // применяться ко всем карточкам внутри, включая название товара
+        // (незаметно для однострочных названий, но криво разъезжалось на
+        // двухстрочных). Снимаем его здесь, при первой реальной отрисовке.
+        container.classList.remove('loading', 'error', 'success');
         if (!products || products.length === 0) {
             container.innerHTML = '<div class="error">📭 Товары не найдены.</div>';
             return;
