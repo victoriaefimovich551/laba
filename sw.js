@@ -1,5 +1,5 @@
 // ========== SERVICE WORKER ДЛЯ ОФЛАЙН-РЕЖИМА ==========
-const CACHE_NAME = 'qr-scanner-v4';
+const CACHE_NAME = 'qr-scanner-v5';
 const urlsToCache = [
   './',
   './index.html',
@@ -39,6 +39,8 @@ self.addEventListener('activate', event => {
 // Проверка: является ли запрос API-вызовом (не кэшировать)
 function isApiRequest(url) {
   return url.includes('script.google.com') ||
+         url.includes('onrender.com') ||
+         url.includes('api.mylaba.com') ||
          url.includes('qrserver.com') ||
          url.includes('?action=') ||
          url.includes('?serial=');
@@ -46,15 +48,22 @@ function isApiRequest(url) {
 
 // Перехват запросов
 self.addEventListener('fetch', event => {
+  const url = event.request.url;
+
   // API-запросы — ТОЛЬКО сеть, без кэширования
-  if (isApiRequest(event.request.url)) {
+  if (isApiRequest(url)) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  // HTML-страницы (сам сайт) — сначала сеть, чтобы обновления файлов сразу
-  // были видны; кэш используется только как резерв при отсутствии сети.
-  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+  // HTML-страницы, а также ВСЕ свои файлы сайта (CSS/JS/JSON — то, что мы
+  // сами постоянно правим) — сначала сеть, чтобы после каждой загрузки
+  // новой версии на GitHub Pages изменения были видны сразу, без ручного
+  // сброса кэша. Кэш — только резерв при отсутствии сети (офлайн-режим).
+  // Cache-first оставляем только для чужих библиотек с CDN (unpkg и т.п.) —
+  // они версионированы в самом URL и не меняются задним числом.
+  const isOwnFile = url.startsWith(self.location.origin);
+  if (event.request.mode === 'navigate' || event.request.destination === 'document' || isOwnFile) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
@@ -67,7 +76,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Остальные статические ресурсы (шрифты, библиотеки и т.п.) — cache-first,
+  // Чужие статические ресурсы (шрифты, библиотеки с CDN и т.п.) — cache-first,
   // с фоллбэком на сеть, это то, что реально не меняется часто.
   event.respondWith(
     caches.match(event.request)
