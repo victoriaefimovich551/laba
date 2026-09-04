@@ -89,7 +89,7 @@
 <div class="container">
   <!-- Header -->
   <div class="cab-header">
-    <a class="back-btn" href="index.html">⬅ Назад</a>
+    <a class="back-btn" href="index.html">← Назад</a>
     <div class="cab-header-title">
       <div class="page-title" style="font-size:20px;">Личный кабинет</div>
       <p id="cab-subtitle">Вход</p>
@@ -205,7 +205,7 @@
           <option value="director">Директор</option>
         </select>
       </div>
-      <button class="btn-dark btn-block" id="add-emp-btn">➕ Добавить</button>
+      <button class="btn-dark btn-block" id="add-emp-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.6v12.8M5.6 12h12.8"></path></svg> Добавить</button>
     </div>
   </div>
 </div>
@@ -236,7 +236,7 @@ function setPeriod(period, btn) {
 }
 
 function fmtRub(n) {
-  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
+  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
 }
 
 function saveSession() {
@@ -268,7 +268,8 @@ async function doLogin() {
     if (!result.success) throw new Error(result.message || 'Не удалось войти');
     session = { token: result.token, employee: result.employee };
     saveSession();
-    showCabinet();
+    location.href = 'index.html';
+    return;
   } catch (e) {
     errEl.textContent = e.message;
   } finally {
