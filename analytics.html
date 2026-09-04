@@ -9,6 +9,7 @@
 <title>Аналитика — Инвентарь</title>
 <script src="theme.js"></script>
 <script src="auth-guard.js"></script>
+<script src="icons.js"></script>
 <script src="status.js"></script>
 <script src="xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -302,7 +303,7 @@
 <!-- PIN-доступ -->
 <div id="auth-overlay" class="auth-overlay">
   <div class="auth-card">
-    <div class="auth-icon">🔒</div>
+    <div class="auth-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.4" width="14" height="9.6" rx="2.4"></rect><path d="M8 10.4V7.6a4 4 0 0 1 8 0v2.8"></path></svg></div>
     <h2>Аналитика под PIN</h2>
     <div class="auth-sub">Финансовые показатели видны только владельцу. Введите 4-значный код.</div>
     <div class="pin-dots" id="pin-dots">
@@ -318,15 +319,15 @@
 
 <!-- Header -->
 <div class="an-header">
-  <a class="back-btn" href="index.html">⬅ Назад</a>
+  <a class="back-btn" href="index.html">← Назад</a>
   <div class="an-header-title">
     <div class="page-title" style="font-size:20px;">Аналитика</div>
     <p id="last-update">Загрузка данных...</p>
   </div>
   <button class="theme-toggle theme-toggle-an" id="theme-toggle-an" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
   <div class="an-header-actions">
-    <button class="back-btn" id="download-export-btn" onclick="downloadDataExport()" title="Скачать таблицу всех товаров для просмотра (Excel)">📋 Таблица</button>
-    <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период">📄 Отчёт</button>
+    <button class="back-btn" id="download-export-btn" onclick="downloadDataExport()" title="Скачать таблицу всех товаров для просмотра (Excel)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2.4"></rect><path d="M4 10h16M4 15h16M10 4v16"></path></svg> Таблица</button>
+    <button class="back-btn" id="download-report-btn" onclick="downloadMonthlyReport()" title="Скачать отчёт за выбранный период"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.6h7.4L18 7.2V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1z"></path><path d="M14 3.6V7.2h4"></path><path d="M9 12.4h6M9 15.8h6"></path></svg> Отчёт</button>
   </div>
 </div>
 
@@ -1020,10 +1021,10 @@ if (window.CABINET_SESSION && window.CABINET_SESSION.employee && window.CABINET_
 } else {
   document.getElementById('auth-overlay').innerHTML = `
     <div class="auth-card">
-      <div class="auth-icon">🚫</div>
-      <h2>Доступ ограничен</h2>
+      <div class="auth-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"></circle><path d="m6.6 6.6 10.8 10.8"></path></svg></div>
+      <h2>Доступ только для директора</h2>
       <div class="auth-sub">Аналитика склада видна только владельцу аккаунта директора.</div>
-      <a class="back-btn" href="index.html" style="margin:8px auto 0; justify-content:center;">⬅ На главную</a>
+      <a class="back-btn" href="index.html" style="margin:8px auto 0; justify-content:center;">← На главную</a>
     </div>
   `;
 }
