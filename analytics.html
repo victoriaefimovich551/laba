@@ -532,10 +532,7 @@ async function init() {
 }
 
 async function fetchProducts(category) {
-  const url = apiUrl({ action: 'getAll', category: category });
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const data = await r.json();
+  const data = await apiGet({ action: 'getAll', category: category });
   if (data.error) throw new Error(data.error);
   return data.products || [];
 }
