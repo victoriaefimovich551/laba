@@ -19,6 +19,33 @@ function apiUrl(params) {
     return GOOGLE_SCRIPT_URL + '?' + usp.toString();
 }
 
+// Выполняет GET-запрос через apiUrl(params) с тем же жёстким таймаутом,
+// что и apiPost — без этого «уснувший» бэкенд или зависшая мобильная сеть
+// оставляют fetch() висеть бесконечно, а вместе с ним и нативный индикатор
+// загрузки страницы в браузере (постоянная «плашка обновления»).
+function apiGet(params) {
+    const controller = new AbortController();
+    const abortTimer = setTimeout(function () { controller.abort(); }, 90000);
+    const wakeupTimer = setTimeout(function () {
+        if (typeof showToast === 'function') {
+            showToast('⏳ Сервер просыпается после простоя, это может занять до минуты...', 'info', 8000);
+        }
+    }, 4000);
+
+    return fetch(apiUrl(params), { signal: controller.signal }).then(function (r) {
+        clearTimeout(wakeupTimer);
+        clearTimeout(abortTimer);
+        return r.json();
+    }).catch(function (err) {
+        clearTimeout(wakeupTimer);
+        clearTimeout(abortTimer);
+        if (err.name === 'AbortError') {
+            throw new Error('Сервер не отвечает больше 90 секунд. Попробуйте ещё раз через минуту.');
+        }
+        throw err;
+    });
+}
+
 // Отправляет данные через POST (без Content-Type: application/json —
 // иначе браузер шлёт CORS-preflight, который Apps Script не обрабатывает).
 // Возвращает Promise с распарсенным JSON-ответом.
