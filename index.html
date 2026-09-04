@@ -762,8 +762,7 @@
 
     async function loadEmployees() {
         try {
-            const res = await fetch(apiUrl({ action: 'getEmployees' }));
-            const data = await res.json();
+            const data = await apiGet({ action: 'getEmployees' });
             EMPLOYEES = data.employees || [];
             const purchasedBySelect = document.getElementById('receive-noqr-purchased-by');
             if (purchasedBySelect) {
@@ -2001,9 +2000,7 @@
 
     async function updateCategoryInBackground(category) {
         try {
-            const url = apiUrl({ action: 'getAll', category: category });
-            const response = await fetch(url);
-            const data = await response.json();
+            const data = await apiGet({ action: 'getAll', category: category });
             if (data.error) throw new Error(data.error);
             const products = data.products || data;
             if (products && products.length) {
@@ -2117,9 +2114,7 @@
 
         container.innerHTML = '<div class="loading">📦 Загрузка...</div>';
         try {
-            const url = apiUrl({ action: 'getAll', category: currentCategory });
-            const response = await fetch(url);
-            const data = await response.json();
+            const data = await apiGet({ action: 'getAll', category: currentCategory });
             if (data.error) throw new Error(data.error);
             const products = data.products || data;
             if (!products || !Array.isArray(products)) throw new Error('Неверный формат данных');
