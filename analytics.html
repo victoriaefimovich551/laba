@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,6 +8,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon-180.png">
 <title>Аналитика — Инвентарь</title>
 <script src="theme.js"></script>
+<script src="auth-guard.js"></script>
 <script src="status.js"></script>
 <script src="xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -731,7 +731,7 @@ function categoryLabel() {
 // Числа отчёта — единый формат "12 345 ₽" (Intl.NumberFormat + один
 // раз символ рубля через неразрывный пробел, без дублирования "₽₽").
 function fmtRp(n) {
-  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
+  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
 }
 
 function fmtDateShort(str) {
@@ -1013,7 +1013,20 @@ function renderChart(data) {
   }).join('');
 }
 
-checkAnalyticsAuth();
+// Аналитика — только для директора. auth-guard.js уже гарантирует вход в
+// личный кабинет, здесь дополнительно проверяем роль сотрудника.
+if (window.CABINET_SESSION && window.CABINET_SESSION.employee && window.CABINET_SESSION.employee.role === 'director') {
+  checkAnalyticsAuth();
+} else {
+  document.getElementById('auth-overlay').innerHTML = `
+    <div class="auth-card">
+      <div class="auth-icon">🚫</div>
+      <h2>Доступ ограничен</h2>
+      <div class="auth-sub">Аналитика склада видна только владельцу аккаунта директора.</div>
+      <a class="back-btn" href="index.html" style="margin:8px auto 0; justify-content:center;">⬅ На главную</a>
+    </div>
+  `;
+}
 
 // ── Тема (общая логика в theme.js) ──────────────────
 initTheme();
