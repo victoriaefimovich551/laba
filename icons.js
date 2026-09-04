@@ -21,7 +21,10 @@ const ICON_PATHS = {
     table:    '<rect x="4" y="4" width="16" height="16" rx="2.4"></rect><path d="M4 10h16M4 15h16M10 4v16"></path>',
     document: '<path d="M7 3.6h7.4L18 7.2V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.6a1 1 0 0 1 1-1z"></path><path d="M14 3.6V7.2h4"></path><path d="M9 12.4h6M9 15.8h6"></path>',
     forbidden: '<circle cx="12" cy="12" r="8.2"></circle><path d="m6.6 6.6 10.8 10.8"></path>',
-    arrowLeft: '<path d="M19 12H6M11 6.6 5.6 12 11 17.4"></path>'
+    arrowLeft: '<path d="M19 12H6M11 6.6 5.6 12 11 17.4"></path>',
+    dot:      '<circle cx="12" cy="12" r="6.4" fill="currentColor" stroke="none"></circle>',
+    truck:    '<path d="M3 16V6.8a1 1 0 0 1 1-1h9.4a1 1 0 0 1 1 1V16"></path><path d="M14.4 10.4h3.1l3 3.1V16h-2.1"></path><path d="M3 16h1.3M10.6 16h2.6"></path><circle cx="7" cy="17.6" r="1.8"></circle><circle cx="16.6" cy="17.6" r="1.8"></circle>',
+    checkCircle: '<circle cx="12" cy="12" r="8.2"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path>'
 };
 
 function svgIcon(name, size, extraAttrs) {
