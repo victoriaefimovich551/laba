@@ -268,7 +268,9 @@
         /* ── ДЕСКТОП ── */
         @media (min-width: 1024px) {
             body { padding: 16px; display: flex; gap: 16px; min-height: 100vh; }
-            body::before, body::after { display: none; } /* атмосфера уже задаётся --g-layer-desktop на body */
+            /* ::before — это сам слой фона (на десктопе он берёт --g-layer-desktop,
+               см. common.css), его прятать нельзя. Убираем только «блобы». */
+            body::after { display: none; }
 
             .desktop-sidebar {
                 display: flex !important;
