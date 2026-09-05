@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -386,14 +385,32 @@
             .desktop-sidebar .sidebar-btn.active .sb-icon { background: rgba(20,23,18,.13); border-color: rgba(20,23,18,.18); }
 
             .desktop-sidebar .sidebar-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 5px; }
-            .desktop-sidebar .sidebar-cta {
-                position: relative; overflow: hidden;
-                background: var(--g-pri-hero); color: var(--g-pri-tx);
-                box-shadow: var(--g-pri-sh-sm);
-                border-radius: 18px; padding: 14px 16px; cursor: pointer;
+            /* Личный кабинет внизу панели — как в макете: лаймовый кружок с
+               инициалами, рядом имя и подпись. */
+            .desktop-sidebar .sidebar-account {
+                display: flex; align-items: center; gap: 11px;
+                background: var(--gs2);
+                border: 1px solid var(--gbd);
+                box-shadow: var(--gin);
+                border-radius: 999px;
+                padding: 8px 14px 8px 8px;
+                text-decoration: none;
+                color: var(--tx);
+                transition: border-color .3s;
             }
-            .desktop-sidebar .sidebar-cta-title { font: 600 14px var(--f-head); }
-            .desktop-sidebar .sidebar-cta-sub { font: 600 11px var(--f-head); opacity: .6; margin-top: 4px; }
+            .desktop-sidebar .sidebar-account:hover { border-color: var(--g-sel); }
+            .desktop-sidebar .sidebar-account-avatar {
+                flex: none; width: 38px; height: 38px; border-radius: 50%;
+                background: var(--g-pri); color: var(--g-pri-tx);
+                display: flex; align-items: center; justify-content: center;
+                font: 700 12.5px var(--f-head);
+            }
+            .desktop-sidebar .sidebar-account-body { min-width: 0; }
+            .desktop-sidebar .sidebar-account-title {
+                font: 600 13.5px var(--f-head); color: var(--tx);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .desktop-sidebar .sidebar-account-sub { font: 600 11px var(--f-head); color: rgba(var(--g-tx),.5); margin-top: 2px; }
             .desktop-sidebar .sidebar-theme-btn {
                 display: flex; align-items: center; gap: 11px;
                 background: var(--gs4);
@@ -542,17 +559,20 @@
             <a class="sidebar-btn" id="sb-nav-analytics" href="analytics.html">
                 <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"></path><path d="m6.5 14.5 3.8-4.4 3 2.8 4.4-5.6"></path></svg></span> Аналитика
             </a>
-            <a class="sidebar-btn" href="cabinet.html">
-                <span class="sb-icon" id="sb-nav-account-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.4" r="3.4"></circle><path d="M5 19.4c1-3.4 3.8-5.2 7-5.2s6 1.8 7 5.2"></path></svg></span> Личный кабинет
-            </a>
+            <!-- Личный кабинет теперь внизу панели отдельным блоком с
+                 инициалами (см. .sidebar-account), в списке разделов его
+                 дублировать не нужно. -->
         </nav>
     </div>
 
     <div class="sidebar-bottom">
-        <div class="sidebar-cta" onclick="switchTab('scan'); setSbNav(document.getElementById('sb-nav-scan'))">
-            <div class="sidebar-cta-title">Сканировать QR</div>
-            <div class="sidebar-cta-sub">камера или ручной ввод</div>
-        </div>
+        <a class="sidebar-account" href="cabinet.html">
+            <span class="sidebar-account-avatar" id="sb-account-avatar">ЛК</span>
+            <span class="sidebar-account-body">
+                <span class="sidebar-account-title" id="sb-account-name">Личный кабинет</span>
+                <span class="sidebar-account-sub">личный кабинет</span>
+            </span>
+        </a>
         <button class="sidebar-theme-btn" id="sb-theme-btn" onclick="toggleTheme()">🌙 Тёмная тема</button>
     </div>
 </aside>
@@ -809,6 +829,10 @@
     <button class="nav-item active" id="nav-home" onclick="switchTab('home', null, this)">
         <span class="nav-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.6 12 4.2l8 6.4V19a1.4 1.4 0 0 1-1.4 1.4h-3.4v-5.6H9.8v5.6H5.4A1.4 1.4 0 0 1 4 19z"></path></svg></span>
         <span class="nav-label">Главная</span>
+    </button>
+    <button class="nav-item" id="nav-tasks" onclick="switchTab('tasks', null, this)">
+        <span class="nav-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6.6h10M10 12h10M10 17.4h10"></path><path d="m3.4 6.4 1.3 1.3 2.3-2.5M3.4 11.8l1.3 1.3 2.3-2.5M3.4 17.2l1.3 1.3 2.3-2.5"></path></svg></span>
+        <span class="nav-label">Задачи</span>
     </button>
     <button class="nav-item" id="nav-scan" onclick="switchTab('scan', null, this)">
         <span class="nav-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.6V5.8A1.8 1.8 0 0 1 5.8 4h2.8M15.4 4h2.8A1.8 1.8 0 0 1 20 5.8v2.8M20 15.4v2.8a1.8 1.8 0 0 1-1.8 1.8h-2.8M8.6 20H5.8A1.8 1.8 0 0 1 4 18.2v-2.8"></path><path d="M4.6 12h14.8"></path></svg></span>
@@ -2651,9 +2675,17 @@
             const el = document.getElementById(id);
             if (el) el.style.display = isDirector ? '' : 'none';
         });
+        const employee = window.CABINET_SESSION && window.CABINET_SESSION.employee;
         const accountBtn = document.getElementById('header-account-btn');
-        if (accountBtn && window.CABINET_SESSION && window.CABINET_SESSION.employee) {
-            accountBtn.textContent = accountInitials(window.CABINET_SESSION.employee.name);
+        if (accountBtn && employee) {
+            accountBtn.textContent = accountInitials(employee.name);
+        }
+        // Блок кабинета внизу боковой панели десктопа: инициалы и имя.
+        const sbAvatar = document.getElementById('sb-account-avatar');
+        const sbName = document.getElementById('sb-account-name');
+        if (employee) {
+            if (sbAvatar) sbAvatar.textContent = accountInitials(employee.name);
+            if (sbName && employee.name) sbName.textContent = employee.name;
         }
     }
 
