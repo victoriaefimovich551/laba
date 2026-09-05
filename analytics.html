@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#101215">
 <link rel="icon" type="image/png" href="favicon-64.png">
 <link rel="apple-touch-icon" href="apple-touch-icon-180.png">
-<title>Аналитика — Инвентарь</title>
+<title>Аналитика — Лаба</title>
 <script src="theme.js"></script>
 <script src="auth-guard.js"></script>
 <script src="icons.js"></script>
@@ -731,7 +731,7 @@ function categoryLabel() {
 // Числа отчёта — единый формат "12 345 ₽" (Intl.NumberFormat + один
 // раз символ рубля через неразрывный пробел, без дублирования "₽₽").
 function fmtRp(n) {
-  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
+  return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)) + ' ₽';
 }
 
 function fmtDateShort(str) {
