@@ -270,7 +270,10 @@ html.theme-repaint, html.theme-repaint * {
 .btn-lime:hover { transform: translateY(-1px); }
 .btn-dark {
     background: linear-gradient(160deg,#1d2217,#0f1210);
-    color: var(--g-acc);
+    /* Фон этой кнопки тёмный в обеих темах, поэтому цвет текста фиксированный.
+       var(--g-acc) в светлой теме — тёмно-оливковый (он рассчитан на светлый
+       фон), и на чёрной кнопке текст получался почти нечитаемым. */
+    color: #dcff7a;
     border: none;
     border-radius: 999px;
     font: 700 13px var(--f-head);
@@ -600,6 +603,21 @@ body:not(.light-mode) input[type="date"]::-webkit-calendar-picker-indicator { fi
 }
 .stat-card .eyebrow { display: block; }
 .stat-card .stat-value { font: 500 21px var(--f-mono); letter-spacing: -.04em; margin-top: 5px; color: var(--tx); }
+
+/* ── «На складе N дн» со шкалой (карточка товара на десктопе) ── */
+.age-box {
+    background: var(--gs4);
+    border: 1px solid var(--gbd2);
+    border-radius: 18px;
+    padding: 13px 16px 15px;
+}
+.age-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.age-days { font: 500 15px var(--f-mono); letter-spacing: -.03em; color: var(--tx); }
+.age-track {
+    margin-top: 10px; height: 6px; border-radius: 999px;
+    background: var(--gtrack); overflow: hidden;
+}
+.age-track > span { display: block; height: 100%; border-radius: 999px; background: var(--g-bar); }
 
 /* ── Диалоги подтверждения / модалки ── */
 .confirm-overlay {
