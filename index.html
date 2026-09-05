@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="favicon-64.png">
     <link rel="apple-touch-icon" href="apple-touch-icon-180.png">
-    <title>QR Сканер</title>
+    <title>Лаба</title>
     <script src="theme.js"></script>
     <script src="auth-guard.js"></script>
     <script src="icons.js"></script>
@@ -212,6 +213,45 @@
             box-shadow: 0 10px 22px rgba(0,0,0,.3);
         }
         .stat-row { display: flex; gap: 9px; margin-top: 14px; }
+        /* ── ЗАДАЧИ ── */
+        .task-row {
+            display: flex; align-items: flex-start; gap: 11px;
+            padding: 11px 13px; border-radius: 16px;
+            background: var(--gs2);
+            backdrop-filter: var(--g-blur-sm);
+            -webkit-backdrop-filter: var(--g-blur-sm);
+            border: 1px solid var(--gbd);
+            box-shadow: var(--gin);
+            margin-bottom: 8px;
+            transition: border-color .3s, opacity .3s;
+        }
+        .task-row.is-done { opacity: .5; }
+        .task-row.is-overdue { border-color: color-mix(in srgb, var(--st-danger) 45%, transparent); }
+        .task-check {
+            flex: none; width: 22px; height: 22px; margin-top: 1px;
+            border-radius: 7px;
+            border: 1.6px solid var(--gbd2);
+            background: var(--gs4);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: transparent; padding: 0;
+            transition: background .2s, border-color .2s, color .2s;
+        }
+        .task-check.checked { background: var(--g-pri); border-color: transparent; color: var(--g-pri-tx); }
+        .task-body { flex: 1; min-width: 0; }
+        .task-title { font: 600 13px/1.35 var(--f-head); color: var(--tx); overflow-wrap: anywhere; }
+        .task-row.is-done .task-title { text-decoration: line-through; }
+        .task-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; align-items: center; }
+        .task-tag {
+            font: 700 9.5px var(--f-head); letter-spacing: .04em;
+            padding: 3px 7px; border-radius: 999px;
+            background: var(--gs4); color: var(--tx2); white-space: nowrap;
+        }
+        .task-tag.common { background: color-mix(in srgb, var(--st-info) 16%, transparent); color: var(--st-info); }
+        .task-tag.overdue { background: color-mix(in srgb, var(--st-danger) 16%, transparent); color: var(--st-danger); }
+        .task-del { flex: none; background: none; border: none; color: var(--tx2); cursor: pointer; padding: 2px; opacity: .55; }
+        .task-del:hover { opacity: 1; color: var(--st-danger); }
+        .tasks-empty { text-align: center; color: var(--tx2); font: 500 12.5px var(--f-head); padding: 18px 0; }
+
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-top: 14px; }
         .quick-action {
             position: relative;
@@ -496,6 +536,9 @@
             <button class="sidebar-btn" onclick="openPrintSelectMode()">
                 <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8.4" width="14" height="7.6" rx="1.8"></rect><path d="M7.4 8.4V6a1.6 1.6 0 0 1 1.6-1.6h6a1.6 1.6 0 0 1 1.6 1.6v2.4"></path><rect x="8.2" y="12.8" width="7.6" height="5.8" rx="1"></rect></svg></span> Наклейки
             </button>
+            <button class="sidebar-btn" id="sb-nav-tasks" onclick="switchTab('tasks'); setSbNav(this)">
+                <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6.6h10M10 12h10M10 17.4h10"></path><path d="m3.4 6.4 1.3 1.3 2.3-2.5M3.4 11.8l1.3 1.3 2.3-2.5M3.4 17.2l1.3 1.3 2.3-2.5"></path></svg></span> Задачи
+            </button>
             <a class="sidebar-btn" id="sb-nav-analytics" href="analytics.html">
                 <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"></path><path d="m6.5 14.5 3.8-4.4 3 2.8 4.4-5.6"></path></svg></span> Аналитика
             </a>
@@ -567,6 +610,12 @@
                 <span class="quick-action-arrow">→</span>
             </a>
         </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:22px;">
+            <div class="eyebrow">Задачи на сегодня</div>
+            <button class="btn-ghost" style="width:auto; margin:0; padding:6px 12px; font-size:11px; height:auto;" onclick="switchTab('tasks')">Все задачи →</button>
+        </div>
+        <div id="home-tasks-list" style="margin-top:10px;"></div>
+
         <div class="eyebrow" style="margin-top:22px;">Последние сканы</div>
         <div id="home-recent-scans" style="margin-top:10px;"></div>
     </div>
@@ -722,6 +771,34 @@
         <button id="submit-noqr-btn" class="btn-lime btn-block">Добавить товар</button>
         <button id="clear-noqr-btn" class="btn-ghost btn-block"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7M6.7 7l.8 12.1A1.8 1.8 0 0 0 9.3 21h5.4a1.8 1.8 0 0 0 1.8-1.7L17.3 7"></path></svg> Очистить</button>
     </div>
+
+    <div id="tasks-panel" class="panel">
+        <div class="page-title">Задачи</div>
+        <div class="page-sub">Что нужно успеть — себе, коллеге или всей команде.</div>
+
+        <div class="pill-switch" style="margin-top:16px;">
+            <button type="button" class="pill-switch-btn active" data-task-period="день" onclick="switchTaskPeriod('день')">День</button>
+            <button type="button" class="pill-switch-btn" data-task-period="неделя" onclick="switchTaskPeriod('неделя')">Неделя</button>
+            <button type="button" class="pill-switch-btn" data-task-period="месяц" onclick="switchTaskPeriod('месяц')">Месяц</button>
+        </div>
+
+        <div class="field-group" style="margin-top:14px;">
+            <input type="text" id="task-title" placeholder="Что нужно сделать..." maxlength="300">
+        </div>
+        <div class="field-group">
+            <div class="eyebrow field-label">Кому</div>
+            <select id="task-assignee">
+                <option value="">Общая — для всех</option>
+            </select>
+        </div>
+        <button class="btn-lime btn-block" id="add-task-btn">Добавить задачу</button>
+
+        <div style="display:flex; gap:7px; margin:20px 0 12px;">
+            <button class="filter-pill active" data-task-filter="mine" onclick="setTaskFilter('mine')">Мои и общие</button>
+            <button class="filter-pill" data-task-filter="all" onclick="setTaskFilter('all')">Все</button>
+        </div>
+        <div id="tasks-list"></div>
+    </div>
 </div>
 
 <!-- Панель детали товара (десктоп, только вкладка «Каталог») -->
@@ -791,6 +868,7 @@
                     select.innerHTML = '<option value="">Выберите сотрудника</option>' + employeeOptionsHtml(null);
                 }
             });
+            fillTaskAssignees();
         } catch (e) { /* попробуем ещё раз при следующей загрузке страницы */ }
     }
 
@@ -986,17 +1064,19 @@
 
     // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
 
-    // Библиотека сканера (~350 КБ с unpkg) нужна ТОЛЬКО когда реально
-    // открывают камеру. Раньше она стояла обычным <script> в конце body и
-    // грузилась при каждом заходе на сайт, блокируя весь остальной код
-    // страницы до своего скачивания. Теперь подгружаем её по требованию.
+    // Библиотека сканера (~360 КБ) нужна ТОЛЬКО когда реально открывают
+    // камеру. Раньше она стояла обычным <script> в конце body и грузилась
+    // при каждом заходе на сайт, блокируя весь остальной код страницы до
+    // своего скачивания. Теперь подгружаем её по требованию — и не с
+    // чужого CDN (unpkg.com в России может быть недоступен, тогда сканер
+    // просто не работал бы), а из этой же папки, рядом с сайтом.
     let qrLibPromise = null;
     function loadQrScannerLib() {
         if (window.Html5Qrcode) return Promise.resolve();
         if (!qrLibPromise) {
             qrLibPromise = new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                script.src = 'html5-qrcode.min.js';
                 script.onload = resolve;
                 script.onerror = () => {
                     qrLibPromise = null; // дать шанс повторной попытке
@@ -2577,6 +2657,197 @@
         }
     }
 
+    // ── ЗАДАЧИ ────────────────────────────────────────────────────────
+    // Разовые задачи со сроком: день / неделя / месяц. Срок вычисляет сервер
+    // (конец выбранного периода). Ставить может любой вошедший сотрудник —
+    // себе, коллеге или общую, которая видна всем.
+    let TASKS = [];
+    let currentTaskPeriod = 'день';
+    let taskFilter = 'mine';
+
+    function taskSessionToken() {
+        return (window.CABINET_SESSION && window.CABINET_SESSION.token) || '';
+    }
+    function myEmployeeId() {
+        const s = window.CABINET_SESSION;
+        return (s && s.employee && s.employee.id) || null;
+    }
+
+    async function loadTasks() {
+        if (!taskSessionToken()) return;
+        try {
+            const data = await apiGet({ action: 'getTasks', sessionToken: taskSessionToken() });
+            if (data.error) throw new Error(data.error);
+            TASKS = data.tasks || [];
+        } catch (e) {
+            TASKS = [];
+        }
+        renderTasks();
+        renderHomeTasks();
+    }
+
+    // «Мои и общие» или «все» — в зависимости от фильтра.
+    function visibleTasks(period) {
+        const me = myEmployeeId();
+        return TASKS.filter(t => {
+            if (period && t.period !== period) return false;
+            if (taskFilter === 'all') return true;
+            return !t.assigneeId || String(t.assigneeId) === String(me);
+        });
+    }
+
+    function formatTaskDate(iso) {
+        if (!iso) return '—';
+        const parts = iso.split('-');
+        return parts.length === 3 ? parts[2] + '.' + parts[1] : iso;
+    }
+
+    function taskRowHtml(t) {
+        let cls = 'task-row';
+        if (t.done) cls += ' is-done';
+        else if (t.overdue) cls += ' is-overdue';
+
+        const who = t.assigneeName
+            ? '<span class="task-tag">' + escapeHtml(t.assigneeName) + '</span>'
+            : '<span class="task-tag common">Общая</span>';
+        const overdue = (t.overdue && !t.done) ? '<span class="task-tag overdue">Просрочена</span>' : '';
+        const doneBy = (t.done && t.doneByName) ? '<span class="task-tag">отметил: ' + escapeHtml(t.doneByName) + '</span>' : '';
+
+        return '<div class="' + cls + '">'
+            + '<button class="task-check' + (t.done ? ' checked' : '') + '" title="Отметить выполненной" '
+            +         'onclick="toggleTask(' + t.id + ',' + (t.done ? 'false' : 'true') + ')">' + svgIcon('check', 13) + '</button>'
+            + '<div class="task-body">'
+            +   '<div class="task-title">' + escapeHtml(t.title) + '</div>'
+            +   '<div class="task-meta">' + who + overdue + doneBy
+            +     '<span class="task-tag">до ' + formatTaskDate(t.dueDate) + '</span>'
+            +   '</div>'
+            + '</div>'
+            + '<button class="task-del" title="Удалить" onclick="removeTask(' + t.id + ')">' + svgIcon('trash', 15) + '</button>'
+            + '</div>';
+    }
+
+    function renderTasks() {
+        const box = document.getElementById('tasks-list');
+        if (!box) return;
+        const list = visibleTasks(currentTaskPeriod);
+        box.innerHTML = list.length
+            ? list.map(taskRowHtml).join('')
+            : '<div class="tasks-empty">Задач на этот срок пока нет</div>';
+    }
+
+    // На главной показываем только то, что горит: невыполненные задачи на
+    // день плюс всё просроченное независимо от периода. Чужие персональные
+    // задачи сюда не попадают — только свои и общие.
+    function renderHomeTasks() {
+        const box = document.getElementById('home-tasks-list');
+        if (!box) return;
+        const me = myEmployeeId();
+        const list = TASKS.filter(t => {
+            if (t.done) return false;
+            if (t.assigneeId && String(t.assigneeId) !== String(me)) return false;
+            return t.period === 'день' || t.overdue;
+        });
+        box.innerHTML = list.length
+            ? list.map(taskRowHtml).join('')
+            : '<div class="tasks-empty">На сегодня задач нет</div>';
+    }
+
+    function switchTaskPeriod(period) {
+        currentTaskPeriod = period;
+        document.querySelectorAll('[data-task-period]').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-task-period') === period);
+        });
+        renderTasks();
+    }
+
+    function setTaskFilter(filter) {
+        taskFilter = filter;
+        document.querySelectorAll('[data-task-filter]').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-task-filter') === filter);
+        });
+        renderTasks();
+    }
+
+    function fillTaskAssignees() {
+        const sel = document.getElementById('task-assignee');
+        if (!sel) return;
+        const me = myEmployeeId();
+        sel.innerHTML = '<option value="">Общая — для всех</option>'
+            + EMPLOYEES.map(e => {
+                const mine = String(e.id) === String(me);
+                return '<option value="' + e.id + '"' + (mine ? ' selected' : '') + '>'
+                    + escapeHtml(e.name) + (mine ? ' (я)' : '') + '</option>';
+            }).join('');
+    }
+
+    async function addTask() {
+        const input = document.getElementById('task-title');
+        const title = (input ? input.value : '').trim();
+        if (!title) {
+            showToast('Напишите, что нужно сделать', 'error');
+            return;
+        }
+        const btn = document.getElementById('add-task-btn');
+        if (btn) btn.disabled = true;
+        try {
+            const assigneeEl = document.getElementById('task-assignee');
+            const res = await apiPost({
+                action: 'createTask',
+                sessionToken: taskSessionToken(),
+                title: title,
+                period: currentTaskPeriod,
+                assigneeId: assigneeEl ? assigneeEl.value : ''
+            });
+            if (!res.success) throw new Error(res.message || 'Не удалось создать задачу');
+            if (input) input.value = '';
+            // Задача, поставленная коллеге, при фильтре «Мои и общие» была бы
+            // не видна — человек нажал «Добавить» и не понял, получилось ли.
+            // Переключаем на «Все», чтобы результат сразу оказался на экране.
+            const assigned = assigneeEl ? assigneeEl.value : '';
+            if (assigned && String(assigned) !== String(myEmployeeId()) && taskFilter !== 'all') {
+                setTaskFilter('all');
+            }
+            await loadTasks();
+            showToast('Задача добавлена');
+        } catch (e) {
+            showToast(e.message, 'error');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    async function toggleTask(id, done) {
+        try {
+            const res = await apiPost({
+                action: 'setTaskDone',
+                sessionToken: taskSessionToken(),
+                taskId: id,
+                done: done
+            });
+            if (!res.success) throw new Error(res.message || 'Не удалось изменить задачу');
+            await loadTasks();
+        } catch (e) {
+            showToast(e.message, 'error');
+        }
+    }
+
+    async function removeTask(id) {
+        const confirmed = await showConfirmDialog('Удалить задачу?');
+        if (!confirmed) return;
+        try {
+            const res = await apiPost({
+                action: 'deleteTask',
+                sessionToken: taskSessionToken(),
+                taskId: id
+            });
+            if (!res.success) throw new Error(res.message || 'Не удалось удалить задачу');
+            await loadTasks();
+            showToast('Задача удалена');
+        } catch (e) {
+            showToast(e.message, 'error');
+        }
+    }
+
     // Раньше это висело на window.onload, который срабатывает только после
     // загрузки ВСЕХ ресурсов страницы (шрифты Google, картинки и т.п.).
     // Из-за этого запрос за товарами уходил в самом конце — и ожидание
@@ -2590,8 +2861,16 @@
         updateModelsForCategory(currentCategory);
         loadEmployees();
         loadCatalog();
+        loadTasks();
         initTheme();
         initPullToRefresh();
+
+        const addTaskBtn = document.getElementById('add-task-btn');
+        if (addTaskBtn) addTaskBtn.onclick = addTask;
+        const taskInput = document.getElementById('task-title');
+        if (taskInput) taskInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); addTask(); }
+        });
         const homeDateEl = document.getElementById('home-date');
         if (homeDateEl) homeDateEl.textContent = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
         renderRecentScans('home-recent-scans');
