@@ -1,6 +1,6 @@
 {
-  "name": "QR Сканер",
-  "short_name": "QR Scanner",
+  "name": "Лаба",
+  "short_name": "Лаба",
   "description": "Система учета с QR-сканированием",
   "start_url": "./",
   "scope": "./",
