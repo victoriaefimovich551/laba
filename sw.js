@@ -1,10 +1,10 @@
 // ========== SERVICE WORKER ДЛЯ ОФЛАЙН-РЕЖИМА ==========
-const CACHE_NAME = 'qr-scanner-v5';
+const CACHE_NAME = 'qr-scanner-v6';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'
+  './html5-qrcode.min.js'
 ];
 
 // Установка Service Worker — кэшируем файлы
