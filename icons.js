@@ -24,7 +24,9 @@ const ICON_PATHS = {
     arrowLeft: '<path d="M19 12H6M11 6.6 5.6 12 11 17.4"></path>',
     dot:      '<circle cx="12" cy="12" r="6.4" fill="currentColor" stroke="none"></circle>',
     truck:    '<path d="M3 16V6.8a1 1 0 0 1 1-1h9.4a1 1 0 0 1 1 1V16"></path><path d="M14.4 10.4h3.1l3 3.1V16h-2.1"></path><path d="M3 16h1.3M10.6 16h2.6"></path><circle cx="7" cy="17.6" r="1.8"></circle><circle cx="16.6" cy="17.6" r="1.8"></circle>',
-    checkCircle: '<circle cx="12" cy="12" r="8.2"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path>'
+    checkCircle: '<circle cx="12" cy="12" r="8.2"></circle><path d="m8.2 12.3 2.6 2.6 5-5.4"></path>',
+    tasks:    '<path d="M10 6.6h10M10 12h10M10 17.4h10"></path><path d="m3.4 6.4 1.3 1.3 2.3-2.5M3.4 11.8l1.3 1.3 2.3-2.5M3.4 17.2l1.3 1.3 2.3-2.5"></path>',
+    check:    '<path d="m5.5 12.5 4 4 9-9"></path>'
 };
 
 function svgIcon(name, size, extraAttrs) {
