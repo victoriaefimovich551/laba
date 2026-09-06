@@ -1,5 +1,5 @@
 // ========== SERVICE WORKER ДЛЯ ОФЛАЙН-РЕЖИМА ==========
-const CACHE_NAME = 'qr-scanner-v6';
+const CACHE_NAME = 'qr-scanner-v7';
 const urlsToCache = [
   './',
   './index.html',
@@ -99,5 +99,23 @@ self.addEventListener('fetch', event => {
           statusText: 'Service Unavailable'
         });
       })
+  );
+});
+
+// Клик по уведомлению о новой задаче: открываем уже запущенное окно
+// приложения на вкладке «Задачи», а не плодим новые вкладки.
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const target = './index.html?tab=tasks';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes('index.html') && 'focus' in client) {
+          client.postMessage({ type: 'open-tasks' });
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
   );
 });
