@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -250,6 +251,41 @@
         .task-del { flex: none; background: none; border: none; color: var(--tx2); cursor: pointer; padding: 2px; opacity: .55; }
         .task-del:hover { opacity: 1; color: var(--st-danger); }
         .tasks-empty { text-align: center; color: var(--tx2); font: 500 12.5px var(--f-head); padding: 18px 0; }
+
+        /* ── Уведомления о новых задачах ── */
+        /* Счётчик непрочитанных задач на кнопке «Задачи» — и в нижней панели,
+           и в боковой на десктопе. */
+        .nav-badge {
+            position: absolute; top: 3px; left: 50%; margin-left: 4px;
+            min-width: 16px; height: 16px; padding: 0 4px;
+            border-radius: 999px; box-sizing: border-box;
+            background: var(--g-pri); color: var(--g-pri-tx);
+            font: 700 10px/16px var(--f-head); text-align: center;
+            pointer-events: none;
+        }
+        .nav-item { position: relative; }
+        .sidebar-btn { position: relative; }
+        .sb-badge {
+            margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px;
+            border-radius: 999px; box-sizing: border-box;
+            background: var(--g-pri); color: var(--g-pri-tx);
+            font: 700 10.5px/18px var(--f-head); text-align: center;
+        }
+        /* Строка настройки уведомлений над формой задачи. */
+        .notif-bar {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--gs4); border: 1px solid var(--gbd2);
+            border-radius: 16px; padding: 10px 12px; margin-top: 14px;
+        }
+        .notif-bar-text { flex: 1; min-width: 0; font: 600 11.5px/1.4 var(--f-head); color: var(--tx2); }
+        .notif-btn {
+            flex: none; border: 1px solid var(--gbd); background: var(--gs2);
+            color: var(--tx); border-radius: 999px; padding: 7px 12px;
+            font: 700 11.5px var(--f-head); cursor: pointer;
+            transition: border-color .3s;
+        }
+        .notif-btn:hover { border-color: var(--g-sel); }
+        .notif-btn.on { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
 
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-top: 14px; }
         .quick-action {
@@ -568,7 +604,7 @@
                 <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8.4" width="14" height="7.6" rx="1.8"></rect><path d="M7.4 8.4V6a1.6 1.6 0 0 1 1.6-1.6h6a1.6 1.6 0 0 1 1.6 1.6v2.4"></path><rect x="8.2" y="12.8" width="7.6" height="5.8" rx="1"></rect></svg></span> Наклейки
             </button>
             <button class="sidebar-btn" id="sb-nav-tasks" onclick="switchTab('tasks'); setSbNav(this)">
-                <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6.6h10M10 12h10M10 17.4h10"></path><path d="m3.4 6.4 1.3 1.3 2.3-2.5M3.4 11.8l1.3 1.3 2.3-2.5M3.4 17.2l1.3 1.3 2.3-2.5"></path></svg></span> Задачи
+                <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6.6h10M10 12h10M10 17.4h10"></path><path d="m3.4 6.4 1.3 1.3 2.3-2.5M3.4 11.8l1.3 1.3 2.3-2.5M3.4 17.2l1.3 1.3 2.3-2.5"></path></svg></span> Задачи<span class="sb-badge" id="sb-tasks-badge" hidden></span>
             </button>
             <a class="sidebar-btn" id="sb-nav-analytics" href="analytics.html">
                 <span class="sb-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"></path><path d="m6.5 14.5 3.8-4.4 3 2.8 4.4-5.6"></path></svg></span> Аналитика
@@ -810,6 +846,12 @@
         <div class="page-title">Задачи</div>
         <div class="page-sub">Что нужно успеть — себе, коллеге или всей команде.</div>
 
+        <div class="notif-bar" id="notif-bar" hidden>
+            <span class="notif-bar-text" id="notif-bar-text">Уведомлять о новых задачах</span>
+            <button type="button" class="notif-btn" id="notif-permission-btn" onclick="enableTaskNotifications()" hidden>Включить</button>
+            <button type="button" class="notif-btn" id="notif-sound-btn" onclick="toggleTaskSound()" title="Звук уведомления">Звук</button>
+        </div>
+
         <div class="pill-switch" style="margin-top:16px;">
             <button type="button" class="pill-switch-btn active" data-task-period="день" onclick="switchTaskPeriod('день')">День</button>
             <button type="button" class="pill-switch-btn" data-task-period="неделя" onclick="switchTaskPeriod('неделя')">Неделя</button>
@@ -847,6 +889,7 @@
     <button class="nav-item" id="nav-tasks" onclick="switchTab('tasks', null, this)">
         <span class="nav-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6.6h10M10 12h10M10 17.4h10"></path><path d="m3.4 6.4 1.3 1.3 2.3-2.5M3.4 11.8l1.3 1.3 2.3-2.5M3.4 17.2l1.3 1.3 2.3-2.5"></path></svg></span>
         <span class="nav-label">Задачи</span>
+        <span class="nav-badge" id="nav-tasks-badge" hidden></span>
     </button>
     <button class="nav-item" id="nav-scan" onclick="switchTab('scan', null, this)">
         <span class="nav-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.6V5.8A1.8 1.8 0 0 1 5.8 4h2.8M15.4 4h2.8A1.8 1.8 0 0 1 20 5.8v2.8M20 15.4v2.8a1.8 1.8 0 0 1-1.8 1.8h-2.8M8.6 20H5.8A1.8 1.8 0 0 1 4 18.2v-2.8"></path><path d="M4.6 12h14.8"></path></svg></span>
@@ -1075,6 +1118,8 @@
         if (navigationStack[navigationStack.length - 1] !== tab) {
             navigationStack.push(tab);
         }
+
+        if (tab === 'tasks') { clearTaskBadge(); renderNotifBar(); }
 
         if (tab === 'catalog') loadCatalog();
         else if (printSelectMode) {
@@ -2659,6 +2704,8 @@
             if (serialInput) serialInput.value = sku;
             searchBySerial();
         }
+        // Клик по уведомлению о задаче открывает приложение с ?tab=tasks.
+        if (urlParams.get('tab') === 'tasks') switchTab('tasks');
     }
 
     // ========== ОБРАБОТЧИКИ ==========
@@ -2735,6 +2782,243 @@
     let currentTaskPeriod = 'день';
     let taskFilter = 'mine';
 
+    // ========== УВЕДОМЛЕНИЯ О НОВЫХ ЗАДАЧАХ ==========
+    //
+    // Отдельного канала на сервере нет и не нужно: getTasks и так отдаёт все
+    // задачи с их id, поэтому «новое» вычисляем на клиенте — запоминаем
+    // наибольший id, который сотрудник уже видел, и всё, что больше, считаем новым.
+    //
+    // Что показываем: всплывающую подсказку в приложении, системное
+    // уведомление (если разрешено) и короткий звук. Плюс счётчик на кнопке
+    // «Задачи», который гаснет, когда человек открыл вкладку.
+    const TASK_POLL_MS = 60000;
+    let taskPollTimer = null;
+    let unseenTaskIds = [];
+
+    function seenKey() {
+        // Ключ свой у каждого сотрудника: на общем компьютере уведомления
+        // одного не должны «съедаться» другим.
+        return 'labaSeenTaskId_' + (myEmployeeId() || 'anon');
+    }
+    function unseenKey() {
+        return 'labaUnseenTasks_' + (myEmployeeId() || 'anon');
+    }
+    // Счётчик переживает перезагрузку страницы: иначе сотрудник, который
+    // закрыл и снова открыл приложение, потерял бы отметку о задаче,
+    // уведомление о которой уже показывалось и больше не повторится.
+    function loadUnseen() {
+        try {
+            const raw = JSON.parse(localStorage.getItem(unseenKey()) || '[]');
+            unseenTaskIds = Array.isArray(raw) ? raw : [];
+        } catch (e) { unseenTaskIds = []; }
+    }
+    function saveUnseen() {
+        try { localStorage.setItem(unseenKey(), JSON.stringify(unseenTaskIds)); } catch (e) {}
+    }
+    function getLastSeenTaskId() {
+        try { return Number(localStorage.getItem(seenKey()) || 0) || 0; } catch (e) { return 0; }
+    }
+    function setLastSeenTaskId(id) {
+        try { localStorage.setItem(seenKey(), String(id)); } catch (e) {}
+    }
+
+    // Задача касается сотрудника, если она общая или назначена ему. Задачи,
+    // которые он сам и поставил, не уведомляют — он о них и так знает.
+    function isTaskForMe(t) {
+        const me = myEmployeeId();
+        if (t.done) return false;
+        if (String(t.createdBy) === String(me)) return false;
+        return !t.assigneeId || String(t.assigneeId) === String(me);
+    }
+
+    // ── Звук ──
+    // Отдельный файл не нужен: короткий двухнотный сигнал синтезируем через
+    // WebAudio. Браузеры не дают играть звук до первого касания экрана,
+    // поэтому контекст «разблокируем» на первом же действии пользователя.
+    let audioCtx = null;
+    function unlockAudio() {
+        if (audioCtx) return;
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        try {
+            audioCtx = new Ctx();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        } catch (e) { audioCtx = null; }
+    }
+    function taskSoundEnabled() {
+        try { return localStorage.getItem('labaTaskSound') !== 'off'; } catch (e) { return true; }
+    }
+    function playTaskChime() {
+        if (!taskSoundEnabled() || !audioCtx) return;
+        try {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            [[880, 0], [1174.7, 0.13]].forEach(function (pair) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = pair[0];
+                // Плавное нарастание и затухание — без него слышен щелчок.
+                gain.gain.setValueAtTime(0, now + pair[1]);
+                gain.gain.linearRampToValueAtTime(0.16, now + pair[1] + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + pair[1] + 0.32);
+                osc.connect(gain).connect(audioCtx.destination);
+                osc.start(now + pair[1]);
+                osc.stop(now + pair[1] + 0.34);
+            });
+        } catch (e) {}
+    }
+    function toggleTaskSound() {
+        const on = !taskSoundEnabled();
+        try { localStorage.setItem('labaTaskSound', on ? 'on' : 'off'); } catch (e) {}
+        renderNotifBar();
+        if (on) { unlockAudio(); playTaskChime(); }
+    }
+
+    // ── Системные уведомления ──
+    // В обычной вкладке Safari на iPhone объекта Notification нет вовсе:
+    // Apple включает его только для приложения, добавленного на экран
+    // «Домой». Поэтому кнопку показываем лишь там, где API существует.
+    function notificationsSupported() {
+        return typeof window.Notification !== 'undefined';
+    }
+    async function enableTaskNotifications() {
+        if (!notificationsSupported()) return;
+        try {
+            const res = await Notification.requestPermission();
+            if (res === 'granted') showToast('Уведомления включены');
+            else if (res === 'denied') showToast('Уведомления запрещены в настройках браузера', 'error');
+        } catch (e) {}
+        renderNotifBar();
+    }
+    function showSystemNotification(count, firstTitle) {
+        if (!notificationsSupported() || Notification.permission !== 'granted') return;
+        const title = count === 1 ? 'Новая задача' : 'Новых задач: ' + count;
+        const body = count === 1 ? firstTitle : firstTitle + ' и ещё ' + (count - 1);
+        // Через service worker уведомление показывается и когда вкладка
+        // свёрнута; new Notification() в этом случае во многих браузерах
+        // просто игнорируется.
+        if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+            navigator.serviceWorker.ready.then(function (reg) {
+                reg.showNotification(title, {
+                    body: body,
+                    icon: 'icon-192.png',
+                    badge: 'icon-192.png',
+                    tag: 'laba-tasks',       // новые уведомления заменяют старое, а не копятся
+                    renotify: true
+                });
+            }).catch(function () {});
+        }
+    }
+
+    // ── Счётчик на кнопке «Задачи» ──
+    function renderTaskBadge() {
+        const n = unseenTaskIds.length;
+        [['nav-tasks-badge', 99], ['sb-tasks-badge', 99]].forEach(function (pair) {
+            const el = document.getElementById(pair[0]);
+            if (!el) return;
+            el.textContent = n > pair[1] ? pair[1] + '+' : String(n);
+            el.hidden = n === 0;
+        });
+    }
+
+    function renderNotifBar() {
+        const bar = document.getElementById('notif-bar');
+        if (!bar) return;
+        bar.hidden = false;
+        const btn = document.getElementById('notif-permission-btn');
+        const soundBtn = document.getElementById('notif-sound-btn');
+        const text = document.getElementById('notif-bar-text');
+
+        if (soundBtn) {
+            const on = taskSoundEnabled();
+            soundBtn.classList.toggle('on', on);
+            soundBtn.textContent = on ? 'Звук вкл.' : 'Звук выкл.';
+        }
+        if (!btn || !text) return;
+
+        if (!notificationsSupported()) {
+            btn.hidden = true;
+            text.textContent = 'Новые задачи подсвечиваются в приложении. Чтобы они приходили как обычные уведомления телефона, добавьте «Лабу» на экран «Домой».';
+            return;
+        }
+        if (Notification.permission === 'granted') {
+            btn.hidden = true;
+            text.textContent = 'Уведомления о новых задачах включены.';
+        } else if (Notification.permission === 'denied') {
+            btn.hidden = true;
+            text.textContent = 'Уведомления запрещены в настройках браузера — включить можно только там.';
+        } else {
+            btn.hidden = false;
+            text.textContent = 'Уведомлять о новых задачах';
+        }
+    }
+
+    // Главное: сравнить пришедший список с тем, что человек уже видел.
+    function detectNewTasks() {
+        const lastSeen = getLastSeenTaskId();
+        const mine = TASKS.filter(isTaskForMe);
+        const maxId = TASKS.reduce(function (m, t) { return Math.max(m, Number(t.id) || 0); }, 0);
+
+        // Первый запуск: ничего не показываем, иначе сотрудник при первом
+        // входе получил бы уведомление обо всех задачах разом. Просто
+        // запоминаем текущее состояние как «уже видел».
+        if (!lastSeen) {
+            setLastSeenTaskId(maxId);
+            unseenTaskIds = [];
+            saveUnseen();
+            renderTaskBadge();
+            return;
+        }
+
+        const fresh = mine.filter(function (t) { return Number(t.id) > lastSeen; });
+        if (fresh.length) {
+            fresh.forEach(function (t) {
+                if (unseenTaskIds.indexOf(t.id) === -1) unseenTaskIds.push(t.id);
+            });
+            playTaskChime();
+            showSystemNotification(fresh.length, fresh[0].title);
+            showToast(fresh.length === 1
+                ? 'Новая задача: ' + fresh[0].title
+                : 'Новых задач: ' + fresh.length, 'task', 6000);
+        }
+        // Из счётчика убираем то, что уже выполнено или удалено, — иначе он
+        // будет висеть с числом, которому в списке ничего не соответствует.
+        const liveIds = TASKS.filter(isTaskForMe).map(function (t) { return t.id; });
+        unseenTaskIds = unseenTaskIds.filter(function (id) { return liveIds.indexOf(id) !== -1; });
+
+        // Отметку «видел» двигаем всегда: иначе одна и та же задача будет
+        // уведомлять при каждом опросе.
+        if (maxId > lastSeen) setLastSeenTaskId(maxId);
+        saveUnseen();
+        renderTaskBadge();
+    }
+
+    // Открыли вкладку «Задачи» — счётчик гаснет.
+    function clearTaskBadge() {
+        if (!unseenTaskIds.length) return;
+        unseenTaskIds = [];
+        saveUnseen();
+        renderTaskBadge();
+    }
+
+    function startTaskWatcher() {
+        if (taskPollTimer) clearInterval(taskPollTimer);
+        taskPollTimer = setInterval(function () {
+            if (taskSessionToken()) loadTasks();
+        }, TASK_POLL_MS);
+
+        // Вернулись в приложение — проверяем сразу, не дожидаясь минуты.
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && taskSessionToken()) loadTasks();
+        });
+
+        // Первое касание экрана разблокирует звук.
+        ['pointerdown', 'keydown'].forEach(function (ev) {
+            window.addEventListener(ev, unlockAudio, { once: true });
+        });
+    }
+
     function taskSessionToken() {
         return (window.CABINET_SESSION && window.CABINET_SESSION.token) || '';
     }
@@ -2754,6 +3038,7 @@
         }
         renderTasks();
         renderHomeTasks();
+        detectNewTasks();
     }
 
     // «Мои и общие» или «все» — в зависимости от фильтра.
@@ -2931,7 +3216,11 @@
         updateModelsForCategory(currentCategory);
         loadEmployees();
         loadCatalog();
+        loadUnseen();
+        renderTaskBadge();
         loadTasks();
+        startTaskWatcher();
+        renderNotifBar();
         initTheme();
         initPullToRefresh();
 
@@ -3016,6 +3305,14 @@
         // берёт управление на себя (controllerchange), перезагружаем
         // страницу один раз сами — дальше пользователю ничего вручную
         // обновлять не нужно.
+        // Клик по уведомлению в уже открытом окне: service worker просит
+        // показать вкладку «Задачи».
+        navigator.serviceWorker.addEventListener('message', event => {
+            if (event.data && event.data.type === 'open-tasks' && typeof switchTab === 'function') {
+                switchTab('tasks');
+            }
+        });
+
         let swRefreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (swRefreshing) return;
