@@ -1,5 +1,5 @@
 // ========== SERVICE WORKER ДЛЯ ОФЛАЙН-РЕЖИМА ==========
-const CACHE_NAME = 'qr-scanner-v7';
+const CACHE_NAME = 'qr-scanner-v8';
 const urlsToCache = [
   './',
   './index.html',
@@ -102,11 +102,30 @@ self.addEventListener('fetch', event => {
   );
 });
 
+// Пуш от сервера: показываем уведомление даже когда приложение закрыто.
+// Показать что-то видимое здесь обязательно — браузеры отзывают разрешение
+// у сайтов, которые получают пуши молча.
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) { data = {}; }
+  const title = data.title || 'Лаба';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || 'Новая задача',
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
+      tag: data.tag || 'laba-tasks',
+      renotify: true,
+      data: { url: data.url || './index.html?tab=tasks' }
+    })
+  );
+});
+
 // Клик по уведомлению о новой задаче: открываем уже запущенное окно
 // приложения на вкладке «Задачи», а не плодим новые вкладки.
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const target = './index.html?tab=tasks';
+  const target = (event.notification.data && event.notification.data.url) || './index.html?tab=tasks';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const client of list) {
