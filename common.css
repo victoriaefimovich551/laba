@@ -342,6 +342,7 @@ html.theme-repaint, html.theme-repaint * {
 .toast-error   { background: #f87171; color: #2b0b0b; }
 .toast-info    { background: #60a5fa; color: #0b1a2b; }
 .toast-warning { background: #fbbf24; color: #2b1f0b; }
+.toast-task    { background: var(--g-pri); color: var(--g-pri-tx); }
 
 /* ── Заголовок раздела (Сканер / Поиск / Каталог / ...) ── */
 .page-title { font: 600 26px/1.1 var(--f-head); letter-spacing: -.02em; color: var(--tx); }
