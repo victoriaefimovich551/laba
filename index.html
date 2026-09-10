@@ -3185,8 +3185,20 @@
         const sel = document.getElementById('task-assignee');
         if (!sel) return;
         const me = myEmployeeId();
+        const session = window.CABINET_SESSION && window.CABINET_SESSION.employee;
+
+        // Тестировщика в общем списке сотрудников нет — его туда намеренно не
+        // отдаёт сервер. Но себе самому задачу он ставить должен, иначе у него
+        // остаётся только вариант «общая», и тестовые задачи посыпались бы
+        // всей команде. Поэтому добавляем текущего пользователя, если его в
+        // списке не оказалось.
+        const list = EMPLOYEES.slice();
+        if (session && me && !list.some(e => String(e.id) === String(me))) {
+            list.unshift({ id: me, name: session.name || 'Я' });
+        }
+
         sel.innerHTML = '<option value="">Общая — для всех</option>'
-            + EMPLOYEES.map(e => {
+            + list.map(e => {
                 const mine = String(e.id) === String(me);
                 return '<option value="' + e.id + '"' + (mine ? ' selected' : '') + '>'
                     + escapeHtml(e.name) + (mine ? ' (я)' : '') + '</option>';
