@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="theme-color" content="#101215">
     <link rel="manifest" href="manifest.json">
+    <!-- Открытие с экрана «Домой» в режиме приложения: без панелей Safari.
+         iOS до 17 не читает display из manifest.json, ей нужен именно этот тег. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Лаба">
     <link rel="icon" type="image/png" href="favicon-64.png">
     <link rel="apple-touch-icon" href="apple-touch-icon-180.png">
     <title>Лаба</title>
@@ -76,6 +81,14 @@
         .category-btn.active { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
 
         .install-banner { background: var(--gs2); backdrop-filter: var(--g-blur-sm); -webkit-backdrop-filter: var(--g-blur-sm); border: 1px solid var(--gbd); box-shadow: var(--gin); color: var(--tx); padding: 12px; border-radius: 16px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
+
+        .ios-install-row { display: flex; align-items: flex-start; gap: 10px; }
+        .ios-install-text { flex: 1; font: 500 12px/1.5 var(--f-head); color: var(--tx2); text-align: left; }
+        .ios-install-text b { color: var(--tx); font-weight: 700; }
+        .ios-install-close {
+            flex: none; background: none; border: none; cursor: pointer;
+            color: var(--tx2); padding: 2px; line-height: 0;
+        }
 
         .panel { display: none; }
         .panel.active { display: block; }
@@ -646,6 +659,12 @@
     </div>
 
     <div id="install-banner" class="install-banner">
+        <div id="ios-install" style="display: none;">
+            <div class="ios-install-row">
+                <span class="ios-install-text">Чтобы «Лаба» открывалась как приложение — во весь экран и с уведомлениями — нажмите <b>Поделиться</b> внизу Safari и выберите <b>«На экран “Домой”»</b>.</span>
+                <button class="ios-install-close" onclick="dismissIosInstall()" title="Скрыть"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+            </div>
+        </div>
         <div id="android-install" style="display: none;"><button id="install-btn" class="btn-dark btn-block"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x='3' y='5' width='18' height='14' rx='2.2'></rect><path d='M8 9h8M8 13h5'></path></svg> Установить</button></div>
     </div>
 
@@ -1018,6 +1037,32 @@
     }
 
     // PWA
+    // На iPhone подсказку показываем только пока приложение НЕ добавлено на
+    // экран «Домой»: в режиме приложения navigator.standalone === true.
+    // iPad с iPadOS представляется маком, поэтому проверяем ещё и касания.
+    function isIosDevice() {
+        const ua = navigator.userAgent;
+        if (/iPhone|iPad|iPod/.test(ua)) return true;
+        return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+    }
+    function isStandalone() {
+        return window.navigator.standalone === true
+            || window.matchMedia('(display-mode: standalone)').matches;
+    }
+    function dismissIosInstall() {
+        try { localStorage.setItem('labaIosInstallHidden', '1'); } catch (e) {}
+        const banner = document.getElementById('install-banner');
+        const box = document.getElementById('ios-install');
+        if (box) box.style.display = 'none';
+        if (banner) banner.style.display = 'none';
+    }
+    let iosHintHidden = false;
+    try { iosHintHidden = localStorage.getItem('labaIosInstallHidden') === '1'; } catch (e) {}
+    if (isIosDevice() && !isStandalone() && !iosHintHidden) {
+        document.getElementById('ios-install').style.display = 'block';
+        document.getElementById('install-banner').style.display = 'block';
+    }
+
     const isAndroid = /Android/.test(navigator.userAgent);
     if (isAndroid) {
         document.getElementById('android-install').style.display = 'block';
@@ -3148,17 +3193,35 @@
             : '<div class="tasks-empty">Задач на этот срок пока нет</div>';
     }
 
-    // На главной показываем только то, что горит: невыполненные задачи на
-    // день плюс всё просроченное независимо от периода. Чужие персональные
-    // задачи сюда не попадают — только свои и общие.
+    // Сегодняшняя дата в том же виде, в каком срок приходит с сервера
+    // (YYYY-MM-DD), — тогда даты можно сравнивать как строки.
+    function todayIso() {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    // На главной показываем всё незакрытое, чему срок уже настал: дата
+    // «сегодня или раньше». Просроченные задачи так и висят здесь, пока их
+    // не отметят сделанными.
+    //
+    // Раньше правило было «задача на день ИЛИ просроченная», и из-за этого
+    // недельная или месячная задача в свой последний день на главную не
+    // попадала: она ещё не просрочена, но и не «на день» — появлялась только
+    // назавтра, уже красной.
+    //
+    // Чужие персональные задачи сюда по-прежнему не попадают — только свои
+    // и общие.
     function renderHomeTasks() {
         const box = document.getElementById('home-tasks-list');
         if (!box) return;
         const me = myEmployeeId();
+        const today = todayIso();
         const list = TASKS.filter(t => {
             if (t.done) return false;
             if (t.assigneeId && String(t.assigneeId) !== String(me)) return false;
-            return t.period === 'день' || t.overdue;
+            // t.overdue — запас на случай, если срок почему-то не пришёл.
+            return (t.dueDate && t.dueDate <= today) || t.overdue;
         });
         box.innerHTML = list.length
             ? list.map(taskRowHtml).join('')
