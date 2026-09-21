@@ -11,11 +11,38 @@
 const GOOGLE_SCRIPT_URL = 'https://api.mylaba.com';
 const APP_TOKEN = 'kUsqq5tD9pQ5j-wUtlKOlyQiT4snxeKA0kUC8cSQO-c';
 
+// Токен личной сессии сотрудника (появляется после входа в кабинет).
+//
+// APP_TOKEN лежит в этом файле открытым текстом и виден любому, кто откроет
+// исходный код страницы, — то есть защитой он не является. Настоящая
+// проверка «кто ты» — вот этот токен сессии: он выдаётся сервером только
+// после ввода email и пароля, живёт в localStorage конкретного устройства и
+// в исходном коде сайта его нет.
+//
+// Подставляем его автоматически ко ВСЕМ запросам, а не по одному на каждом
+// вызове: так ни один существующий или будущий запрос не окажется случайно
+// без проверки. Запросы, которым сессия не нужна (вход, восстановление
+// пароля), сервер разбирает до всякой проверки — лишний параметр им не мешает.
+function currentSessionToken() {
+    try {
+        const raw = localStorage.getItem('cabinetSession');
+        const s = raw ? JSON.parse(raw) : null;
+        return (s && s.token) || '';
+    } catch (e) {
+        return '';
+    }
+}
+
 // Строит URL для чтения (GET) с автоматически добавленным токеном.
 // params — обычный объект { action: 'getAll', category: 'Дроны', ... }
 function apiUrl(params) {
     const usp = new URLSearchParams(params || {});
     usp.set('token', APP_TOKEN);
+    // Явно переданный sessionToken не трогаем — он уже в params.
+    if (!usp.get('sessionToken')) {
+        const st = currentSessionToken();
+        if (st) usp.set('sessionToken', st);
+    }
     return GOOGLE_SCRIPT_URL + '?' + usp.toString();
 }
 
@@ -64,9 +91,15 @@ function apiPost(payload) {
         }
     }, 4000);
 
+    const body = Object.assign({}, payload, { token: APP_TOKEN });
+    if (!body.sessionToken) {
+        const st = currentSessionToken();
+        if (st) body.sessionToken = st;
+    }
+
     return fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify(Object.assign({}, payload, { token: APP_TOKEN })),
+        body: JSON.stringify(body),
         signal: controller.signal
     }).then(function (r) {
         clearTimeout(wakeupTimer);
