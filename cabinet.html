@@ -510,8 +510,25 @@ async function init() {
 
   document.getElementById('cab-subtitle').textContent = 'Вход';
   try {
-    const data = await apiGet({ action: 'getEmployees' });
-    if (!data.employees || !data.employees.length) {
+    // Спрашиваем только «есть ли вообще хоть один аккаунт» — этот вопрос
+    // задаётся ДО входа, поэтому полный список сотрудников с именами и
+    // почтами здесь отдавать нельзя. Сам список (getEmployees) теперь
+    // доступен только после входа.
+    //
+    // Пока на сервер не выложен новый код, действия hasEmployees там нет.
+    // Чтобы сайт можно было обновить раньше сервера и ничего при этом не
+    // сломать, в таком случае откатываемся на старый способ. Иначе
+    // непонятный ответ старого сервера показал бы экран «Первый аккаунт»
+    // всем подряд.
+    let hasAny;
+    const data = await apiGet({ action: 'hasEmployees' });
+    if (typeof data.hasAny === 'boolean') {
+      hasAny = data.hasAny;
+    } else {
+      const legacy = await apiGet({ action: 'getEmployees' });
+      hasAny = !!(legacy.employees && legacy.employees.length);
+    }
+    if (!hasAny) {
       document.getElementById('setup-box').style.display = 'block';
       return;
     }
