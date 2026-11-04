@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Лаба — восстановление данных</title>
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+<style>
+  /* Намеренно НЕ подключаем auth-guard.js: сервер лежит, войти нельзя,
+     а страница должна открываться у любого сотрудника. Сеть ей не нужна —
+     всё берётся из памяти самого браузера. */
+  body { padding: 18px 16px 40px; }
+  .r-wrap { max-width: 640px; margin: 0 auto; }
+  .r-title { font: 800 26px/1.15 var(--f-head); letter-spacing: -.02em; margin: 6px 0 8px; }
+  .r-lead { font: 500 13.5px/1.55 var(--f-head); color: var(--tx2); margin-bottom: 20px; }
+  .r-card { background: var(--gs2); border: 1px solid var(--gbd); border-radius: 20px; padding: 16px; margin-bottom: 14px; }
+  .r-found { font: 700 15px var(--f-head); margin-bottom: 10px; }
+  .r-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+           padding: 9px 0; border-bottom: 1px solid var(--gbd3); }
+  .r-row:last-child { border-bottom: none; }
+  .r-cat { font: 700 14px var(--f-head); }
+  .r-meta { font: 500 11.5px var(--f-head); color: var(--tx2); }
+  .r-count { font: 500 17px var(--f-mono); letter-spacing: -.03em; }
+  .r-empty { text-align: center; color: var(--tx2); font: 600 13px var(--f-head); padding: 22px 6px; line-height: 1.5; }
+  .r-btns { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; }
+  .r-note { font: 500 11.5px/1.5 var(--f-head); color: var(--tx2); margin-top: 14px; }
+  .r-out { width: 100%; height: 190px; margin-top: 12px; border-radius: 14px; padding: 10px;
+           border: 1px solid var(--gbd); background: var(--gs4); color: var(--tx);
+           font: 400 10.5px/1.4 var(--f-mono); resize: vertical; }
+  /* Предупреждение важное — цвет текста задаём явно, а не наследуем:
+     на светлой подложке var(--tx) оказывался почти нечитаемым. */
+  .r-warn { background: color-mix(in srgb, var(--st-danger) 14%, transparent);
+            border: 1px solid color-mix(in srgb, var(--st-danger) 45%, transparent);
+            border-radius: 16px; padding: 13px 15px; margin-bottom: 16px;
+            font: 700 13px/1.5 var(--f-head); color: var(--st-danger); }
+  .r-ok { color: var(--g-acc); }
+</style>
+</head>
+<body>
+<div class="r-wrap">
+  <div class="r-title">Восстановление данных</div>
+  <div class="r-lead">
+    Эта страница собирает копию каталога, которая сохранилась в памяти этого
+    телефона или компьютера. Интернет и сервер ей не нужны.
+  </div>
+
+  <div class="r-warn">
+    Ничего не удаляйте и не очищайте в браузере, пока файл не сохранён.
+  </div>
+
+  <div class="r-card">
+    <div class="r-found">Что нашлось на этом устройстве</div>
+    <div id="r-list"></div>
+  </div>
+
+  <div id="r-actions" style="display:none;">
+    <div class="r-btns">
+      <button class="btn-lime btn-block" id="r-xlsx">Сохранить файл Excel</button>
+      <button class="btn-ghost btn-block" id="r-share" style="display:none;">Отправить файл (почта, Telegram…)</button>
+      <button class="btn-ghost btn-block" id="r-text">Показать текстом — скопировать вручную</button>
+    </div>
+    <div class="r-note">
+      Если кнопка «Сохранить» на айфоне ничего не делает — нажмите «Отправить файл»
+      и выберите почту или Telegram. Крайний вариант — «Показать текстом»:
+      выделить всё, скопировать и прислать сообщением.
+    </div>
+    <textarea class="r-out" id="r-area" style="display:none;" readonly></textarea>
+  </div>
+</div>
+
+<script src="xlsx.full.min.js"></script>
+<script>
+(function () {
+    // Собираем всё, что приложение сохраняло локально: кэш каталога по
+    // категориям и историю сканирований. Имена полей не фиксируем —
+    // берём те, что реально лежат в данных, чтобы ничего не потерять.
+    var snapshots = [];
+    var scans = [];
+
+    for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.indexOf('cachedProducts_') === 0) {
+            try {
+                var raw = JSON.parse(localStorage.getItem(key));
+                var items = Array.isArray(raw) ? raw : (raw && raw.products) || [];
+                if (items.length) {
+                    snapshots.push({
+                        category: (raw && raw.category) || key.replace('cachedProducts_', ''),
+                        timestamp: (raw && raw.timestamp) || null,
+                        products: items
+                    });
+                }
+            } catch (e) { /* повреждённую запись просто пропускаем */ }
+        }
+    }
+    try { scans = JSON.parse(localStorage.getItem('recentScans') || '[]'); } catch (e) { scans = []; }
+
+    function when(ts) {
+        if (!ts) return 'дата неизвестна';
+        var d = new Date(ts);
+        return 'снимок от ' + d.toLocaleDateString('ru-RU') + ', ' +
+               d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    var list = document.getElementById('r-list');
+    var total = snapshots.reduce(function (n, s) { return n + s.products.length; }, 0);
+
+    if (!total && !scans.length) {
+        list.innerHTML = '<div class="r-empty">На этом устройстве копии каталога нет.<br>' +
+            'Попробуйте на другом телефоне — у того, кто чаще открывал каталог.</div>';
+        return;
+    }
+
+    var html = '';
+    snapshots.forEach(function (s) {
+        html += '<div class="r-row"><div><div class="r-cat">' + s.category + '</div>' +
+                '<div class="r-meta">' + when(s.timestamp) + '</div></div>' +
+                '<div class="r-count r-ok">' + s.products.length + '</div></div>';
+    });
+    if (scans.length) {
+        html += '<div class="r-row"><div><div class="r-cat">История сканирований</div>' +
+                '<div class="r-meta">последние отсканированные товары</div></div>' +
+                '<div class="r-count">' + scans.length + '</div></div>';
+    }
+    list.innerHTML = html;
+    document.getElementById('r-actions').style.display = 'block';
+
+    // ── сборка файла ──
+    function columnsOf(rows) {
+        var seen = {}, cols = [];
+        rows.forEach(function (r) {
+            Object.keys(r || {}).forEach(function (k) {
+                if (!seen[k]) { seen[k] = 1; cols.push(k); }
+            });
+        });
+        return cols;
+    }
+    function sheetFrom(rows) {
+        var cols = columnsOf(rows);
+        var aoa = [cols].concat(rows.map(function (r) {
+            return cols.map(function (c) { var v = r[c]; return (v === null || v === undefined) ? '' : v; });
+        }));
+        return XLSX.utils.aoa_to_sheet(aoa);
+    }
+    function buildWorkbook() {
+        var wb = XLSX.utils.book_new();
+        snapshots.forEach(function (s) {
+            XLSX.utils.book_append_sheet(wb, sheetFrom(s.products), s.category.slice(0, 28));
+        });
+        if (scans.length) XLSX.utils.book_append_sheet(wb, sheetFrom(scans), 'Сканирования');
+        return wb;
+    }
+    function fileName(ext) {
+        var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
+        // Имя латиницей: кириллицу в имени файла часть браузеров и почтовых
+        // клиентов режет, и файл приходит безымянным.
+        return 'laba-rescue-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) +
+               '-' + p(d.getHours()) + p(d.getMinutes()) + '.' + ext;
+    }
+    function xlsxBlob() {
+        var out = XLSX.write(buildWorkbook(), { bookType: 'xlsx', type: 'array' });
+        return new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    }
+
+    document.getElementById('r-xlsx').onclick = function () {
+        try {
+            var url = URL.createObjectURL(xlsxBlob());
+            var a = document.createElement('a');
+            a.href = url; a.download = fileName('xlsx');
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        } catch (e) { alert('Не удалось сохранить файл: ' + e.message + '\nНажмите «Показать текстом».'); }
+    };
+
+    // На айфоне сохранение файла из браузера часто не срабатывает —
+    // там надёжнее системное «Поделиться».
+    var shareBtn = document.getElementById('r-share');
+    try {
+        var probe = new File([new Blob(['x'])], 'x.xlsx');
+        if (navigator.canShare && navigator.canShare({ files: [probe] })) {
+            shareBtn.style.display = 'flex';
+            shareBtn.onclick = function () {
+                var f = new File([xlsxBlob()], fileName('xlsx'),
+                        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                navigator.share({ files: [f], title: 'Лаба — восстановление данных' })
+                         .catch(function () { /* пользователь отменил */ });
+            };
+        }
+    } catch (e) { /* File/canShare нет — оставляем скрытой */ }
+
+    document.getElementById('r-text').onclick = function () {
+        var area = document.getElementById('r-area');
+        area.value = JSON.stringify({ snapshots: snapshots, recentScans: scans }, null, 1);
+        area.style.display = 'block';
+        area.focus(); area.select();
+        try { document.execCommand('copy'); } catch (e) {}
+    };
+})();
+</script>
+</body>
+</html>
