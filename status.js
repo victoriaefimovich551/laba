@@ -61,13 +61,31 @@ function getModelGroupKey(name) {
     return key.trim().replace(/\s+/g, ' ') || (name || '').trim();
 }
 
-// Порядок сортировки каталога: в наличии → в доставке → резерв → продан
+// Дата закупки в миллисекундах — для сортировки каталога.
+// С сервера дата приходит строкой "дд.мм.гггг"; new Date() такой формат
+// понимает неправильно (принимает за американский мм/дд), поэтому разбираем
+// сами. Товар без даты получает -Infinity и уходит в конец своей группы.
+function purchaseTime(product) {
+    const raw = product && product['Дата закупки'];
+    if (!raw) return -Infinity;
+    const m = String(raw).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]).getTime();
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? -Infinity : d.getTime();
+}
+
+// Порядок сортировки каталога: в наличии → в доставке → резерв → продан,
+// а внутри каждой группы — сначала самые новые по дате закупки.
+// Раньше второго правила не было: внутри группы товары шли в том порядке,
+// в каком их отдала база (по номеру записи), и после восстановления каталога
+// из резервной копии этот порядок перестал совпадать с датами.
 function sortByStatus(products) {
     const order = {};
     STATUS_ORDER.forEach((s, i) => { order[s] = i; });
     return products.slice().sort((a, b) => {
         const oa = order[a['Статус']] !== undefined ? order[a['Статус']] : 1;
         const ob = order[b['Статус']] !== undefined ? order[b['Статус']] : 1;
-        return oa - ob;
+        if (oa !== ob) return oa - ob;
+        return purchaseTime(b) - purchaseTime(a);
     });
 }
