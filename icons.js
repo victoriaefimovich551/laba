@@ -9,6 +9,7 @@ const ICON_PATHS = {
     add:      '<path d="M12 5.6v12.8M5.6 12h12.8"></path>',
     analytics:'<path d="M4 19h16"></path><path d="m6.5 14.5 3.8-4.4 3 2.8 4.4-5.6"></path>',
     drone:    '<path d="M9.4 9.4h5.2v5.2H9.4zM9.4 9.4 6.4 6.8M14.6 9.4 17.6 6.8M9.4 14.6 6.4 17.2M14.6 14.6 17.6 17.2M4 6.8h4.8M15.2 6.8H20M4 17.2h4.8M15.2 17.2H20"></path>',
+    car:      '<path d="M4.2 12.6 6 7.8a2 2 0 0 1 1.87-1.3h8.26A2 2 0 0 1 18 7.8l1.8 4.8"></path><path d="M3 12.6h18v4.2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><circle cx="7.4" cy="17.8" r="1.5"></circle><circle cx="16.6" cy="17.8" r="1.5"></circle>',
     scooter:  '<path d="M6.2 15.2a2.4 2.4 0 1 0 .01 4.8 2.4 2.4 0 1 0-.01-4.8M17.8 15.2a2.4 2.4 0 1 0 .01 4.8 2.4 2.4 0 1 0-.01-4.8M8.6 17.6h5.2l2.9-11M14.6 6.6h4"></path>',
     sticker:  '<rect x="5" y="8.4" width="14" height="7.6" rx="1.8"></rect><path d="M7.4 8.4V6a1.6 1.6 0 0 1 1.6-1.6h6a1.6 1.6 0 0 1 1.6 1.6v2.4"></path><rect x="8.2" y="12.8" width="7.6" height="5.8" rx="1"></rect>',
     share:    '<circle cx="18" cy="5.5" r="2.4"></circle><circle cx="6" cy="12" r="2.4"></circle><circle cx="18" cy="18.5" r="2.4"></circle><path d="M8.1 10.6 15.9 6.7M8.1 13.4l7.8 3.9"></path>',
