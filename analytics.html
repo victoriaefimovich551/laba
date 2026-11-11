@@ -53,6 +53,16 @@
 
   /* ── Переключатели категории / периода ── */
   .cat-bar { margin-bottom: 10px; }
+
+  /* С четвёртой пилюлей («Машины») ряд перестал помещаться в ширину экрана
+     телефона: нужно 387px при 356px доступных, и вся страница начинала
+     ездить вбок. Поджимаем отступы и шрифт — четыре пилюли снова влезают
+     в строку целиком. flex-wrap оставлен страховкой на совсем узкие
+     экраны: лучше вторая строка, чем обрезанное слово. */
+  @media (max-width: 430px) {
+    .cat-bar { flex-wrap: wrap; row-gap: 4px; }
+    .cat-bar .pill-switch-btn { padding: 9px 8px; font-size: 11.5px; }
+  }
   .period-bar { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
   .period-btn {
     flex: 1;
@@ -71,6 +81,39 @@
     transition: color .35s;
   }
   .period-btn.active { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
+
+  /* Месяц со стрелками — та же пилюля, что и остальные кнопки периода, но
+     внутри три отдельные кликабельные зоны: назад, название, вперёд.
+     flex: 1.6 — названию месяца («Сентябрь 2026») нужно заметно больше
+     места, чем словам «Год» и «Всё время». */
+  .period-month {
+    flex: 1.6;
+    display: flex;
+    align-items: stretch;
+    background: var(--gs1);
+    backdrop-filter: var(--g-blur-sm);
+    -webkit-backdrop-filter: var(--g-blur-sm);
+    border: 1px solid var(--gbd);
+    box-shadow: var(--gin);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .period-month.active { background: var(--g-pri); border-color: transparent; }
+  .period-month button {
+    background: none;
+    border: 0;
+    color: var(--tx2);
+    font: 700 11.5px var(--f-head);
+    cursor: pointer;
+    padding: 8px 4px;
+    transition: color .35s, opacity .2s;
+  }
+  .period-month.active button { color: var(--g-pri-tx); }
+  .pm-label { flex: 1; text-align: center; white-space: nowrap; }
+  .pm-arrow { width: 30px; font-size: 17px !important; line-height: 1; flex: none; }
+  .pm-arrow:hover { opacity: .65; }
+  /* Вперёд дальше текущего месяца идти некуда — стрелка гаснет. */
+  .pm-arrow:disabled { opacity: .3; cursor: default; }
 
   /* ── KPI ── */
   .kpi-lime {
@@ -344,10 +387,13 @@
 
   <!-- Period filter -->
   <div class="period-bar">
-    <button class="period-btn active" onclick="setPeriod('month', this)">Этот месяц</button>
-    <button class="period-btn" onclick="setPeriod('quarter', this)">Квартал</button>
-    <button class="period-btn" onclick="setPeriod('year', this)">Год</button>
-    <button class="period-btn" onclick="setPeriod('all', this)">Всё время</button>
+    <div class="period-month active" id="period-month">
+      <button class="pm-arrow" id="pm-prev" onclick="stepMonth(-1)" title="Предыдущий месяц" aria-label="Предыдущий месяц">‹</button>
+      <button class="pm-label" id="pm-label" onclick="setPeriod('month')">Месяц</button>
+      <button class="pm-arrow" id="pm-next" onclick="stepMonth(1)" title="Следующий месяц" aria-label="Следующий месяц">›</button>
+    </div>
+    <button class="period-btn" id="pb-year" onclick="setPeriod('year')">Год</button>
+    <button class="period-btn" id="pb-all" onclick="setPeriod('all')">Всё время</button>
   </div>
 </div>
 
@@ -501,6 +547,8 @@ function checkAnalyticsAuth() {
 let allData    = [];   // все товары (дроны + самокаты)
 let currentCat = 'all';
 let currentPeriod = 'month';
+// Какой именно месяц показываем. Стартуем с текущего, стрелками ходим назад.
+let monthCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let lastRenderState = null; // снимок последнего render() — используется для отчёта
 
 // ── Init ──────────────────────────────────────────────────────
@@ -543,11 +591,46 @@ function switchCat(cat, btn) {
   render();
 }
 
-function setPeriod(period, btn) {
+function setPeriod(period) {
   currentPeriod = period;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   render();
+}
+
+// Шаг по месяцам: -1 назад, +1 вперёд. Вперёд дальше текущего месяца не
+// пускаем — будущих продаж не бывает, а пустой экран выглядит как поломка.
+function stepMonth(delta) {
+  const next = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + delta, 1);
+  if (next > startOfThisMonth()) return;
+  monthCursor = next;
+  currentPeriod = 'month';
+  render();
+}
+
+function startOfThisMonth() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+// Подсветка активной кнопки и подпись месяца. Вызывается из render(),
+// чтобы состояние панели всегда соответствовало тому, что показано ниже.
+function syncPeriodBar() {
+  const monthPill = document.getElementById('period-month');
+  const label     = document.getElementById('pm-label');
+  const next      = document.getElementById('pm-next');
+  const yearBtn   = document.getElementById('pb-year');
+  const allBtn    = document.getElementById('pb-all');
+  if (!monthPill || !label) return;
+
+  const name = RU_MONTHS_NOM[monthCursor.getMonth()];
+  label.textContent = name.charAt(0).toUpperCase() + name.slice(1) + ' ' + monthCursor.getFullYear();
+
+  monthPill.classList.toggle('active', currentPeriod === 'month');
+  if (yearBtn) {
+    yearBtn.classList.toggle('active', currentPeriod === 'year');
+    yearBtn.textContent = monthCursor.getFullYear() + ' год';
+  }
+  if (allBtn) allBtn.classList.toggle('active', currentPeriod === 'all');
+  if (next) next.disabled = monthCursor >= startOfThisMonth();
 }
 
 function getFilteredData() {
@@ -556,11 +639,24 @@ function getFilteredData() {
 }
 
 function getPeriodStart() {
-  const now = new Date();
-  if (currentPeriod === 'month')   return new Date(now.getFullYear(), now.getMonth(), 1);
-  if (currentPeriod === 'quarter') return new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
-  if (currentPeriod === 'year')    return new Date(now.getFullYear(), 0, 1);
+  if (currentPeriod === 'month') return monthCursor;
+  if (currentPeriod === 'year')  return new Date(monthCursor.getFullYear(), 0, 1);
   return new Date(0); // all time
+}
+
+// Верхняя граница периода (не включая). Раньше её не было вовсе: период
+// задавался одной нижней границей, и «этот месяц» означал «с первого числа
+// и до бесконечности». Пока смотрели только текущий месяц, разницы не было,
+// но для сентября так попали бы и октябрьские продажи.
+// null — границы нет («год» считаем от января до сегодня, «всё время» без рамок).
+function getPeriodEnd() {
+  if (currentPeriod === 'month') {
+    return new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1);
+  }
+  if (currentPeriod === 'year') {
+    return new Date(monthCursor.getFullYear() + 1, 0, 1);
+  }
+  return null;
 }
 
 function parseDate(str) {
@@ -579,14 +675,18 @@ function fmt(num) {
 
 // ── Main render ───────────────────────────────────────────────
 function render() {
-  const data      = getFilteredData();
+  syncPeriodBar();
+
+  const data        = getFilteredData();
   const periodStart = getPeriodStart();
+  const periodEnd   = getPeriodEnd();
 
   // Товары проданные за период
   const soldInPeriod = data.filter(p => {
     if (p['Статус'] !== 'Продан') return false;
     const d = parseDate(p['Дата продажи']);
-    return d && d >= periodStart;
+    if (!d || d < periodStart) return false;
+    return periodEnd ? d < periodEnd : true;
   });
 
   // Товары в наличии (склад)
@@ -641,8 +741,11 @@ function render() {
   renderChart(data);
 
   // ── Топ моделей ──
+  // Считаем по продажам выбранного периода, а не по всему складу за всё
+  // время: иначе, открыв сентябрь, видишь в топе ноябрьские модели.
+  // Раньше это было незаметно — месяц всегда был текущим.
   const modelStats = {};
-  data.filter(p => p['Статус'] === 'Продан').forEach(p => {
+  soldInPeriod.forEach(p => {
     const name = getModelGroupKey(p['Название'] || 'Без названия');
     if (!modelStats[name]) modelStats[name] = { profit: 0, sold: 0, revenue: 0, cost: 0 };
     modelStats[name].profit  += parseFloat(p['Прибыль'])     || 0;
@@ -715,10 +818,8 @@ function escapeHtmlRp(text) {
 const RU_MONTHS_NOM = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
 
 function periodLabel() {
-  const now = new Date();
-  if (currentPeriod === 'month')   return RU_MONTHS_NOM[now.getMonth()] + ' ' + now.getFullYear();
-  if (currentPeriod === 'quarter') return (Math.floor(now.getMonth() / 3) + 1) + '-й квартал ' + now.getFullYear();
-  if (currentPeriod === 'year')    return now.getFullYear() + ' год';
+  if (currentPeriod === 'month') return RU_MONTHS_NOM[monthCursor.getMonth()] + ' ' + monthCursor.getFullYear();
+  if (currentPeriod === 'year')  return monthCursor.getFullYear() + ' год';
   return 'всё время';
 }
 
