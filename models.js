@@ -1,4 +1,4 @@
-// models.js — общий список моделей по категориям (Дроны / Самокаты)
+// models.js — общий список моделей по категориям (Дроны / Самокаты / Машины)
 // Используется в index.html (выбор модели при добавлении товара).
 
 const MODELS_BY_CATEGORY = {
@@ -92,5 +92,27 @@ const MODELS_BY_CATEGORY = {
         'Syccyba Impulse X20', 'Syccyba Impulse X20 Lite', 'Syccyba Impulse X20 Dual',
         'Syccyba Impulse X21', 'Syccyba Impulse X21 Pro', 'Syccyba Impulse X21 Sport',
         'Syccyba Monster', 'Syccyba X22'
+    ],
+    // Стартовый список — замени на те марки, с которыми реально работаете.
+    // Если нужной модели в списке нет, в форме добавления есть переключатель
+    // «ввести вручную»: название можно просто напечатать.
+    'Машины': [
+        'Lada Granta', 'Lada Vesta', 'Lada Largus', 'Lada Niva Legend', 'Lada Niva Travel',
+        'Haval Jolion', 'Haval F7', 'Haval F7x', 'Haval Dargo', 'Haval H9',
+        'Chery Tiggo 4 Pro', 'Chery Tiggo 7 Pro', 'Chery Tiggo 8 Pro', 'Chery Arrizo 8',
+        'Geely Coolray', 'Geely Atlas', 'Geely Monjaro', 'Geely Emgrand',
+        'Changan CS35 Plus', 'Changan CS55 Plus', 'Changan UNI-S', 'Changan UNI-K',
+        'Omoda C5', 'Omoda S5', 'Exeed TXL', 'Exeed LX', 'Exeed VX',
+        'Jetour Dashing', 'Jetour X70 Plus', 'Jetour T2',
+        'Kia Rio', 'Kia Sportage', 'Kia Seltos', 'Kia K5', 'Kia Sorento',
+        'Hyundai Solaris', 'Hyundai Creta', 'Hyundai Tucson', 'Hyundai Santa Fe',
+        'Toyota Camry', 'Toyota RAV4', 'Toyota Land Cruiser 300', 'Toyota Corolla',
+        'Volkswagen Polo', 'Volkswagen Tiguan', 'Volkswagen Touareg',
+        'Skoda Octavia', 'Skoda Kodiaq', 'Skoda Rapid',
+        'BMW X3', 'BMW X5', 'BMW 3 series', 'BMW 5 series',
+        'Mercedes-Benz C-class', 'Mercedes-Benz E-class', 'Mercedes-Benz GLC',
+        'Audi A4', 'Audi A6', 'Audi Q5', 'Audi Q7',
+        'Nissan Qashqai', 'Nissan X-Trail', 'Renault Duster', 'Renault Logan',
+        'Mazda CX-5', 'Mazda 6', 'Mitsubishi Outlander', 'Mitsubishi Pajero'
     ]
 };
