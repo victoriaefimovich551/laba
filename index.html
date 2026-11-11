@@ -80,6 +80,26 @@
         }
         .category-btn.active { background: var(--g-pri); color: var(--g-pri-tx); border-color: transparent; }
 
+        .category-btn { flex: none; white-space: nowrap; }
+
+        /* С третьей категорией («Машины») ряд кнопок перестал помещаться в
+           одну строку с иконками: кнопкам нужно ~263px, иконкам ~124px, а на
+           типичном телефоне (390px) всего ~348px полезной ширины. Прокрутка
+           здесь не годится — она режет кнопку посередине слова.
+           Поэтому на узких экранах иконки остаются сверху справа, а
+           категории переезжают на свою строку во всю ширину. */
+        @media (max-width: 440px) {
+            .mobile-header { flex-wrap: wrap; row-gap: 10px; }
+            .header-icons { order: 1; margin-left: auto; }
+            #mobile-header-cat-group {
+                order: 2;
+                flex-basis: 100%;
+                justify-content: flex-start;
+                gap: 7px !important;
+            }
+            .category-btn { padding: 7px 11px; }
+        }
+
         .install-banner { background: var(--gs2); backdrop-filter: var(--g-blur-sm); -webkit-backdrop-filter: var(--g-blur-sm); border: 1px solid var(--gbd); box-shadow: var(--gin); color: var(--tx); padding: 12px; border-radius: 16px; margin-bottom: 15px; text-align: center; font-size: 14px; display: none; }
 
         .ios-install-row { display: flex; align-items: flex-start; gap: 10px; }
@@ -580,13 +600,6 @@
     </style>
 </head>
 <body>
-<!-- ВРЕМЕННО: ссылка на страницу восстановления данных после аварии
-     хостинга 1-2 ноября 2026. На айфоне приложение с экрана «Домой» и
-     Safari хранят данные раздельно, а адресной строки внутри приложения
-     нет — попасть на rescue.html можно только по ссылке отсюда.
-     После сбора данных этот блок убрать. -->
-<a href="rescue.html" style="display:block; margin:0 0 14px; padding:13px 16px; border-radius:16px; text-decoration:none; background:color-mix(in srgb, #f87171 14%, transparent); border:1px solid color-mix(in srgb, #f87171 45%, transparent); font:700 13px/1.45 var(--f-head); color:#f87171;">Восстановление данных после сбоя хостинга — открыть &rarr;</a>
-
 
 <!-- САЙДБАР (десктоп) -->
 <aside class="desktop-sidebar">
@@ -594,7 +607,7 @@
         <div class="sidebar-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.6V5.8A1.8 1.8 0 0 1 5.8 4h2.8M15.4 4h2.8A1.8 1.8 0 0 1 20 5.8v2.8M20 15.4v2.8a1.8 1.8 0 0 1-1.8 1.8h-2.8M8.6 20H5.8A1.8 1.8 0 0 1 4 18.2v-2.8"></path></svg></div>
         <div>
             <div class="sidebar-title">Инвентарь</div>
-            <div class="sidebar-sub">дроны · самокаты</div>
+            <div class="sidebar-sub">дроны · самокаты · машины</div>
         </div>
     </div>
 
@@ -602,6 +615,7 @@
     <div class="sidebar-cat">
         <button class="cat-item" id="sb-drones" onclick="switchCategory('Дроны'); setSbCat(this)"><span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.4 9.4h5.2v5.2H9.4zM9.4 9.4 6.4 6.8M14.6 9.4 17.6 6.8M9.4 14.6 6.4 17.2M14.6 14.6 17.6 17.2M4 6.8h4.8M15.2 6.8H20M4 17.2h4.8M15.2 17.2H20"></path></svg></span> Дроны</button>
         <button class="cat-item active" id="sb-scooters" onclick="switchCategory('Самокаты'); setSbCat(this)"><span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 15.2a2.4 2.4 0 1 0 .01 4.8 2.4 2.4 0 1 0-.01-4.8M17.8 15.2a2.4 2.4 0 1 0 .01 4.8 2.4 2.4 0 1 0-.01-4.8M8.6 17.6h5.2l2.9-11M14.6 6.6h4"></path></svg></span> Самокаты</button>
+        <button class="cat-item" id="sb-cars" onclick="switchCategory('Машины'); setSbCat(this)"><span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 12.6 6 7.8a2 2 0 0 1 1.87-1.3h8.26A2 2 0 0 1 18 7.8l1.8 4.8"></path><path d="M3 12.6h18v4.2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><circle cx="7.4" cy="17.8" r="1.5"></circle><circle cx="16.6" cy="17.8" r="1.5"></circle></svg></span> Машины</button>
     </div>
 
     <div>
@@ -657,6 +671,7 @@
         <div id="mobile-header-cat-group" style="display:flex; gap:8px;">
             <button id="btn-drones" class="category-btn" onclick="switchCategory('Дроны')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.4 9.4h5.2v5.2H9.4zM9.4 9.4 6.4 6.8M14.6 9.4 17.6 6.8M9.4 14.6 6.4 17.2M14.6 14.6 17.6 17.2M4 6.8h4.8M15.2 6.8H20M4 17.2h4.8M15.2 17.2H20"></path></svg> Дроны</button>
             <button id="btn-scooters" class="category-btn active" onclick="switchCategory('Самокаты')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 15.2a2.4 2.4 0 1 0 .01 4.8 2.4 2.4 0 1 0-.01-4.8M17.8 15.2a2.4 2.4 0 1 0 .01 4.8 2.4 2.4 0 1 0-.01-4.8M8.6 17.6h5.2l2.9-11M14.6 6.6h4"></path></svg> Самокаты</button>
+            <button id="btn-cars" class="category-btn" onclick="switchCategory('Машины')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 12.6 6 7.8a2 2 0 0 1 1.87-1.3h8.26A2 2 0 0 1 18 7.8l1.8 4.8"></path><path d="M3 12.6h18v4.2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><circle cx="7.4" cy="17.8" r="1.5"></circle><circle cx="16.6" cy="17.8" r="1.5"></circle></svg> Машины</button>
         </div>
         <div class="header-icons">
             <a href="cabinet.html" class="icon-btn" id="header-account-btn" title="Личный кабинет" style="background:var(--g-pri); color:var(--g-pri-tx); border:none; font:700 11.5px var(--f-head);">ЛК</a>
@@ -945,6 +960,27 @@
     let isScanning = false;
     let allProducts = [];
     let currentProduct = null;
+    // ── Категории товаров ─────────────────────────────────────────────
+    // Единственное место, где категории перечислены. Раньше они были зашиты
+    // парами в двух десятках мест («Дроны или самокаты»), и добавление
+    // третьей требовало найти их все. Теперь, чтобы завести ещё одну,
+    // достаточно дописать строку сюда, добавить модели в models.js, кнопки
+    // в разметку и категорию в CATEGORIES на сервере.
+    const CATEGORIES = [
+        { name: 'Дроны',    icon: 'drone',   sbId: 'sb-drones',   btnId: 'btn-drones' },
+        { name: 'Самокаты', icon: 'scooter', sbId: 'sb-scooters', btnId: 'btn-scooters' },
+        { name: 'Машины',   icon: 'car',     sbId: 'sb-cars',     btnId: 'btn-cars' }
+    ];
+    const CATEGORY_NAMES = CATEGORIES.map(c => c.name);
+
+    function categoryIcon(name) {
+        const c = CATEGORIES.find(x => x.name === name);
+        return c ? c.icon : 'package';
+    }
+    function isKnownCategory(name) {
+        return CATEGORY_NAMES.indexOf(name) !== -1;
+    }
+
     let currentCategory = 'Самокаты';
 
     let cachedProducts = null;
@@ -1279,14 +1315,14 @@
 
     // Скан QR не зависит от выбранной наверху категории — ищет товар и в дронах, и в самокатах.
     async function findProductAcrossCategories(sku) {
-        for (const cat of ['Дроны', 'Самокаты']) {
+        for (const cat of CATEGORY_NAMES) {
             const cached = window['cachedProducts_' + cat];
             if (cached && cached.length) {
                 const found = cached.find(p => p['Артикул'] === sku);
                 if (found) return { product: found, cat: cat };
             }
         }
-        for (const cat of ['Дроны', 'Самокаты']) {
+        for (const cat of CATEGORY_NAMES) {
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -1297,7 +1333,7 @@
                 return { product: data, cat: cat };
             } catch (error) { /* пробуем следующую категорию */ }
         }
-        for (const cat of ['Дроны', 'Самокаты']) {
+        for (const cat of CATEGORY_NAMES) {
             const offlineData = loadProductsFromLocalStorageForCategory(cat);
             if (offlineData && offlineData.products) {
                 const found = offlineData.products.find(p => p['Артикул'] === sku);
@@ -1340,7 +1376,7 @@
         let html = '';
         list.slice(0, 3).forEach(r => {
             const si = getStatusIcon(r.status);
-            const catIcon = svgIcon(r.cat === 'Дроны' ? 'drone' : 'scooter', 19);
+            const catIcon = svgIcon(categoryIcon(r.cat), 19);
             let whenLabel = r.time || '';
             if (r.ts) {
                 const scanDate = new Date(r.ts);
@@ -1527,17 +1563,17 @@
     // Объединённый список товаров обеих категорий для поиска — не путать с allProducts
     // (тот всегда относится только к текущей выбранной категории и используется в каталоге).
     function getAllProductsForSearch() {
-        const drones = window['cachedProducts_Дроны'] || [];
-        const scooters = window['cachedProducts_Самокаты'] || [];
-        return [
-            ...drones.map(p => ({ ...p, _cat: 'Дроны' })),
-            ...scooters.map(p => ({ ...p, _cat: 'Самокаты' }))
-        ];
+        // Склеиваем кэш всех категорий сразу — так поиск ищет по всему складу,
+        // а не только по выбранной вкладке.
+        return CATEGORY_NAMES.reduce((all, cat) => {
+            const items = window['cachedProducts_' + cat] || [];
+            return all.concat(items.map(p => ({ ...p, _cat: cat })));
+        }, []);
     }
 
     // Подгружает данные обеих категорий в кэш, чтобы поиск сразу видел и дроны, и самокаты
     function ensureAllCategoriesLoaded() {
-        ['Дроны', 'Самокаты'].forEach(cat => {
+        CATEGORY_NAMES.forEach(cat => {
             const cacheKey = 'cachedProducts_' + cat;
             if (!window[cacheKey] || !window[cacheKey].length) {
                 const offline = loadProductsFromLocalStorageForCategory(cat);
@@ -1573,7 +1609,7 @@
         let html = '<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">';
         visible.forEach(p => {
             const si = getStatusIcon(p['Статус']);
-            const catIcon = svgIcon(p._cat === 'Дроны' ? 'drone' : 'scooter', 19);
+            const catIcon = svgIcon(categoryIcon(p._cat), 19);
             let price = p['Цена закупка'];
             price = (price && !isNaN(parseFloat(price))) ? parseFloat(price).toLocaleString('ru-RU') + ' ₽' : '';
             html += '<div class="list-row" onclick="selectSearchResult(\'' + escapeHtml(p['Артикул']) + '\', \'' + escapeHtml(p._cat) + '\')">'
@@ -1671,7 +1707,7 @@
         }
 
         // Не нашли локально — пробуем сеть по обеим категориям по очереди
-        for (const cat of ['Дроны', 'Самокаты']) {
+        for (const cat of CATEGORY_NAMES) {
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -1685,7 +1721,7 @@
         }
 
         // Сеть недоступна — офлайн-кэш по обеим категориям
-        for (const cat of ['Дроны', 'Самокаты']) {
+        for (const cat of CATEGORY_NAMES) {
             const offlineData = loadProductsFromLocalStorageForCategory(cat);
             if (offlineData && offlineData.products) {
                 const offlineProduct = offlineData.products.find(p => p['Артикул'] === sku);
@@ -1750,7 +1786,7 @@
         const si = getStatusIcon(p['Статус']);
         const statusText = getStatusText(p['Статус']);
         const escapedSku = escapeHtml(p['Артикул']);
-        const catIcon = svgIcon(currentCategory === 'Дроны' ? 'drone' : 'scooter', 28);
+        const catIcon = svgIcon(categoryIcon(currentCategory), 28);
         const tileBg = 'color-mix(in srgb, ' + si.color + ' 18%, transparent)';
 
         let html = '<div class="product-card" id="product-card-' + escapedSku + '">'
@@ -2070,7 +2106,7 @@
             let cardClass = 'catalog-card product-item';
             if (status === 'Продан') cardClass += ' is-dim';
             if (printSelectMode && isSelected) cardClass += ' is-print-selected';
-            const catIcon = svgIcon(currentCategory === 'Дроны' ? 'drone' : 'scooter', 23);
+            const catIcon = svgIcon(categoryIcon(currentCategory), 23);
             const clickHandler = printSelectMode
                 ? "togglePrintSelection('" + escapeHtml(sku) + "')"
                 : "viewProductDetail('" + escapeHtml(sku) + "')";
@@ -2337,15 +2373,13 @@
         if (detailPanel) detailPanel.classList.remove('visible');
 
         document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-        if (category === 'Дроны') {
-            document.getElementById('btn-drones').classList.add('active');
-        } else {
-            document.getElementById('btn-scooters').classList.add('active');
+        const cat = CATEGORIES.find(c => c.name === category);
+        if (cat) {
+            const btn = document.getElementById(cat.btnId);
+            if (btn) btn.classList.add('active');
+            // Синхронизируем сайдбар категории
+            setSbCat(document.getElementById(cat.sbId) || null);
         }
-
-        // Синхронизируем сайдбар категории
-        const sbCatBtn = document.getElementById(category === 'Дроны' ? 'sb-drones' : 'sb-scooters');
-        setSbCat(sbCatBtn || null);
 
         updateModelsForCategory(category);
 
@@ -2458,7 +2492,7 @@
 
     function getAllOfflineProducts() {
         const all = [];
-        for (let cat of ['Дроны', 'Самокаты']) {
+        for (let cat of CATEGORY_NAMES) {
             const cached = localStorage.getItem('cachedProducts_' + cat);
             if (cached) {
                 const data = JSON.parse(cached);
@@ -2734,13 +2768,13 @@
     function handleUrlParams() {
         const urlParams = new URLSearchParams(window.location.search);
         const category = urlParams.get('category');
-        if (category && (category === 'Дроны' || category === 'Самокаты')) {
+        if (category && isKnownCategory(category)) {
             currentCategory = category;
             document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-            if (category === 'Дроны') {
-                document.getElementById('btn-drones').classList.add('active');
-            } else {
-                document.getElementById('btn-scooters').classList.add('active');
+            const urlCat = CATEGORIES.find(c => c.name === category);
+            if (urlCat) {
+                const urlBtn = document.getElementById(urlCat.btnId);
+                if (urlBtn) urlBtn.classList.add('active');
             }
             const headerTitle = document.querySelector('#catalog-panel .page-title');
             if (headerTitle) headerTitle.textContent = 'Каталог · ' + category;
