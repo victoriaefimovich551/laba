@@ -9,7 +9,7 @@
 // данных и не публикуйте этот файл с реальным токеном в открытом виде,
 // если это для вас критично.
 const GOOGLE_SCRIPT_URL = 'https://api.mylaba.com';
-const APP_TOKEN = 'kUsqq5tD9pQ5j-wUtlKOlyQiT4snxeKA0kUC8cSQO-c';
+const APP_TOKEN = 'rAXAVbrv0zmiKsa_2FNtD4R_yFuS2hjHB5MVXuoN0tU';
 
 // Токен личной сессии сотрудника (появляется после входа в кабинет).
 //
