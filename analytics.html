@@ -339,6 +339,7 @@
     <button class="pill-switch-btn active" onclick="switchCat('all', this)">🌐 Все</button>
     <button class="pill-switch-btn" onclick="switchCat('Дроны', this)">🚁 Дроны</button>
     <button class="pill-switch-btn" onclick="switchCat('Самокаты', this)">🛴 Самокаты</button>
+    <button class="pill-switch-btn" onclick="switchCat('Машины', this)">🚗 Машины</button>
   </div>
 
   <!-- Period filter -->
@@ -505,15 +506,12 @@ let lastRenderState = null; // снимок последнего render() — и
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
   try {
-    // Загружаем оба листа параллельно
-    const [drones, scooters] = await Promise.all([
-      fetchProducts('Дроны'),
-      fetchProducts('Самокаты')
-    ]);
-    allData = [
-      ...drones.map(p => ({ ...p, _cat: 'Дроны' })),
-      ...scooters.map(p => ({ ...p, _cat: 'Самокаты' }))
-    ];
+    // Загружаем все категории параллельно. Список один на весь файл —
+    // чтобы при добавлении новой категории не искать её по коду.
+    const CATEGORY_NAMES = ['Дроны', 'Самокаты', 'Машины'];
+    const perCategory = await Promise.all(CATEGORY_NAMES.map(fetchProducts));
+    allData = perCategory.reduce((all, items, i) =>
+      all.concat(items.map(p => ({ ...p, _cat: CATEGORY_NAMES[i] }))), []);
 
     document.getElementById('loading').style.display   = 'none';
     document.getElementById('dashboard').style.display = 'block';
