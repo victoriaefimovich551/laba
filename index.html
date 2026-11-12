@@ -483,6 +483,7 @@
                 color: var(--tx);
             }
             .desktop-sidebar .sidebar-account:hover { border-color: var(--g-sel); transform: translateY(-1px); }
+            .desktop-sidebar .sidebar-account { cursor: pointer; font: inherit; }
             .desktop-sidebar .sidebar-account-avatar {
                 background: var(--g-pri); color: var(--g-pri-tx);
                 font: 700 12.5px var(--f-head);
@@ -597,6 +598,115 @@
             color: var(--tx2);
             margin-top: 6px;
         }
+
+        /* ── МЕНЮ АККАУНТА ──────────────────────────────────────────────
+           Раньше кнопка кабинета вела сразу на cabinet.html. Теперь из неё
+           раскрывается короткий список разделов, а состав списка зависит от
+           роли: «Добавить сотрудника» видит только директор.
+           Меню позиционируется из JS (fixed + координаты кнопки), поэтому
+           его разметка лежит в конце body и не зависит от того, в каком
+           месте страницы находится кнопка — в боковой панели или в шапке. */
+        .acc-backdrop {
+            position: fixed; inset: 0; z-index: 2400;
+            background: transparent;
+        }
+        .acc-menu {
+            position: fixed; z-index: 2401;
+            min-width: 232px; max-width: calc(100vw - 24px);
+            padding: 6px;
+            border-radius: 20px;
+            background: var(--gs1);
+            backdrop-filter: var(--g-blur-lg, blur(18px));
+            -webkit-backdrop-filter: var(--g-blur-lg, blur(18px));
+            border: 1px solid var(--gbd);
+            box-shadow: 0 18px 44px rgba(0,0,0,.18);
+            animation: accMenuIn .16s ease-out;
+        }
+        @keyframes accMenuIn { from { opacity: 0; transform: translateY(4px); } }
+        .acc-menu-head {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px 11px;
+        }
+        .acc-menu-ava {
+            flex: none; width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--g-pri); color: var(--g-pri-tx);
+            font: 700 12.5px var(--f-head);
+        }
+        .acc-menu-name {
+            font: 700 13px/1.25 var(--f-head); color: var(--tx);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .acc-menu-role { font: 600 10.5px/1.25 var(--f-head); color: var(--tx2); }
+        .acc-menu-item {
+            display: flex; align-items: center; gap: 11px;
+            width: 100%; box-sizing: border-box;
+            padding: 11px 12px;
+            border: 0; border-radius: 14px;
+            background: none; color: var(--tx);
+            font: 600 13.5px var(--f-head);
+            text-align: left; text-decoration: none;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .acc-menu-item:hover { background: var(--gs2); }
+        .acc-menu-item svg { flex: none; opacity: .75; }
+        .acc-menu-item.is-danger { color: var(--st-danger); }
+        .acc-menu-sep { height: 1px; margin: 5px 10px; background: var(--gbd); }
+
+        /* ── ПОМОЩЬ ─────────────────────────────────────────────────────
+           Разбор частых поломок. Намеренно без картинок и без обращений к
+           серверу: этот экран нужен именно тогда, когда что-то не работает,
+           и он обязан открываться даже при мёртвой связи. */
+        .help-box {
+            width: 100%; max-width: 560px;
+            max-height: 86vh; overflow-y: auto;
+            padding: 22px;
+            border-radius: 26px;
+            background: var(--bg);
+            background-image: var(--gs1);
+            border: 1px solid var(--gbd);
+            box-shadow: 0 24px 60px rgba(0,0,0,.28);
+        }
+        .help-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+        .help-title { font: 800 21px var(--f-head); color: var(--tx); }
+        .help-lead { font: 500 12.5px/1.5 var(--f-head); color: var(--tx2); margin: 2px 0 16px; }
+        .help-close {
+            flex: none; width: 32px; height: 32px; border-radius: 50%;
+            border: 1px solid var(--gbd); background: var(--gs2);
+            color: var(--tx2); font: 700 15px var(--f-head); cursor: pointer;
+        }
+        .help-item { border-top: 1px solid var(--gbd); }
+        .help-item:last-of-type { border-bottom: 1px solid var(--gbd); }
+        .help-q {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            width: 100%; box-sizing: border-box;
+            padding: 14px 2px;
+            border: 0; background: none; color: var(--tx);
+            font: 700 13.5px/1.4 var(--f-head);
+            text-align: left; cursor: pointer;
+        }
+        .help-q::after {
+            content: '+'; flex: none;
+            font: 700 17px var(--f-head); color: var(--tx2);
+        }
+        .help-item.is-open .help-q::after { content: '–'; }
+        .help-a {
+            display: none;
+            padding: 0 2px 15px;
+            font: 500 13px/1.6 var(--f-head); color: var(--tx2);
+        }
+        .help-item.is-open .help-a { display: block; }
+        .help-a b { color: var(--tx); font-weight: 700; }
+        .help-a ol, .help-a ul { margin: 7px 0 0; padding-left: 19px; }
+        .help-a li { margin-bottom: 5px; }
+        .help-foot {
+            margin-top: 18px;
+            padding: 13px 15px;
+            border-radius: 16px;
+            background: var(--gs2);
+            font: 500 12.5px/1.55 var(--f-head); color: var(--tx2);
+        }
     </style>
 </head>
 <body>
@@ -649,13 +759,13 @@
     </div>
 
     <div class="sidebar-bottom">
-        <a class="sidebar-account" href="cabinet.html">
+        <button type="button" class="sidebar-account" id="sb-account-btn" onclick="toggleAccountMenu(this)" aria-haspopup="menu" aria-expanded="false">
             <span class="sidebar-account-avatar" id="sb-account-avatar">ЛК</span>
             <span class="sidebar-account-body">
                 <span class="sidebar-account-title" id="sb-account-name">Личный кабинет</span>
                 <span class="sidebar-account-sub">личный кабинет</span>
             </span>
-        </a>
+        </button>
         <button class="sidebar-theme-btn" id="sb-theme-btn" onclick="toggleTheme()"><span class="sidebar-theme-icon" data-theme-icon>🌙</span><span id="sb-theme-label">Тёмная тема</span></button>
     </div>
 </aside>
@@ -674,7 +784,7 @@
             <button id="btn-cars" class="category-btn" onclick="switchCategory('Машины')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 12.6 6 7.8a2 2 0 0 1 1.87-1.3h8.26A2 2 0 0 1 18 7.8l1.8 4.8"></path><path d="M3 12.6h18v4.2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><circle cx="7.4" cy="17.8" r="1.5"></circle><circle cx="16.6" cy="17.8" r="1.5"></circle></svg> Машины</button>
         </div>
         <div class="header-icons">
-            <a href="cabinet.html" class="icon-btn" id="header-account-btn" title="Личный кабинет" style="background:var(--g-pri); color:var(--g-pri-tx); border:none; font:700 11.5px var(--f-head);">ЛК</a>
+            <button type="button" class="icon-btn" id="header-account-btn" title="Личный кабинет" aria-haspopup="menu" aria-expanded="false" onclick="toggleAccountMenu(this)" style="background:var(--g-pri); color:var(--g-pri-tx); border:none; font:700 11.5px var(--f-head); cursor:pointer;">ЛК</button>
             <a href="analytics.html" class="icon-btn" id="mobile-header-analytics-btn" title="Аналитика"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"></path><path d="m6.5 14.5 3.8-4.4 3 2.8 4.4-5.6"></path></svg></a>
             <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
         </div>
@@ -2864,6 +2974,197 @@
             if (sbAvatar) sbAvatar.textContent = accountInitials(employee.name);
             if (sbName && employee.name) sbName.textContent = employee.name;
         }
+    }
+
+    // ── МЕНЮ АККАУНТА ─────────────────────────────────────────────────
+    // Кнопка кабинета (пилюля в боковой панели на десктопе, кружок с
+    // инициалами в шапке на телефоне) раскрывает короткий список разделов.
+    // Разметка меню создаётся заново при каждом открытии: состав зависит от
+    // роли, а роль берётся из сессии, которая может смениться без
+    // перезагрузки страницы (вышел один сотрудник — вошёл другой).
+
+    const ACC_ICONS = {
+        profile: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.8 19.4c.9-3.3 3.7-5.2 7.2-5.2s6.3 1.9 7.2 5.2"></path></svg>',
+        addEmp:  '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.4"></circle><path d="M3.6 19.4c.8-3.1 3.3-4.9 6.4-4.9 1 0 1.9.2 2.7.5"></path><path d="M17.5 14.6v5.2M14.9 17.2h5.2"></path></svg>',
+        help:    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"></circle><path d="M9.7 9.4a2.4 2.4 0 1 1 3.2 2.3c-.6.2-.9.8-.9 1.4v.4"></path><path d="M12 16.6h.01"></path></svg>',
+        exit:    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 4.6H6.2a1.4 1.4 0 0 0-1.4 1.4v12a1.4 1.4 0 0 0 1.4 1.4h8.2"></path><path d="M16.4 8.4 20 12l-3.6 3.6M20 12h-9.4"></path></svg>'
+    };
+
+    function accountMenuItems() {
+        const emp = (window.CABINET_SESSION && window.CABINET_SESSION.employee) || {};
+        const items = [
+            { icon: ACC_ICONS.profile, label: 'Личный кабинет', href: 'cabinet.html' }
+        ];
+        if (emp.role === 'director') {
+            items.push({ icon: ACC_ICONS.addEmp, label: 'Добавить сотрудника', href: 'cabinet.html?add=1' });
+        }
+        items.push({ sep: true });
+        items.push({ icon: ACC_ICONS.help, label: 'Помощь', action: 'help' });
+        items.push({ icon: ACC_ICONS.exit, label: 'Выход', action: 'logout', danger: true });
+        return items;
+    }
+
+    function closeAccountMenu() {
+        document.querySelectorAll('.acc-menu, .acc-backdrop').forEach(el => el.remove());
+        document.querySelectorAll('[aria-haspopup="menu"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    }
+
+    function toggleAccountMenu(trigger) {
+        if (document.querySelector('.acc-menu')) { closeAccountMenu(); return; }
+
+        const emp = (window.CABINET_SESSION && window.CABINET_SESSION.employee) || {};
+        const roleName = emp.role === 'director' ? 'директор' : emp.role === 'tester' ? 'тестировщик' : 'сотрудник';
+
+        const backdrop = document.createElement('div');
+        backdrop.className = 'acc-backdrop';
+        backdrop.onclick = closeAccountMenu;
+
+        const menu = document.createElement('div');
+        menu.className = 'acc-menu';
+        menu.setAttribute('role', 'menu');
+
+        let html = '<div class="acc-menu-head">'
+            + '<span class="acc-menu-ava">' + escapeHtml(accountInitials(emp.name || '')) + '</span>'
+            + '<span style="min-width:0">'
+            + '<span class="acc-menu-name" style="display:block">' + escapeHtml(emp.name || 'Личный кабинет') + '</span>'
+            + '<span class="acc-menu-role">' + roleName + '</span>'
+            + '</span></div>';
+
+        accountMenuItems().forEach(it => {
+            if (it.sep) { html += '<div class="acc-menu-sep"></div>'; return; }
+            const cls = 'acc-menu-item' + (it.danger ? ' is-danger' : '');
+            html += it.href
+                ? '<a class="' + cls + '" role="menuitem" href="' + it.href + '">' + it.icon + escapeHtml(it.label) + '</a>'
+                : '<button type="button" class="' + cls + '" role="menuitem" data-acc-action="' + it.action + '">' + it.icon + escapeHtml(it.label) + '</button>';
+        });
+        menu.innerHTML = html;
+
+        menu.querySelectorAll('[data-acc-action]').forEach(btn => {
+            btn.onclick = () => {
+                const act = btn.getAttribute('data-acc-action');
+                closeAccountMenu();
+                if (act === 'help') openHelp();
+                if (act === 'logout') logoutFromApp();
+            };
+        });
+
+        document.body.appendChild(backdrop);
+        document.body.appendChild(menu);
+        placeAccountMenu(menu, trigger);
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    // Меню прижимается к кнопке: раскрывается вниз, а если снизу не хватает
+    // места — вверх. На десктопе кнопка стоит в самом низу боковой панели,
+    // поэтому там меню почти всегда открывается вверх.
+    function placeAccountMenu(menu, trigger) {
+        const r = trigger.getBoundingClientRect();
+        const m = menu.getBoundingClientRect();
+        const gap = 8, edge = 12;
+
+        let top = r.bottom + gap;
+        if (top + m.height > window.innerHeight - edge) {
+            top = Math.max(edge, r.top - gap - m.height);
+        }
+        let left = r.left;
+        if (left + m.width > window.innerWidth - edge) left = r.right - m.width;
+        left = Math.max(edge, Math.min(left, window.innerWidth - m.width - edge));
+
+        menu.style.top = Math.round(top) + 'px';
+        menu.style.left = Math.round(left) + 'px';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeAccountMenu(); closeHelp(); }
+    });
+    window.addEventListener('resize', closeAccountMenu);
+
+    // Выход: гасим сессию на сервере, чистим её у себя и уходим на экран
+    // входа. Если сервер недоступен, всё равно выходим локально — иначе
+    // при проблемах со связью из приложения было бы не выйти.
+    async function logoutFromApp() {
+        const ok = await showConfirmDialog('Выйти из аккаунта?');
+        if (!ok) return;
+        try {
+            await apiPost({ action: 'logout', sessionToken: currentSessionToken() });
+        } catch (e) { /* связи нет — выходим локально */ }
+        try { localStorage.removeItem('cabinetSession'); } catch (e) {}
+        location.replace('cabinet.html');
+    }
+
+    // ── ПОМОЩЬ ────────────────────────────────────────────────────────
+    // Экран открывается поверх приложения и ничего не запрашивает у
+    // сервера: он нужен ровно тогда, когда связь и не работает.
+    const HELP_ITEMS = [
+        ['Каталог не загружается, крутится «Загрузка»',
+         'Чаще всего это интернет, а не приложение.<ol>'
+         + '<li>Проверьте, открываются ли другие сайты.</li>'
+         + '<li>Потяните экран вниз — список обновится заново.</li>'
+         + '<li>Закройте приложение полностью и откройте снова.</li>'
+         + '<li>Если на телефоне плохая связь, переключитесь с мобильного интернета на Wi-Fi или наоборот.</li></ol>'
+         + 'Если не помогло ни у вас, ни у коллег — напишите директору: похоже, лёг сервер, сами вы это не почините.'],
+
+        ['Камера не открывается при сканировании',
+         'Браузер спрашивает разрешение на камеру один раз. Если тогда нажали «Запретить», кнопка сканера будет молчать.<ul>'
+         + '<li><b>iPhone:</b> Настройки → Safari → Камера → Спросить или Разрешить.</li>'
+         + '<li><b>Android:</b> Настройки → Приложения → браузер → Разрешения → Камера.</li></ul>'
+         + 'После изменения закройте и откройте приложение. Камера работает только на защищённом соединении — адрес должен начинаться с <b>https://</b>.'],
+
+        ['Забыл пароль',
+         'На экране входа нажмите <b>«Забыли пароль?»</b> и введите свою почту — придёт письмо со ссылкой. Ссылка действует час.<br><br>'
+         + 'Письма нет? Проверьте папку «Спам» и что почта написана без опечаток. Если письмо так и не пришло, директор может задать вам новый пароль вручную: личный кабинет → список сотрудников.'],
+
+        ['Фото товара не загружается',
+         '<ol><li>Снимок с современного телефона может весить слишком много — попробуйте снять заново или выбрать фото поменьше.</li>'
+         + '<li>Загрузка идёт дольше обычного при слабой связи: дождитесь, пока пропадёт индикатор.</li>'
+         + '<li>Остальные данные товара сохраняются отдельно от фото — если товар создан, а фото не прикрепилось, откройте товар и добавьте фото ещё раз, заново заводить не нужно.</li></ol>'],
+
+        ['Не приходят уведомления о задачах',
+         'Уведомления приходят, только когда приложение открыто хотя бы в фоне, и если вы разрешили их при первом запросе.<br><br>'
+         + 'Проверьте разрешения уведомлений для браузера в настройках телефона. На iPhone уведомления работают только если приложение добавлено на экран «Домой» — из обычной вкладки Safari они не приходят.'],
+
+        ['Товар не сохраняется или артикул выглядит странно',
+         'Артикул придумывает сервер по названию и категории: <b>DRN</b> — дроны, <b>SCT</b> — самокаты, <b>CAR</b> — машины, у известных моделей свои коды.<br><br>'
+         + 'Если артикул явно не из той категории, значит товар завели не в той вкладке. Проверьте, какая категория выбрана сверху, прежде чем нажимать «Добавить».'],
+
+        ['Приложение показывает старые данные',
+         'Список товаров сохраняется на телефоне, чтобы открываться быстро и работать при плохой связи. Потяните экран вниз — данные перечитаются с сервера.<br><br>'
+         + 'Если товар добавил коллега пару секунд назад, он появится у вас после такого обновления.']
+    ];
+
+    function openHelp() {
+        closeHelp();
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-overlay';
+        overlay.id = 'help-overlay';
+
+        const items = HELP_ITEMS.map(([q, a]) =>
+            '<div class="help-item">'
+            + '<button type="button" class="help-q">' + escapeHtml(q) + '</button>'
+            + '<div class="help-a">' + a + '</div>'
+            + '</div>').join('');
+
+        overlay.innerHTML = '<div class="help-box">'
+            + '<div class="help-head">'
+            + '<div class="help-title">Помощь</div>'
+            + '<button type="button" class="help-close" id="help-close" aria-label="Закрыть">×</button>'
+            + '</div>'
+            + '<p class="help-lead">Что делать, если что-то не работает. Нажмите на вопрос, чтобы увидеть ответ.</p>'
+            + items
+            + '<div class="help-foot">Не нашли свой случай — напишите директору и опишите, <b>что делали и что увидели</b>. Это экономит половину времени на разбор.</div>'
+            + '</div>';
+
+        overlay.querySelectorAll('.help-q').forEach(q => {
+            q.onclick = () => q.parentElement.classList.toggle('is-open');
+        });
+        overlay.querySelector('#help-close').onclick = closeHelp;
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeHelp(); });
+        document.body.appendChild(overlay);
+    }
+
+    function closeHelp() {
+        const el = document.getElementById('help-overlay');
+        if (el) el.remove();
     }
 
     // ── ЗАДАЧИ ────────────────────────────────────────────────────────
