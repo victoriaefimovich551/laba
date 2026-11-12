@@ -1065,6 +1065,7 @@
 <script src="toast.js"></script>
 <script src="qrcode.js"></script>
 <script src="print-label.js"></script>
+<script src="bodymap.js"></script>
 <script>
     let html5QrCode = null;
     let isScanning = false;
@@ -1878,6 +1879,60 @@
     }
 
     // ========== ОТОБРАЖЕНИЕ ==========
+    // ── СХЕМА КУЗОВА ──────────────────────────────────────────────────
+    // Только для машин: у дронов и самокатов кузова нет. Блок один на обе
+    // карточки — мобильную и десктопную, поэтому живёт отдельной функцией.
+    // Отметки сохраняются сразу при нажатии: отдельная кнопка «сохранить»
+    // здесь только мешала бы — на складе отмечают по одной детали, обходя
+    // машину, и забыть нажать проще простого.
+    let bodyMapCtl = null;
+
+    function bodyMapHost(product) {
+        if (!product || product['Категория'] !== 'Машины') return '';
+        if (typeof LabaBody === 'undefined') return '';
+        return '<div id="body-map-host"></div>';
+    }
+
+    function mountBodyMap(product) {
+        const host = document.getElementById('body-map-host');
+        if (!host || typeof LabaBody === 'undefined') return;
+        bodyMapCtl = LabaBody.mount(host, {
+            bodyType: product['ТипКузова'],
+            map: product['СхемаКузова'],
+            onChange: function (next) { saveBodyMap(product, next); }
+        });
+    }
+
+    // Сохранение отметок. Пишем точечно, не трогая остальные поля товара:
+    // карточка открыта на просмотр, и случайно перезаписать цену или дату
+    // чужой правкой из другого устройства было бы неприятно.
+    let bodyMapTimer = null;
+    function saveBodyMap(product, next) {
+        const sku = product['Артикул'];
+        product['ТипКузова'] = next.bodyType;
+        product['СхемаКузова'] = next.map;
+        if (allProducts && allProducts.length) {
+            const idx = allProducts.findIndex(x => x['Артикул'] === sku);
+            if (idx !== -1) allProducts[idx] = product;
+        }
+        clearTimeout(bodyMapTimer);
+        bodyMapTimer = setTimeout(async () => {
+            try {
+                const res = await apiPost({
+                    action: 'updateProduct',
+                    sku: sku,
+                    category: 'Машины',
+                    bodyType: next.bodyType,
+                    bodyMap: next.map
+                });
+                if (res && res.success === false) throw new Error(res.message || 'не сохранилось');
+                catalogLoaded = false;
+            } catch (e) {
+                showToast('Схема кузова не сохранилась: ' + (e.message || 'нет связи'), 'error');
+            }
+        }, 600);
+    }
+
     function displayProduct(p, containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -1930,6 +1985,8 @@
             html += '<div style="margin-top:14px;"><span class="eyebrow">Состояние</span><div class="state-list">' + formatStateText(p['Состояние']) + '</div></div>';
         }
 
+        html += bodyMapHost(p);
+
         html += '<div class="action-buttons">'
             + '<button class="btn-lime btn-block" onclick="editProduct(\'' + escapedSku + '\')" style="margin-top:0;">Редактировать</button>'
             + '<div class="action-buttons-row">'
@@ -1944,6 +2001,7 @@
 
         html += '</div>';
         container.innerHTML = html;
+        mountBodyMap(p);
     }
 
     async function shareProduct(sku) {
@@ -2415,6 +2473,8 @@
                 + '<span class="eyebrow">Состояние</span><div class="state-list">' + formatStateText(product['Состояние']) + '</div></div>';
         }
 
+        html += bodyMapHost(product);
+
         html += '<div style="margin-top:auto; display:flex; flex-direction:column; gap:9px; padding-top:14px; border-top:1px solid var(--gbd3);">'
             + '<button class="btn-lime btn-block" style="margin-top:0;" onclick="editProduct(\'' + escapedSku + '\')">Редактировать</button>'
             + '<div style="display:flex; gap:9px;">'
@@ -2424,6 +2484,7 @@
             + '</div>';
 
         panel.innerHTML = html;
+        mountBodyMap(product);
     }
 
     // ========== КАТАЛОГ С КЭШИРОВАНИЕМ ==========
