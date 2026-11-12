@@ -210,6 +210,39 @@
       </div>
       <button class="btn-dark btn-block" id="add-emp-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.6v12.8M5.6 12h12.8"></path></svg> Добавить</button>
     </div>
+
+    <!-- Свои данные: имя, почта, пароль. Видно всем вошедшим — каждый
+         правит только себя, сервер берёт id из сессии и чужую запись
+         изменить не даст, даже если подставить чужой id в запрос. -->
+    <div id="my-profile-block" style="display:none; margin-top:26px;">
+      <div class="eyebrow" style="margin-bottom:10px;">Мои данные</div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Имя</div>
+        <input type="text" id="my-name">
+      </div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Email</div>
+        <input type="email" id="my-email" autocomplete="off">
+        <div class="field-hint">Это же и логин для входа, и адрес, куда придёт письмо для восстановления пароля.</div>
+      </div>
+      <button class="btn-dark btn-block" id="save-profile-btn">Сохранить</button>
+
+      <div class="eyebrow" style="margin:24px 0 10px;">Смена пароля</div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Текущий пароль</div>
+        <input type="password" id="my-pass-current" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Новый пароль</div>
+        <input type="password" id="my-pass-new" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="eyebrow field-label">Новый пароль ещё раз</div>
+        <input type="password" id="my-pass-new2" autocomplete="off">
+        <div class="field-hint">После смены на других устройствах придётся войти заново — здесь вы останетесь.</div>
+      </div>
+      <button class="btn-ghost btn-block" id="change-pass-btn">Сменить пароль</button>
+    </div>
   </div>
 </div>
 
@@ -346,7 +379,86 @@ function showCabinet() {
   document.getElementById('cab-subtitle').textContent = session.employee.role === 'director' ? 'Кабинет директора' : 'Кабинет сотрудника';
   document.getElementById('cab-whoami').textContent = session.employee.name + (session.employee.role === 'director' ? ' · директор' : '');
   document.getElementById('add-employee-block').style.display = session.employee.role === 'director' ? 'block' : 'none';
+  document.getElementById('my-profile-block').style.display = 'block';
+  loadMyProfile();
   render();
+
+  // Из меню аккаунта сюда приходят двумя разными пунктами: «Личный
+  // кабинет» и «Добавить сотрудника». Второй открывается этой же
+  // страницей, просто сразу прокручивает к нужной форме.
+  const params = new URLSearchParams(location.search);
+  if (params.get('add') === '1' && session.employee.role === 'director') {
+    setTimeout(() => {
+      const block = document.getElementById('add-employee-block');
+      if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const nameField = document.getElementById('new-emp-name');
+      if (nameField) nameField.focus({ preventScroll: true });
+    }, 120);
+  }
+}
+
+// ── Свои данные ──────────────────────────────────────────────────────
+async function loadMyProfile() {
+  try {
+    const data = await apiGet({ action: 'getProfile', sessionToken: session.token });
+    if (data.error || !data.profile) return;
+    document.getElementById('my-name').value = data.profile.name || '';
+    document.getElementById('my-email').value = data.profile.email || '';
+  } catch (e) {
+    // Молча: экран зарплаты важнее, он покажет свою ошибку сам.
+  }
+}
+
+async function saveMyProfile() {
+  const btn = document.getElementById('save-profile-btn');
+  const name = document.getElementById('my-name').value.trim();
+  const email = document.getElementById('my-email').value.trim();
+  if (!name || !email) { showToast('Заполните имя и email', 'error'); return; }
+
+  btn.disabled = true;
+  try {
+    const res = await apiPost({ action: 'updateProfile', sessionToken: session.token, name: name, email: email });
+    if (res.error || res.success === false) throw new Error(res.message || res.error);
+    // Имя показывается в шапке приложения и в меню аккаунта — обновляем
+    // сохранённую сессию, иначе там останется старое до перезахода.
+    session.employee.name = res.employee.name;
+    saveSession();
+    document.getElementById('cab-whoami').textContent =
+      session.employee.name + (session.employee.role === 'director' ? ' · директор' : '');
+    showToast('Данные сохранены', 'success');
+  } catch (e) {
+    showToast(e.message || 'Не удалось сохранить', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function changeMyPassword() {
+  const btn = document.getElementById('change-pass-btn');
+  const cur = document.getElementById('my-pass-current').value;
+  const nw = document.getElementById('my-pass-new').value;
+  const nw2 = document.getElementById('my-pass-new2').value;
+
+  if (!cur || !nw) { showToast('Заполните оба поля с паролями', 'error'); return; }
+  if (nw !== nw2) { showToast('Новые пароли не совпадают', 'error'); return; }
+  if (nw.length < 4) { showToast('Новый пароль слишком короткий', 'error'); return; }
+
+  btn.disabled = true;
+  try {
+    const res = await apiPost({
+      action: 'changePassword', sessionToken: session.token,
+      currentPassword: cur, newPassword: nw
+    });
+    if (res.error || res.success === false) throw new Error(res.message || res.error);
+    document.getElementById('my-pass-current').value = '';
+    document.getElementById('my-pass-new').value = '';
+    document.getElementById('my-pass-new2').value = '';
+    showToast('Пароль изменён', 'success');
+  } catch (e) {
+    showToast(e.message || 'Не удалось сменить пароль', 'error');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function fetchSalary(employeeId) {
@@ -448,6 +560,9 @@ document.getElementById('back-to-login-link').onclick = (e) => {
 };
 document.getElementById('forgot-btn').onclick = doForgotPassword;
 
+document.getElementById('save-profile-btn').onclick = saveMyProfile;
+document.getElementById('change-pass-btn').onclick = changeMyPassword;
+
 document.getElementById('add-emp-btn').onclick = async () => {
   const name = document.getElementById('new-emp-name').value.trim();
   const email = document.getElementById('new-emp-email').value.trim();
@@ -527,6 +642,10 @@ async function init() {
       hasAny = data.hasAny;
     } else {
       const legacy = await apiGet({ action: 'getEmployees' });
+      // Ошибка — это «не знаю», а не «аккаунтов нет». Без этой проверки
+      // при недоступной базе всем показывался экран «Первый аккаунт»,
+      // будто сотрудников стёрли.
+      if (legacy.error) throw new Error(legacy.error);
       hasAny = !!(legacy.employees && legacy.employees.length);
     }
     if (!hasAny) {
