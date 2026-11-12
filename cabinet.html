@@ -92,7 +92,7 @@
     <a class="back-btn" href="index.html">← Назад</a>
 
     <div class="cab-header-title">
-      <div class="page-title" style="font-size:20px;">Личный кабинет</div>
+      <div class="page-title" style="font-size:20px;" id="cab-page-title">Личный кабинет</div>
       <p id="cab-subtitle">Вход</p>
     </div>
     <button class="theme-toggle theme-toggle-cab" id="theme-toggle-cab" onclick="toggleTheme()" title="Переключить тему" data-theme-icon>🌙</button>
@@ -171,22 +171,27 @@
       <button class="btn-ghost" id="logout-btn" style="width:auto; margin:0; padding:8px 16px; height:auto; font-size:12.5px;">Выйти</button>
     </div>
 
-    <div class="period-bar">
-      <button class="period-btn active" onclick="setPeriod('month', this)">Этот месяц</button>
-      <button class="period-btn" onclick="setPeriod('quarter', this)">Квартал</button>
-      <button class="period-btn" onclick="setPeriod('year', this)">Год</button>
-      <button class="period-btn" onclick="setPeriod('all', this)">Всё время</button>
+    <!-- ЭКРАН «Сотрудники» (директор) / «Моя зарплата» (сотрудник).
+         Открывается отдельным пунктом меню аккаунта, в личном кабинете
+         больше не показывается: там теперь только свои данные. -->
+    <div id="salary-view" style="display:none;">
+      <div class="period-bar">
+        <button class="period-btn active" onclick="setPeriod('month', this)">Этот месяц</button>
+        <button class="period-btn" onclick="setPeriod('quarter', this)">Квартал</button>
+        <button class="period-btn" onclick="setPeriod('year', this)">Год</button>
+        <button class="period-btn" onclick="setPeriod('all', this)">Всё время</button>
+      </div>
+
+      <!-- Сводка сотрудника / выбранного сотрудника у директора -->
+      <div id="salary-summary"></div>
+
+      <!-- Список сотрудников (только директор, когда никто не выбран) -->
+      <div id="employees-list"></div>
     </div>
 
-    <!-- Сводка сотрудника / выбранного сотрудника у директора -->
-    <div id="salary-summary"></div>
-
-    <!-- Список сотрудников (только директор, когда никто не выбран) -->
-    <div id="employees-list"></div>
-
     <!-- Добавление сотрудника (только директор) -->
-    <div id="add-employee-block" style="display:none; margin-top:22px;">
-      <div class="eyebrow" style="margin-bottom:10px;">Добавить сотрудника</div>
+    <div id="add-employee-block" style="display:none;">
+      <div class="eyebrow" style="margin-bottom:10px;">Новый сотрудник</div>
       <div class="field-group">
         <div class="eyebrow field-label">Имя</div>
         <input type="text" id="new-emp-name">
@@ -214,7 +219,7 @@
     <!-- Свои данные: имя, почта, пароль. Видно всем вошедшим — каждый
          правит только себя, сервер берёт id из сессии и чужую запись
          изменить не даст, даже если подставить чужой id в запрос. -->
-    <div id="my-profile-block" style="display:none; margin-top:26px;">
+    <div id="my-profile-block" style="display:none;">
       <div class="eyebrow" style="margin-bottom:10px;">Мои данные</div>
       <div class="field-group">
         <div class="eyebrow field-label">Имя</div>
@@ -269,6 +274,15 @@ function setPeriod(period, btn) {
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   render();
+}
+
+// «1 товар / 2 товара / 5 товаров»
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  if (b === 1) return one;
+  return many;
 }
 
 function fmtRub(n) {
@@ -378,22 +392,49 @@ function showCabinet() {
   document.getElementById('cab-body').style.display = 'block';
   document.getElementById('cab-subtitle').textContent = session.employee.role === 'director' ? 'Кабинет директора' : 'Кабинет сотрудника';
   document.getElementById('cab-whoami').textContent = session.employee.name + (session.employee.role === 'director' ? ' · директор' : '');
-  document.getElementById('add-employee-block').style.display = session.employee.role === 'director' ? 'block' : 'none';
-  document.getElementById('my-profile-block').style.display = 'block';
-  loadMyProfile();
-  render();
+  showCabinetView(currentViewFromUrl());
+}
 
-  // Из меню аккаунта сюда приходят двумя разными пунктами: «Личный
-  // кабинет» и «Добавить сотрудника». Второй открывается этой же
-  // страницей, просто сразу прокручивает к нужной форме.
+// Страница обслуживает три разных пункта меню аккаунта, поэтому делится
+// на экраны: кабинет — только свои данные, зарплата — отдельный экран,
+// добавление сотрудника — тоже отдельный. Раньше всё это лежало одной
+// простынёй, и «Личный кабинет» открывался сразу со списком сотрудников
+// и формой их создания.
+function currentViewFromUrl() {
   const params = new URLSearchParams(location.search);
-  if (params.get('add') === '1' && session.employee.role === 'director') {
-    setTimeout(() => {
-      const block = document.getElementById('add-employee-block');
-      if (block) block.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      const nameField = document.getElementById('new-emp-name');
-      if (nameField) nameField.focus({ preventScroll: true });
-    }, 120);
+  if (params.get('add') === '1') return 'add';
+  if (params.get('view') === 'salary') return 'salary';
+  return 'profile';
+}
+
+function showCabinetView(view) {
+  const isDirector = session.employee.role === 'director';
+  // Экраны директора сотруднику недоступны: промах по ссылке возвращает
+  // на свой кабинет, а не показывает пустой экран.
+  if (view === 'add' && !isDirector) view = 'profile';
+
+  const titles = {
+    profile: 'Личный кабинет',
+    salary:  isDirector ? 'Сотрудники' : 'Моя зарплата',
+    add:     'Добавить сотрудника'
+  };
+  const subs = {
+    profile: 'Имя, почта и пароль',
+    salary:  isDirector ? 'Начисления по каждому' : 'Процент с закупок и продаж',
+    add:     'Новый доступ к приложению'
+  };
+  document.getElementById('cab-page-title').textContent = titles[view];
+  document.getElementById('cab-subtitle').textContent = subs[view];
+
+  document.getElementById('my-profile-block').style.display = view === 'profile' ? 'block' : 'none';
+  document.getElementById('salary-view').style.display = view === 'salary' ? 'block' : 'none';
+  document.getElementById('add-employee-block').style.display = view === 'add' ? 'block' : 'none';
+
+  if (view === 'profile') loadMyProfile();
+  if (view === 'salary') render();
+  if (view === 'add') {
+    const nameField = document.getElementById('new-emp-name');
+    if (nameField) setTimeout(() => nameField.focus(), 120);
   }
 }
 
@@ -516,21 +557,44 @@ async function render() {
       return;
     }
 
-    const data = await fetchSalary(null);
-    const all = data.result || [];
+    // Список сотрудников берём отдельно от начислений: computeSalary
+    // возвращает только тех, у кого в периоде были продажи, а на вкладке
+    // «Сотрудники» должны быть видны все — иначе в тихий месяц экран
+    // выглядит так, будто сотрудников нет вовсе.
+    const [data, staff] = await Promise.all([
+      fetchSalary(null),
+      apiGet({ action: 'getEmployees' })
+    ]);
+    const earned = {};
+    (data.result || []).forEach(e => { earned[e.employeeId] = e; });
+
+    let people = (staff && staff.employees) ? staff.employees.slice() : [];
+    if (!people.length) {
+      // Запасной путь: если список сотрудников не пришёл, показываем хотя
+      // бы тех, у кого есть начисления.
+      people = (data.result || []).map(e => ({ id: e.employeeId, name: e.name, role: '' }));
+    }
+    people.sort((a, b) => (earned[b.id] ? earned[b.id].total : 0) - (earned[a.id] ? earned[a.id].total : 0));
+
     summaryEl.innerHTML = '';
-    if (!all.length) {
-      listEl.innerHTML = '<div class="empty-state">За этот период продаж нет</div>';
+    if (!people.length) {
+      listEl.innerHTML = '<div class="empty-state">Сотрудников пока нет</div>';
       return;
     }
-    let html = '<div class="eyebrow" style="margin-bottom:10px;">Сотрудники</div>';
-    all.forEach(e => {
-      html += '<div class="list-row" style="margin-bottom:10px; cursor:pointer;" onclick="viewingEmployeeId=' + e.employeeId + '; render();">'
+
+    let html = '';
+    people.forEach(p => {
+      const e = earned[p.id];
+      const sub = e
+        ? e.items.length + ' ' + plural(e.items.length, 'товар', 'товара', 'товаров')
+        : 'за этот период начислений нет';
+      const roleMark = p.role === 'director' ? ' · директор' : '';
+      html += '<div class="list-row" style="margin-bottom:10px; cursor:pointer;" onclick="viewingEmployeeId=' + p.id + '; render();">'
         + '<div class="list-row-body">'
-        + '<div class="list-row-title">' + escapeHtmlCab(e.name) + '</div>'
-        + '<div class="list-row-sub">' + e.items.length + ' товар(ов)</div>'
+        + '<div class="list-row-title">' + escapeHtmlCab(p.name) + escapeHtmlCab(roleMark) + '</div>'
+        + '<div class="list-row-sub">' + escapeHtmlCab(sub) + '</div>'
         + '</div>'
-        + '<div class="list-row-side"><div class="list-row-price">' + fmtRub(e.total) + '</div></div>'
+        + '<div class="list-row-side"><div class="list-row-price">' + fmtRub(e ? e.total : 0) + '</div></div>'
         + '</div>';
     });
     listEl.innerHTML = html;
@@ -576,7 +640,8 @@ document.getElementById('add-emp-btn').onclick = async () => {
     document.getElementById('new-emp-name').value = '';
     document.getElementById('new-emp-email').value = '';
     document.getElementById('new-emp-password').value = '';
-    render();
+    // Остаёмся на форме: часто сотрудников заводят подряд, а список
+    // начислений живёт на соседнем экране и здесь не нужен.
   } catch (e) {
     showToast('❌ ' + e.message, 'error');
   }
