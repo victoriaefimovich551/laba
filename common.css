@@ -643,7 +643,7 @@ body:not(.light-mode) input[type="date"]::-webkit-calendar-picker-indicator { fi
     width: 100%;
     text-align: center;
 }
-.confirm-dialog p { margin-bottom: 20px; color: var(--tx); font: 500 15px/1.5 var(--f-head); }
+.confirm-dialog p { margin-bottom: 20px; color: var(--tx); font: 500 15px/1.5 var(--f-head); white-space: pre-line; }
 .confirm-dialog .confirm-buttons { display: flex; gap: 10px; }
 
 /* ── Полноширинные кнопки-пилюли (используются вместе с .btn-lime/.btn-dark/.btn-ghost) ── */
