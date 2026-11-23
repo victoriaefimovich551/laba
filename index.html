@@ -916,7 +916,7 @@
 
     <div id="receive-noqr-panel" class="panel">
         <div class="page-title">Новый товар</div>
-        <div class="page-sub">Артикул и QR-код создадутся автоматически после сохранения.</div>
+        <div class="page-sub">Артикул и QR-код создадутся автоматически после сохранения. Для партии одинаковых вещей поставьте количество больше одной.</div>
 
         <div class="field-group" style="margin-top:16px;">
             <div class="eyebrow field-label">Модель *</div>
@@ -936,8 +936,24 @@
         </div>
 
         <div class="field-group">
+            <div class="eyebrow field-label">Количество</div>
+            <input type="number" id="receive-noqr-qty" value="1" min="1" max="50" step="1" inputmode="numeric" oninput="updateQtyUI()">
+            <div style="font-size:12px; color:var(--tx2); margin-top:4px;">Одинаковые вещи — например 10 лопастей. Каждая станет отдельным товаром со своим артикулом и своим QR-кодом.</div>
+        </div>
+
+        <div class="field-group">
             <div class="eyebrow field-label">Серийный номер</div>
             <input type="text" id="receive-noqr-serial" placeholder="Например: 3YTBJ4900301RC">
+            <div id="noqr-serial-note" style="display:none; font-size:12px; color:var(--tx2); margin-top:4px;">Для партии серийный номер не заполняется: он у каждой вещи свой. Впишите его позже в карточке товара.</div>
+        </div>
+
+        <div class="field-group" id="noqr-money-mode-group" style="display:none;">
+            <div class="eyebrow field-label">Суммы ниже указаны</div>
+            <div class="pill-switch">
+                <button type="button" id="noqr-money-each" class="pill-switch-btn active" onclick="setMoneyMode('each')">За штуку</button>
+                <button type="button" id="noqr-money-total" class="pill-switch-btn" onclick="setMoneyMode('total')">За всю партию</button>
+            </div>
+            <div id="noqr-money-hint" style="font-size:12px; color:var(--tx2); margin-top:6px;"></div>
         </div>
 
         <div class="field-group">
@@ -1514,8 +1530,97 @@
         await viewProductDetail(sku);
     }
 
+    // ── Партия одинаковых вещей ──────────────────────────────────────
+    // Артикул выдаёт сервер, по одному на запрос. Поэтому партию заводим
+    // последовательно: сколько штук, столько запросов. Так артикулы не
+    // сталкиваются друг с другом и на сервере менять ничего не нужно.
+    const MAX_BULK_QTY = 50;
+    let noqrMoneyMode = 'each';
+
+    function noqrQty() {
+        const raw = document.getElementById('receive-noqr-qty')?.value;
+        if (raw === '' || raw === null || raw === undefined) return NaN;
+        const n = Number(raw);
+        return Number.isInteger(n) ? n : NaN;
+    }
+
+    function pluralRu(n, one, few, many) {
+        const a = Math.abs(n) % 100, b = a % 10;
+        if (a > 10 && a < 20) return many;
+        if (b === 1) return one;
+        if (b > 1 && b < 5) return few;
+        return many;
+    }
+
+    function setMoneyMode(mode) {
+        noqrMoneyMode = mode === 'total' ? 'total' : 'each';
+        const each = document.getElementById('noqr-money-each');
+        const total = document.getElementById('noqr-money-total');
+        if (each) each.classList.toggle('active', noqrMoneyMode === 'each');
+        if (total) total.classList.toggle('active', noqrMoneyMode === 'total');
+        updateQtyUI();
+    }
+
+    // Серийный номер принадлежит одной конкретной вещи, поэтому для
+    // партии поле отключаем, а не тихо копируем один номер десяти вещам.
+    function updateQtyUI() {
+        const n = noqrQty();
+        const many = Number.isFinite(n) && n > 1;
+
+        const serial = document.getElementById('receive-noqr-serial');
+        if (serial) {
+            serial.disabled = many;
+            serial.placeholder = many ? 'У каждой вещи свой — заполните позже' : 'Например: 3YTBJ4900301RC';
+            // Приглушаем отключённое поле: иначе по виду не понять, что
+            // оно сейчас не работает.
+            serial.style.opacity = many ? '0.5' : '';
+        }
+        const serialNote = document.getElementById('noqr-serial-note');
+        if (serialNote) serialNote.style.display = many ? 'block' : 'none';
+
+        const moneyGroup = document.getElementById('noqr-money-mode-group');
+        if (moneyGroup) moneyGroup.style.display = many ? 'block' : 'none';
+
+        const moneyHint = document.getElementById('noqr-money-hint');
+        if (moneyHint) {
+            moneyHint.textContent = noqrMoneyMode === 'total'
+                ? 'Цена закупки и затраты разделятся на ' + n + ' шт. Остаток от деления уйдёт первым вещам, чтобы сумма сошлась копейка в копейку.'
+                : 'Цена закупки и затраты запишутся каждой вещи целиком.';
+        }
+
+        const btn = document.getElementById('submit-noqr-btn');
+        if (btn && !btn.disabled) {
+            btn.textContent = many ? 'Добавить ' + n + ' шт.' : 'Добавить товар';
+        }
+    }
+
+    // Делит сумму партии на штуки, не теряя копеек: остаток уходит
+    // первым вещам, так что сумма частей в точности равна исходной.
+    function splitAmount(value, n) {
+        if (value === '' || value === null || value === undefined) {
+            return new Array(n).fill('');
+        }
+        const num = Number(value);
+        if (!isFinite(num)) return new Array(n).fill('');
+        const cents = Math.round(num * 100);
+        const base = Math.floor(cents / n);
+        const rest = cents - base * n;
+        const out = [];
+        for (let i = 0; i < n; i++) {
+            out.push(String((base + (i < rest ? 1 : 0)) / 100));
+        }
+        return out;
+    }
+
+    function amountsFor(value, n) {
+        if (n <= 1) return [value];
+        if (noqrMoneyMode === 'total') return splitAmount(value, n);
+        return new Array(n).fill(value);
+    }
+
     async function submitNoQRProduct() {
         const model = getModelValue();
+        const qty = noqrQty();
         const serialNumber = document.getElementById('receive-noqr-serial')?.value.trim() || '';
         const purchasePrice = document.getElementById('receive-noqr-price')?.value || '';
         const purchasedBy = document.getElementById('receive-noqr-purchased-by')?.value || '';
@@ -1529,14 +1634,21 @@
             showToast('Выберите модель товара', 'error');
             return;
         }
+        if (!Number.isFinite(qty) || qty < 1 || qty > MAX_BULK_QTY) {
+            showToast('Количество — целое число от 1 до ' + MAX_BULK_QTY, 'error');
+            return;
+        }
         if (!purchasedBy) {
             showToast('Выберите, кто закупил товар', 'error');
             return;
         }
 
+        // Для партии серийный номер не передаём вообще.
+        const oneSerial = qty === 1 ? serialNumber : '';
+
         // Проверка дубликата серийного номера
-        if (serialNumber && allProducts && allProducts.length) {
-            const duplicate = allProducts.find(p => p['Серийный номер'] && p['Серийный номер'].trim() === serialNumber);
+        if (oneSerial && allProducts && allProducts.length) {
+            const duplicate = allProducts.find(p => p['Серийный номер'] && p['Серийный номер'].trim() === oneSerial);
             if (duplicate) {
                 const confirmed = await showConfirmDialog(
                     '⚠️ Товар с таким серийным номером уже существует:\n' +
@@ -1544,6 +1656,19 @@
                 );
                 if (!confirmed) return;
             }
+        }
+
+        // Партия — действие заметное и в один клик не отменяется,
+        // поэтому спрашиваем подтверждение.
+        if (qty > 1) {
+            const moneyNote = noqrMoneyMode === 'total'
+                ? 'Суммы разделятся на ' + qty + ' шт.'
+                : 'Указанные суммы запишутся каждой вещи целиком.';
+            const confirmed = await showConfirmDialog(
+                'Создать ' + qty + ' шт. «' + model + '»?\n' +
+                'У каждой будет свой артикул и свой QR-код.\n' + moneyNote
+            );
+            if (!confirmed) return;
         }
 
         const submitBtn = document.getElementById('submit-noqr-btn');
@@ -1555,79 +1680,138 @@
             submitBtn.innerHTML = '⏳ Добавление...';
         }
 
+        const prices = amountsFor(purchasePrice, qty);
+        const repairs = amountsFor(repairCost, qty);
+        const deliveries = amountsFor(deliveryCost, qty);
+
         const resultDiv = document.getElementById('receive-noqr-result');
-        if (resultDiv) resultDiv.innerHTML = '<div class="loading">💾 Добавление товара и генерация QR-кода...</div>';
+        const created = [];
+        let failMessage = '';
 
         try {
-            const data = await apiPost({
-                action:         'addWithoutSku',
-                model:          model,
-                serialNumber:   serialNumber,
-                purchasePrice:  purchasePrice,
-                purchasedBy:    purchasedBy,
-                soldBy:         soldBy,
-                repairCost:     repairCost,
-                deliveryCost:   deliveryCost,
-                avitoLink:      avitoLink,
-                description:    description,
-                category:       currentCategory
+            for (let i = 0; i < qty; i++) {
+                if (resultDiv) {
+                    resultDiv.innerHTML = '<div class="loading">💾 ' + (qty === 1
+                        ? 'Добавление товара и генерация QR-кода...'
+                        : 'Добавляю ' + (i + 1) + ' из ' + qty + '...') + '</div>';
+                }
+                let data;
+                try {
+                    data = await apiPost({
+                        action:         'addWithoutSku',
+                        model:          model,
+                        serialNumber:   oneSerial,
+                        purchasePrice:  prices[i],
+                        purchasedBy:    purchasedBy,
+                        soldBy:         soldBy,
+                        repairCost:     repairs[i],
+                        deliveryCost:   deliveries[i],
+                        avitoLink:      avitoLink,
+                        description:    description,
+                        category:       currentCategory
+                    });
+                } catch (err) {
+                    failMessage = err.message;
+                    break;
+                }
+                if (!data || !data.success) {
+                    failMessage = (data && data.message) ? data.message : 'сервер не подтвердил добавление';
+                    break;
+                }
+                created.push(data.sku);
+            }
+
+            if (!created.length) {
+                if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ ' + escapeHtml(failMessage || 'Не удалось добавить товар') + '</div>';
+                return;
+            }
+
+            // Что-то создалось — показываем артикулы и кнопку печати.
+            const labels = created.map(function (sku) {
+                return { 'Артикул': sku, 'Название': model };
             });
 
-            if (data.success) {
-                if (resultDiv) {
-                    resultDiv.innerHTML = '<div class="success">' + escapeHtml(data.message) + '<br>🔢 Артикул: ' + escapeHtml(data.sku) + '</div>'
-                        + '<button id="print-new-label-btn" class="btn-dark btn-block"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8.4" width="14" height="7.6" rx="1.8"></rect><path d="M7.4 8.4V6a1.6 1.6 0 0 1 1.6-1.6h6a1.6 1.6 0 0 1 1.6 1.6v2.4"></path><rect x="8.2" y="12.8" width="7.6" height="5.8" rx="1"></rect></svg> Напечатать наклейку</button>';
-                    const printBtn = document.getElementById('print-new-label-btn');
-                    if (printBtn) printBtn.onclick = () => printLabels([{ 'Артикул': data.sku, 'Название': model }]);
-                }
-                if (noqrSelectedPhotoFiles.length) {
-                    const photosToUpload = noqrSelectedPhotoFiles;
-                    const sku = data.sku;
-                    (async () => {
+            let head;
+            if (created.length === qty) {
+                head = '<div class="success">' + (qty === 1
+                    ? 'Товар добавлен'
+                    : 'Добавлено ' + created.length + ' ' + pluralRu(created.length, 'штука', 'штуки', 'штук')) + '</div>';
+            } else {
+                head = '<div class="error">⚠️ Добавлено ' + created.length + ' из ' + qty +
+                    '. Остальные не прошли: ' + escapeHtml(failMessage) +
+                    '<br>Созданные уже в каталоге. Чтобы довести партию, оставьте количество ' +
+                    (qty - created.length) + ' и нажмите «Добавить» снова.</div>';
+            }
+
+            const skuList = '<div style="font-size:13px; line-height:1.7; margin:8px 0; word-break:break-all;">🔢 ' +
+                created.map(escapeHtml).join(', ') + '</div>';
+
+            const printLabel = 'Напечатать ' + (created.length === 1
+                ? 'наклейку'
+                : created.length + ' ' + pluralRu(created.length, 'наклейку', 'наклейки', 'наклеек'));
+
+            if (resultDiv) {
+                resultDiv.innerHTML = head + skuList
+                    + '<button id="print-new-label-btn" class="btn-dark btn-block"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8.4" width="14" height="7.6" rx="1.8"></rect><path d="M7.4 8.4V6a1.6 1.6 0 0 1 1.6-1.6h6a1.6 1.6 0 0 1 1.6 1.6v2.4"></path><rect x="8.2" y="12.8" width="7.6" height="5.8" rx="1"></rect></svg> '
+                    + escapeHtml(printLabel) + '</button>';
+                const printBtn = document.getElementById('print-new-label-btn');
+                if (printBtn) printBtn.onclick = () => printLabels(labels);
+            }
+
+            // Фото кладём каждой заведённой вещи: товары одинаковые,
+            // и в карточке у каждой должна быть своя картинка.
+            if (noqrSelectedPhotoFiles.length) {
+                const photosToUpload = noqrSelectedPhotoFiles;
+                const skus = created.slice();
+                const cat = currentCategory;
+                (async () => {
+                    let failed = 0;
+                    for (const sku of skus) {
                         for (const photoFile of photosToUpload) {
                             try {
-                                await uploadProductPhoto(sku, currentCategory, photoFile);
+                                await uploadProductPhoto(sku, cat, photoFile);
                             } catch (err) {
-                                showToast('Товар добавлен, но часть фото не загрузилась: ' + err.message, 'error');
+                                failed++;
                                 break;
                             }
                         }
-                    })();
-                }
-                const receiveNoqrModel = document.getElementById('receive-noqr-model');
-                const receiveNoqrSerial = document.getElementById('receive-noqr-serial');
-                const receiveNoqrPrice = document.getElementById('receive-noqr-price');
-                const receiveNoqrPurchasedBy = document.getElementById('receive-noqr-purchased-by');
-                const receiveNoqrSoldBy = document.getElementById('receive-noqr-sold-by');
-                const receiveNoqrRepairCost = document.getElementById('receive-noqr-repair-cost');
-                const receiveNoqrDeliveryCost = document.getElementById('receive-noqr-delivery-cost');
-                const receiveNoqrAvito = document.getElementById('receive-noqr-avito');
-                const receiveNoqrDescription = document.getElementById('receive-noqr-description');
-                if (receiveNoqrModel) receiveNoqrModel.value = '';
-                if (receiveNoqrSerial) receiveNoqrSerial.value = '';
-                if (receiveNoqrPrice) receiveNoqrPrice.value = '';
-                if (receiveNoqrPurchasedBy) receiveNoqrPurchasedBy.value = '';
-                if (receiveNoqrSoldBy) receiveNoqrSoldBy.value = '';
-                if (receiveNoqrRepairCost) receiveNoqrRepairCost.value = '';
-                if (receiveNoqrDeliveryCost) receiveNoqrDeliveryCost.value = '';
-                if (receiveNoqrAvito) receiveNoqrAvito.value = '';
-                if (receiveNoqrDescription) receiveNoqrDescription.value = '';
-                const receiveNoqrModelManualEl = document.getElementById('receive-noqr-model-manual');
-                if (receiveNoqrModelManualEl) receiveNoqrModelManualEl.value = '';
-                switchModelMode('manual');
-                resetNoqrPhotoPicker();
-                catalogLoaded = false;
-                loadCatalog();
-                showToast('Товар успешно добавлен!');
-            } else {
-                if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ ' + escapeHtml(data.message) + '</div>';
+                    }
+                    if (failed) {
+                        showToast('Товары добавлены, но фото не загрузились у ' + failed + ' ' +
+                            pluralRu(failed, 'вещи', 'вещей', 'вещей'), 'error', 6000);
+                    }
+                })();
             }
+
+            if (created.length === qty) {
+                clearNoQRForm();
+                if (resultDiv) {
+                    // clearNoQRForm стирает и результат — возвращаем его,
+                    // иначе исчезнет кнопка печати наклеек.
+                    resultDiv.innerHTML = head + skuList
+                        + '<button id="print-new-label-btn" class="btn-dark btn-block"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8.4" width="14" height="7.6" rx="1.8"></rect><path d="M7.4 8.4V6a1.6 1.6 0 0 1 1.6-1.6h6a1.6 1.6 0 0 1 1.6 1.6v2.4"></path><rect x="8.2" y="12.8" width="7.6" height="5.8" rx="1"></rect></svg> '
+                        + escapeHtml(printLabel) + '</button>';
+                    const printBtn2 = document.getElementById('print-new-label-btn');
+                    if (printBtn2) printBtn2.onclick = () => printLabels(labels);
+                }
+                showToast(qty === 1 ? 'Товар успешно добавлен!' : 'Добавлено ' + qty + ' шт.');
+            } else {
+                // Партия прошла не полностью: форму не стираем, чтобы
+                // можно было дозавести остаток, и подставляем сколько.
+                const qtyEl = document.getElementById('receive-noqr-qty');
+                if (qtyEl) qtyEl.value = String(qty - created.length);
+                updateQtyUI();
+            }
+
+            catalogLoaded = false;
+            loadCatalog();
         } catch (error) {
             if (resultDiv) resultDiv.innerHTML = '<div class="error">❌ Ошибка: ' + escapeHtml(error.message) + '</div>';
         } finally {
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
+                updateQtyUI();
             }
         }
     }
@@ -1655,8 +1839,12 @@
         if (receiveNoqrResult) receiveNoqrResult.innerHTML = '';
         const receiveNoqrModelManual = document.getElementById('receive-noqr-model-manual');
         if (receiveNoqrModelManual) receiveNoqrModelManual.value = '';
+        const receiveNoqrQty = document.getElementById('receive-noqr-qty');
+        if (receiveNoqrQty) receiveNoqrQty.value = '1';
+        setMoneyMode('each');
         switchModelMode('manual');
         resetNoqrPhotoPicker();
+        updateQtyUI();
     }
 
     function resetNoqrPhotoPicker() {
